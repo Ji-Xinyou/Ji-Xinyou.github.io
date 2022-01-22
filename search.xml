@@ -1,8 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>homepage</title>
+    <title>Welcome!</title>
     <url>/2022/01/23/homepage/</url>
-    <content><![CDATA[]]></content>
+    <content><![CDATA[<style>
+img{
+    width: 60%;
+}
+</style>
+<h2 id="Welcome-to-my-homepage-💤"><a class="header-anchor" href="#Welcome-to-my-homepage-💤">¶</a>Welcome to my homepage! 💤</h2>
+<p>This is my first post to this blog website! 😋<br>
+It is really exciting for me to have the chance to really say something on the Internet.<br>
+There are mainly <strong>3️⃣</strong> reasons for me to start the blog.</p>
+<ul>
+<li>
+<p>⭐ <strong>Reading others blog really inspires me</strong></p>
+<ul>
+<li>Others’ sharing experiences on blogs really helps me through many mind-windling 😱 situations and intriges me to be one of them. Hopefully my experience will help the readers as well 😄<br>
+<br/></li>
+</ul>
+</li>
+<li>
+<p>☝️ <strong>Learning without recording is not as effective</strong></p>
+<ul>
+<li>This came across to my mind when I am taking 6.S081: Operating System Engineering (great course btw). There are so many important details and great minds inside an O/S, which I think should be well-learned and recorded.<br>
+<br/></li>
+</ul>
+</li>
+<li>
+<p>💥 <strong>SHARING IS ALWAYS FUN!</strong></p>
+<ul>
+<li>The thrill of sharing takes up the most part of why I am starting this blog! Not only sharing the experience is rewarding 😋, but sharing my daily life is also exciting.<br>
+<br/></li>
+</ul>
+</li>
+</ul>
+<p><strong>To everyone read this page:</strong></p>
+<p><em>May the force be with you</em></p>
+<p><img src="./../images/grogu.jpeg" alt="grogu"></p>
+]]></content>
   </entry>
 </search>
