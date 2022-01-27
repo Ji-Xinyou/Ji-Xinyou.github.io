@@ -1,6 +1,126 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>6.S081 lec5: RISCV-calling conventions</title>
+    <url>/2022/01/27/6-S081-lec5-RISCV-calling-conventions/</url>
+    <content><![CDATA[<style>
+img{
+    width: 70%;
+}
+</style>
+<h1>6.S081 lec5: RISCV calling conventions</h1>
+<hr>
+<h2 id="Caller-Saved-and-Callee-Saved"><a class="header-anchor" href="#Caller-Saved-and-Callee-Saved">¶</a>Caller Saved and Callee Saved</h2>
+<p>Registers are categorized as <strong>caller saved</strong> and <strong>callee saved</strong>. The difference between them is very important.</p>
+<p><img src="../images/6S081/regs.png" alt=""></p>
+<ul>
+<li><strong>Caller Saved</strong> registers are <strong>not</strong> reserved across function calls.</li>
+<li><strong>Callee Saved</strong> registers are reserved across function calls. The caller has to find someway to save those registers.</li>
+</ul>
+<hr>
+<h2 id="the-Stack"><a class="header-anchor" href="#the-Stack">¶</a>the Stack</h2>
+<ul>
+<li>The stack is created by function call! <strong>Each function call creates a stack frame for itself to use.</strong></li>
+<li>The stack starts from high address, growes down to low address. To make a new stack frame, decrement sp register.</li>
+<li>The stack size is <strong>not fixed</strong>, pay attention to the layout.
+<ul>
+<li>The return address is always at the first word
+<ul>
+<li>
+<pre><code class="language-asm">  addi sp. sp, 16 # alloc stack frame
+  sd ra, 0(sp)    # store the return address
+  ...
+  ld ra, 0(sp)    # recover the return address
+  addi sp, sp, 16 # delete the stack frame
+</code></pre>
+<ul>
+<li>This also shows that why $ra is a <strong>callee saved</strong> register.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>The Prev. Frame address is always next to return address, to control frame callback.</li>
+</ul>
+</li>
+</ul>
+<p><img src="../images/6S081/stack.png" alt=""></p>
+<hr>
+<h2 id="GDB-commands"><a class="header-anchor" href="#GDB-commands">¶</a>GDB commands</h2>
+<ul>
+<li>
+<p><strong>To open the gdb mode of xv6</strong></p>
+<ul>
+<li>In one window type <strong>make qemu-gdb</strong> to start the gdb server</li>
+<li>In another window type <strong>riscv-unknown-elf-gdb</strong> to connect to the previous gdb server and start debugging!<br>
+<br/></li>
+</ul>
+</li>
+<li>
+<p><strong>layout split/asm/reg/src</strong></p>
+<ul>
+<li>-&gt; show the layout of (asm &amp; src)/asm/reg/ src</li>
+<li><strong>focus reg/asm</strong>…
+<ul>
+<li>-&gt; change the focus among windows<br>
+<br/></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>info</strong></p>
+<ul>
+<li><strong>info breakpoints</strong>
+<ul>
+<li>-&gt; check the number of bp</li>
+</ul>
+</li>
+<li><strong>info frame</strong>
+<ul>
+<li>-&gt; check the info of current stack frame (frame 0)</li>
+<li><strong>backtrace (bt)</strong>
+<ul>
+<li>frame x -&gt; info frame
+<ul>
+<li>-&gt; change current frame to <strong>x</strong> and print the info<br>
+<br/></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>tui enable</strong></p>
+<ul>
+<li>show the tui<br>
+<br/></li>
+</ul>
+</li>
+<li>
+<p><strong>breakpoint/watchpoint &lt;tag&gt;</strong></p>
+<ul>
+<li><strong>delete &lt;bp_nr&gt;</strong></li>
+<li>info breakpoints/watchpoints<br>
+<br/></li>
+</ul>
+</li>
+<li>
+<p><strong>s &amp; si</strong> (step instruction)</p>
+</li>
+</ul>
+<hr>
+]]></content>
+      <categories>
+        <category>Operation System</category>
+      </categories>
+      <tags>
+        <tag>6.S081</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Welcome!</title>
     <url>/2022/01/23/homepage/</url>
     <content><![CDATA[<style>
