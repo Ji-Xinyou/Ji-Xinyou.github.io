@@ -27,7 +27,7 @@ img{
 <li>The return address is always at the first word
 <ul>
 <li>
-<pre><code class="language-asm">  addi sp. sp, 16 # alloc stack frame
+<pre><code class="language-asm">  addi sp, sp, 16 # alloc stack frame
   sd ra, 0(sp)    # store the return address
   ...
   ld ra, 0(sp)    # recover the return address
@@ -159,5 +159,114 @@ There are mainly <strong>3️⃣</strong> reasons for me to start the blog.</p>
 <p><em>May the force be with you</em></p>
 <p><img src="./../images/grogu.jpeg" alt="grogu"></p>
 ]]></content>
+  </entry>
+  <entry>
+    <title>xv6book-chap4: traps and syscall</title>
+    <url>/2022/01/28/xv6book-chap4-traps-and-syscall/</url>
+    <content><![CDATA[<h1>xv6 book - Traps and syscall</h1>
+<hr>
+<style>
+img{
+    width: 60%;
+}
+</style>
+<h2 id="Trap"><a class="header-anchor" href="#Trap">¶</a>Trap</h2>
+<p>There are three events cause CPU to trap</p>
+<ul>
+<li>ecall</li>
+<li>exception</li>
+<li>device interrupt</li>
+</ul>
+<p>Trap stages (4 in total)</p>
+<ul>
+<li>hardware actions (from CPU)</li>
+<li>assembly instructions, to prepare the way for kernel C code (<strong>called vector</strong>)</li>
+<li>C function to handle the trap (<strong>called handler</strong>)</li>
+<li>system call/device driver service routine</li>
+</ul>
+<p>It is convenient to have separate code for different paths</p>
+<ul>
+<li>from user space</li>
+<li>from kernel space</li>
+<li>timer interrupts</li>
+</ul>
+<hr>
+<h2 id="RISC-V-trap-machiery"><a class="header-anchor" href="#RISC-V-trap-machiery">¶</a>RISC-V trap machiery</h2>
+<ul>
+<li>Control regs (some) for RISC-V
+<ul>
+<li>these regs cannot be written in user mode.</li>
+<li>in machine modes, similar set of regs are used -&gt; only for timer interrputs.</li>
+</ul>
+</li>
+</ul>
+<p><img src="../images/6S081/trapregs.png" alt=""></p>
+<ul>
+<li>
+<p>Steps when trap happens <strong>in hardware!!!</strong></p>
+<ol>
+<li>If the trap is device interrupt, clear SIE bit and do nothing following.</li>
+<li>Disable interrupts, i.e. clear the SIE bit in <em>sstatus</em></li>
+<li>Copy pc to sepc</li>
+<li>Save current permission (user or supervisor) in SPP</li>
+<li>Set scause</li>
+<li>Set mode to supervisor</li>
+<li>Copy stvec to pc</li>
+<li>Start executing at new pc</li>
+</ol>
+<ul>
+<li>The CPU does not switch to kernel pgtbl, does not switch to kernel stack, does not save any regs <strong>other than pc</strong>, which means <strong>all these jobs are done by kernel software!!!</strong></li>
+</ul>
+</li>
+<li>
+<p>This gives more flexibility to kernel software</p>
+</li>
+<li>
+<p>pc is always saved and changed because, if pc is not changed but the permission is changed from user to supervisor, a user process could run user commands in supervisor privilege, which is very dangerous.</p>
+</li>
+</ul>
+<hr>
+<h2 id="Traps-from-user-space"><a class="header-anchor" href="#Traps-from-user-space">¶</a>Traps from user space</h2>
+<p>Cases:</p>
+<ul>
+<li>ecall</li>
+<li>does sth illeagl</li>
+<li>device interrupts</li>
+</ul>
+<p>Highlevel path:</p>
+<ul>
+<li>uservec(trampoline.S:16) -&gt; usertrap(trap.c:37) -&gt; usertrapret(trap.c:90) -&gt; userret(trampoline.S:88)</li>
+</ul>
+<p><strong>The trampoline page does the magic.</strong></p>
+<ul>
+<li>The pc that stvec contains must have a mapping in all user pagetables!
+<ul>
+<li>Because the hardware does not change the pgtbl</li>
+</ul>
+</li>
+<li>After that, the handling code switch the pgtbl to kernel pgtbl, and in order to continue executing, the handler code must be mapped also in kernel page table!</li>
+<li><strong>The trampoline page(PTE_U set) is in both kernel pgtbl and every process’ pgtbl, containing the handler codes!</strong></li>
+</ul>
+<h3 id="uservec"><a class="header-anchor" href="#uservec">¶</a>uservec</h3>
+<p><em>sscratch</em> reg helps to store process regs!</p>
+<ul>
+<li>process’ regs need to be stored somewhere in memory. And to store the memory, a register is needed to store the address! (no <strong>general-perpose reg</strong> offered in RISC-V)</li>
+<li><em>sscratch</em> does the magic!
+<ul>
+<li>
+<pre><code class="language-asm">csrrw a0, sscratch, a0 # swap the content
+</code></pre>
+</li>
+</ul>
+now uservec has <strong>a0</strong> to play with!</li>
+</ul>
+<h4 id="store-the-regs"><a class="header-anchor" href="#store-the-regs">¶</a>store the regs!</h4>
+]]></content>
+      <categories>
+        <category>operating system</category>
+      </categories>
+      <tags>
+        <tag>6.S081</tag>
+      </tags>
   </entry>
 </search>
