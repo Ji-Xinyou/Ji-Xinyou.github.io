@@ -558,4 +558,151 @@ You probably already notice why, because the <strong>pointer is actually a addre
         <tag>detail</tag>
       </tags>
   </entry>
+  <entry>
+    <title>6.S081 lec6: Traps</title>
+    <url>/2022/01/29/6-S081-lec6-Traps/</url>
+    <content><![CDATA[<style>
+img{
+    width: 80%;
+}
+</style>
+<h1>6.S081 lec6: Traps</h1>
+<p>From user space to kernel space</p>
+<ul>
+<li>Hardware state
+<ul>
+<li>32 general-purpose regs
+<ul>
+<li>saved entirely</li>
+<li>sp needs to be modifies later</li>
+</ul>
+</li>
+<li>pc, mode, satp
+<ul>
+<li>pc needs to be saved, mode needs to be set</li>
+<li><strong>needs to be changed to kernel pgtbl</strong>, user pgtbl does not have the mapping for kernel data</li>
+</ul>
+</li>
+<li>stvec
+<ul>
+<li>point to entry of trap</li>
+</ul>
+</li>
+<li>sepc
+<ul>
+<li>save pc when trap</li>
+</ul>
+</li>
+<li>sscratch
+<ul>
+<li>“tmp” usage reg when trap</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="Supervisor-mode"><a class="header-anchor" href="#Supervisor-mode">¶</a>Supervisor mode</h2>
+<ul>
+<li>R/W Control regs
+<ul>
+<li>satp, stvec, sepc, sscratch</li>
+</ul>
+</li>
+<li>use PTEs that don’t have the PTE_U flag set</li>
+</ul>
+<p>supervisor mode can’t do everything</p>
+<ul>
+<li>e.g. It is forced to go through pgtbl as well.</li>
+</ul>
+<hr>
+<h2 id="Shell-calls-to-write"><a class="header-anchor" href="#Shell-calls-to-write">¶</a>Shell calls to write()</h2>
+<ul>
+<li>high level path<br>
+<img src="../images/6S081/shwrite.png" alt=""></li>
+</ul>
+<h3 id="gdb-debugging-the-code"><a class="header-anchor" href="#gdb-debugging-the-code">¶</a>gdb debugging the code</h3>
+<ul>
+<li>In qemu-gdb, <code>^A + C</code> will get into qemu monitor
+<ul>
+<li>info mem will print the pgtbl<br>
+<img src="../images/6S081/pgtblofsh.png" alt=""></li>
+</ul>
+</li>
+<li>text page, data page, guard page(no PTE_U bit), stack page, TRAPFRAME page and TRAMPOLINE page</li>
+</ul>
+<hr>
+<p>After the kernel runs <strong>ecall</strong>, this is called by <strong>write()</strong>(in usys.S)<br>
+<strong>ecall does three things</strong></p>
+<ul>
+<li>saves <code>pc</code> to <code>sepc</code></li>
+<li>changes mode to <code>supervisor</code></li>
+<li>jump to <code>stvec</code></li>
+</ul>
+<h4 id="enters-uservec"><a class="header-anchor" href="#enters-uservec">¶</a>enters uservec()</h4>
+<ul>
+<li>pc -&gt; TRAMPOLINE page
+<ul>
+<li>the registers are the original one, cannot be modifies <strong>until we have saved them</strong></li>
+<li>save a0 to sscratch, save sscratch to a0
+<ul>
+<li>a0 now <strong>points at TRAPFRAME</strong></li>
+<li>sscratch saves a0</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>Since ecall does not switch pgtbl, the first instructions of trap needs to present in every user’s pagetable. (By the TRAMPOLINE page)</p>
+<ul>
+<li>controlled by <em>stvec</em>
+<ul>
+<li><strong>before entering userspace, kernel</strong> set it to 0x3ffffff000 (TRAMPOLINE)</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p><strong>OK! After ecall, we jump to stvec’s address, entering uservec()! Prepare for it.</strong></p>
+<hr>
+<h4 id="in-uservec"><a class="header-anchor" href="#in-uservec">¶</a>in uservec()</h4>
+<p><strong>TRAPFRAME page</strong></p>
+<ul>
+<li><strong>32 slots + some interesting values</strong>
+<ul>
+<li><strong>kernel_satp, kernel_sp, kernel_trap, epc, kernel_hartid</strong>
+<ul>
+<li>There are <strong>previously setup</strong> by kernel when mapping trapframe for each process.</li>
+</ul>
+</li>
+<li>32 slots is to save register when trapping</li>
+</ul>
+</li>
+<li><strong>before entering userspace, kernel</strong> puts the address of the trapframe in sscratch.
+<ul>
+<li>since we swapped, sscratch and a0, now a0 points at the trapframe</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">(gdb) print/x $a0</span><br><span class="line">$1 = 0x3fffffe000 # trapframe addr, used to be in sscratch</span><br><span class="line"></span><br><span class="line">(gdb) print/x $sscratch</span><br><span class="line">$2 = 0x2 # first argument of write() syscall, which is the fd 2</span><br></pre></td></tr></table></figure>
+<p>from info above, we know that the kernel_satp, sp, trap, epc, hartid are set by kernel <strong>previously</strong></p>
+<p>so in <strong>uservec()</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">...</span><br><span class="line">ld sp, 8(a0)</span><br><span class="line">ld tp, 32(a0) # core_nr: hartid</span><br><span class="line">ld t0, 16(a0) # address of usertrap()</span><br><span class="line">ld t1, 0(a0)  # pgtbl addr of kernel</span><br><span class="line"></span><br><span class="line">csrw satp, t1 # from now on, the va are interpretted by kernel pgtbl</span><br><span class="line">sfence.vma zero, zero</span><br><span class="line"></span><br><span class="line">jr t0         # jump to usertrap()</span><br></pre></td></tr></table></figure>
+<h5 id="One-last-thing"><a class="header-anchor" href="#One-last-thing">¶</a>One last thing!</h5>
+<p>Why don’t we crash!<br>
+<strong>pc is holding some va, and we switched pgtbl from user’s to kernel’s</strong><br>
+Why the next instuction is correctly executed instead of some garbage being run.</p>
+<p><strong>This is because the va of TRAMPOLINE is THE SAME in userspace and kernel space!!! It is in 0x3ffffff000.</strong></p>
+<p>This is so damn important, always keep this in mind!</p>
+<hr>
+<p><strong>OK! WE ARE NOW EXITING FROM uservec(), GOING INTO usertrap()</strong></p>
+<hr>
+<h4 id="in-usertrap-C-code"><a class="header-anchor" href="#in-usertrap-C-code">¶</a>in usertrap() (C code)</h4>
+]]></content>
+      <categories>
+        <category>O/S</category>
+      </categories>
+      <tags>
+        <tag>6.S081</tag>
+      </tags>
+  </entry>
 </search>
