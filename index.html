@@ -224,7 +224,7 @@
               <span class="post-meta-item-text">Posted on</span>
               
 
-              <time title="Created: 2022-01-29 00:13:46 / Modified: 02:54:14" itemprop="dateCreated datePublished" datetime="2022-01-29T00:13:46+08:00">2022-01-29</time>
+              <time title="Created: 2022-01-29 00:13:46 / Modified: 03:00:19" itemprop="dateCreated datePublished" datetime="2022-01-29T00:13:46+08:00">2022-01-29</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -397,6 +397,22 @@ Why the next instuction is correctly executed instead of some garbage being run.
 <p><strong>OK! WE ARE NOW EXITING FROM uservec(), GOING INTO usertrap()</strong></p>
 <hr>
 <h4 id="in-usertrap-C-code"><a class="header-anchor" href="#in-usertrap-C-code">¶</a>in usertrap() (C code)</h4>
+<hr>
+<h3 id="IMPORTANT-THINGS-TO-FIGURE-OUT"><a class="header-anchor" href="#IMPORTANT-THINGS-TO-FIGURE-OUT">¶</a>IMPORTANT THINGS TO FIGURE OUT</h3>
+<ol>
+<li>
+<p><strong>Why do we need TRAMPOLINE page</strong></p>
+<p>I think this is because, when we trap from userspace, we are using user’s pgtbl. To <strong>run the code helping us jump into kernel space</strong>, we need this code text be mapped in every user process’ pgtbl. And this is the TRAMPOLINE page.</p>
+</li>
+</ol>
+<hr>
+<ol start="2">
+<li>
+<p><strong>Why do we need TRAPFRAME page</strong></p>
+<p>I think this is because, when we enter the trampoline page, we are still in user’s va space. However, we need to save the user’s registers. <strong>Given the context that, first we are using user’s mapping, and second we gotta save the registers</strong>, we need some space mapped in user process’ pgtbl to save them. And this is the TRAPFRAME page.</p>
+</li>
+</ol>
+<hr>
 
       
     </div>
