@@ -18,6 +18,7 @@ img{
 <li><strong>Callee Saved</strong> registers are reserved across function calls. The caller has to find someway to save those registers.</li>
 </ul>
 <hr>
+<span id="more"></span>
 <h2 id="the-Stack"><a class="header-anchor" href="#the-Stack">¶</a>the Stack</h2>
 <ul>
 <li>The stack is created by function call! <strong>Each function call creates a stack frame for itself to use.</strong></li>
@@ -177,6 +178,7 @@ img{
 <li>exception</li>
 <li>device interrupt</li>
 </ul>
+<span id="more"></span>
 <p>Trap stages (4 in total)</p>
 <ul>
 <li>hardware actions (from CPU)</li>
@@ -424,6 +426,7 @@ so both can use trapframe.</li>
     <url>/2022/01/28/Set-up-gdb-in-macOS/</url>
     <content><![CDATA[<h1>How to setup gdb in macOS</h1>
 <p><a href="https://zhuanlan.zhihu.com/p/68398728">referencelink-zhihu</a></p>
+<span id="more"></span>
 <h2 id="Step1-install-gdb"><a class="header-anchor" href="#Step1-install-gdb">¶</a>Step1: install gdb</h2>
 <figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">brew install gdb</span><br></pre></td></tr></table></figure>
 <p>The gdb executable is in /usr/local/bin/gdb</p>
@@ -477,8 +480,9 @@ so both can use trapframe.</li>
     <url>/2022/01/28/Some-tricky-things-about-char-and-error-prone-string-ops-in-C/</url>
     <content><![CDATA[<h1>detailed error-prone things in C (1st)</h1>
 <hr>
-<p>As we all know, in C programming language, functions in <em>string.h</em> is very error-prone! In this post, I show something that might be in your way when you are manipulating string functions.</p>
+<p>As we all know, in C programming language, functions in <em>string.h</em> is very error-prone! In this post, I show something that might be in your way when you are using C.</p>
 <hr>
+<span id="more"></span>
 <h2 id="static-keyword"><a class="header-anchor" href="#static-keyword">¶</a>static keyword</h2>
 <p>prologue about initialized value:</p>
 <ul>
@@ -568,6 +572,7 @@ img{
 </style>
 <h1>6.S081 lec6: Traps</h1>
 <p>From user space to kernel space</p>
+<span id="more"></span>
 <ul>
 <li>Hardware state
 <ul>

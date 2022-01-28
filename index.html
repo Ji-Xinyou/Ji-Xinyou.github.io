@@ -224,7 +224,7 @@
               <span class="post-meta-item-text">Posted on</span>
               
 
-              <time title="Created: 2022-01-29 00:13:46 / Modified: 03:00:19" itemprop="dateCreated datePublished" datetime="2022-01-29T00:13:46+08:00">2022-01-29</time>
+              <time title="Created: 2022-01-29 00:13:46 / Modified: 03:03:43" itemprop="dateCreated datePublished" datetime="2022-01-29T00:13:46+08:00">2022-01-29</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -268,152 +268,14 @@ img{
 </style>
 <h1>6.S081 lec6: Traps</h1>
 <p>From user space to kernel space</p>
-<ul>
-<li>Hardware state
-<ul>
-<li>32 general-purpose regs
-<ul>
-<li>saved entirely</li>
-<li>sp needs to be modifies later</li>
-</ul>
-</li>
-<li>pc, mode, satp
-<ul>
-<li>pc needs to be saved, mode needs to be set</li>
-<li><strong>needs to be changed to kernel pgtbl</strong>, user pgtbl does not have the mapping for kernel data</li>
-</ul>
-</li>
-<li>stvec
-<ul>
-<li>point to entry of trap</li>
-</ul>
-</li>
-<li>sepc
-<ul>
-<li>save pc when trap</li>
-</ul>
-</li>
-<li>sscratch
-<ul>
-<li>“tmp” usage reg when trap</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<hr>
-<h2 id="Supervisor-mode"><a class="header-anchor" href="#Supervisor-mode">¶</a>Supervisor mode</h2>
-<ul>
-<li>R/W Control regs
-<ul>
-<li>satp, stvec, sepc, sscratch</li>
-</ul>
-</li>
-<li>use PTEs that don’t have the PTE_U flag set</li>
-</ul>
-<p>supervisor mode can’t do everything</p>
-<ul>
-<li>e.g. It is forced to go through pgtbl as well.</li>
-</ul>
-<hr>
-<h2 id="Shell-calls-to-write"><a class="header-anchor" href="#Shell-calls-to-write">¶</a>Shell calls to write()</h2>
-<ul>
-<li>high level path<br>
-<img src="../images/6S081/shwrite.png" alt=""></li>
-</ul>
-<h3 id="gdb-debugging-the-code"><a class="header-anchor" href="#gdb-debugging-the-code">¶</a>gdb debugging the code</h3>
-<ul>
-<li>In qemu-gdb, <code>^A + C</code> will get into qemu monitor
-<ul>
-<li>info mem will print the pgtbl<br>
-<img src="../images/6S081/pgtblofsh.png" alt=""></li>
-</ul>
-</li>
-<li>text page, data page, guard page(no PTE_U bit), stack page, TRAPFRAME page and TRAMPOLINE page</li>
-</ul>
-<hr>
-<p>After the kernel runs <strong>ecall</strong>, this is called by <strong>write()</strong>(in usys.S)<br>
-<strong>ecall does three things</strong></p>
-<ul>
-<li>saves <code>pc</code> to <code>sepc</code></li>
-<li>changes mode to <code>supervisor</code></li>
-<li>jump to <code>stvec</code></li>
-</ul>
-<h4 id="enters-uservec"><a class="header-anchor" href="#enters-uservec">¶</a>enters uservec()</h4>
-<ul>
-<li>pc -&gt; TRAMPOLINE page
-<ul>
-<li>the registers are the original one, cannot be modifies <strong>until we have saved them</strong></li>
-<li>save a0 to sscratch, save sscratch to a0
-<ul>
-<li>a0 now <strong>points at TRAPFRAME</strong></li>
-<li>sscratch saves a0</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<p>Since ecall does not switch pgtbl, the first instructions of trap needs to present in every user’s pagetable. (By the TRAMPOLINE page)</p>
-<ul>
-<li>controlled by <em>stvec</em>
-<ul>
-<li><strong>before entering userspace, kernel</strong> set it to 0x3ffffff000 (TRAMPOLINE)</li>
-</ul>
-</li>
-</ul>
-<hr>
-<p><strong>OK! After ecall, we jump to stvec’s address, entering uservec()! Prepare for it.</strong></p>
-<hr>
-<h4 id="in-uservec"><a class="header-anchor" href="#in-uservec">¶</a>in uservec()</h4>
-<p><strong>TRAPFRAME page</strong></p>
-<ul>
-<li><strong>32 slots + some interesting values</strong>
-<ul>
-<li><strong>kernel_satp, kernel_sp, kernel_trap, epc, kernel_hartid</strong>
-<ul>
-<li>There are <strong>previously setup</strong> by kernel when mapping trapframe for each process.</li>
-</ul>
-</li>
-<li>32 slots is to save register when trapping</li>
-</ul>
-</li>
-<li><strong>before entering userspace, kernel</strong> puts the address of the trapframe in sscratch.
-<ul>
-<li>since we swapped, sscratch and a0, now a0 points at the trapframe</li>
-</ul>
-</li>
-</ul>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">(gdb) print/x $a0</span><br><span class="line">$1 = 0x3fffffe000 # trapframe addr, used to be in sscratch</span><br><span class="line"></span><br><span class="line">(gdb) print/x $sscratch</span><br><span class="line">$2 = 0x2 # first argument of write() syscall, which is the fd 2</span><br></pre></td></tr></table></figure>
-<p>from info above, we know that the kernel_satp, sp, trap, epc, hartid are set by kernel <strong>previously</strong></p>
-<p>so in <strong>uservec()</strong></p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line">ld sp, 8(a0)</span><br><span class="line">ld tp, 32(a0) # core_nr: hartid</span><br><span class="line">ld t0, 16(a0) # address of usertrap()</span><br><span class="line">ld t1, 0(a0)  # pgtbl addr of kernel</span><br><span class="line"></span><br><span class="line">csrw satp, t1 # from now on, the va are interpretted by kernel pgtbl</span><br><span class="line">sfence.vma zero, zero</span><br><span class="line"></span><br><span class="line">jr t0         # jump to usertrap()</span><br></pre></td></tr></table></figure>
-<h5 id="One-last-thing"><a class="header-anchor" href="#One-last-thing">¶</a>One last thing!</h5>
-<p>Why don’t we crash!<br>
-<strong>pc is holding some va, and we switched pgtbl from user’s to kernel’s</strong><br>
-Why the next instuction is correctly executed instead of some garbage being run.</p>
-<p><strong>This is because the va of TRAMPOLINE is THE SAME in userspace and kernel space!!! It is in 0x3ffffff000.</strong></p>
-<p>This is so damn important, always keep this in mind!</p>
-<hr>
-<p><strong>OK! WE ARE NOW EXITING FROM uservec(), GOING INTO usertrap()</strong></p>
-<hr>
-<h4 id="in-usertrap-C-code"><a class="header-anchor" href="#in-usertrap-C-code">¶</a>in usertrap() (C code)</h4>
-<hr>
-<h3 id="IMPORTANT-THINGS-TO-FIGURE-OUT"><a class="header-anchor" href="#IMPORTANT-THINGS-TO-FIGURE-OUT">¶</a>IMPORTANT THINGS TO FIGURE OUT</h3>
-<ol>
-<li>
-<p><strong>Why do we need TRAMPOLINE page</strong></p>
-<p>I think this is because, when we trap from userspace, we are using user’s pgtbl. To <strong>run the code helping us jump into kernel space</strong>, we need this code text be mapped in every user process’ pgtbl. And this is the TRAMPOLINE page.</p>
-</li>
-</ol>
-<hr>
-<ol start="2">
-<li>
-<p><strong>Why do we need TRAPFRAME page</strong></p>
-<p>I think this is because, when we enter the trampoline page, we are still in user’s va space. However, we need to save the user’s registers. <strong>Given the context that, first we are using user’s mapping, and second we gotta save the registers</strong>, we need some space mapped in user process’ pgtbl to save them. And this is the TRAPFRAME page.</p>
-</li>
-</ol>
-<hr>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2022/01/29/6-S081-lec6-Traps/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -455,10 +317,16 @@ Why the next instuction is correctly executed instead of some garbage being run.
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
-              
 
-              <time title="Created: 2022-01-28 20:31:29 / Modified: 22:47:14" itemprop="dateCreated datePublished" datetime="2022-01-28T20:31:29+08:00">2022-01-28</time>
+              <time title="Created: 2022-01-28 20:31:29" itemprop="dateCreated datePublished" datetime="2022-01-28T20:31:29+08:00">2022-01-28</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2022-01-29 03:04:32" itemprop="dateModified" datetime="2022-01-29T03:04:32+08:00">2022-01-29</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -496,47 +364,14 @@ Why the next instuction is correctly executed instead of some garbage being run.
       
           <h1>How to setup gdb in macOS</h1>
 <p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/68398728">referencelink-zhihu</a></p>
-<h2 id="Step1-install-gdb"><a class="header-anchor" href="#Step1-install-gdb">¶</a>Step1: install gdb</h2>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">brew install gdb</span><br></pre></td></tr></table></figure>
-<p>The gdb executable is in /usr/local/bin/gdb</p>
-<p><strong>GDB is not plug-and-play in macOS, it needs setup since macOS does not allow debugger to debug codes. macOS does not want its kernel be debugged</strong></p>
-<h2 id="Step2-setup-certificate"><a class="header-anchor" href="#Step2-setup-certificate">¶</a>Step2: setup certificate</h2>
-<ul>
-<li>
-<p><code>cmd + space</code> open spotline, and type <code>keychain access</code></p>
-</li>
-<li>
-<p>In upper-left menu, select <code>certificate assistant -&gt; create a certificate</code></p>
-</li>
-<li>
-<p>name it <code>gdb-cert</code> or what ever you like</p>
-<ul>
-<li>Identity Type: Self Signed Root</li>
-<li>Certificate Type: Code Signing</li>
-</ul>
-</li>
-<li>
-<p>Continue ahead, until <code>position of certificate (select system)</code></p>
-</li>
-<li>
-<p>double-click the certificate, <code>Trust -&gt; When using this certificate -&gt; Always Trust</code></p>
-</li>
-</ul>
-<h2 id="Step3-in-terminal"><a class="header-anchor" href="#Step3-in-terminal">¶</a>Step3: in terminal</h2>
-<ul>
-<li>create a file named <code>gdb-entitlement.xml</code></li>
-</ul>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span></span><br><span class="line"><span class="meta">&lt;!DOCTYPE <span class="meta-keyword">plist</span> <span class="meta-keyword">PUBLIC</span> <span class="meta-string">&quot;-//Apple//DTD PLIST 1.0//EN&quot;</span> <span class="meta-string">&quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">plist</span> <span class="attr">version</span>=<span class="string">&quot;1.0&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dict</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">key</span>&gt;</span>com.apple.security.cs.debugger<span class="tag">&lt;/<span class="name">key</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">true</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dict</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">plist</span>&gt;</span></span><br></pre></td></tr></table></figure>
-<ul>
-<li>open the terminal
-<ul>
-<li><code>codesign --entitlements gdb-entitlement.xml -fs gdb-cert /usr/loacl/bin/gdb</code></li>
-<li><code>echo &quot;set startup-with-shell off&quot; &gt;&gt; ~/.gdbinit</code></li>
-</ul>
-</li>
-</ul>
-<p><strong>You are all set! Enjoy gdb!</strong></p>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2022/01/28/Set-up-gdb-in-macOS/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -578,10 +413,16 @@ Why the next instuction is correctly executed instead of some garbage being run.
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
-              
 
-              <time title="Created: 2022-01-28 20:03:38 / Modified: 22:31:06" itemprop="dateCreated datePublished" datetime="2022-01-28T20:03:38+08:00">2022-01-28</time>
+              <time title="Created: 2022-01-28 20:03:38" itemprop="dateCreated datePublished" datetime="2022-01-28T20:03:38+08:00">2022-01-28</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2022-01-29 03:04:54" itemprop="dateModified" datetime="2022-01-29T03:04:54+08:00">2022-01-29</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -619,80 +460,16 @@ Why the next instuction is correctly executed instead of some garbage being run.
       
           <h1>detailed error-prone things in C (1st)</h1>
 <hr>
-<p>As we all know, in C programming language, functions in <em>string.h</em> is very error-prone! In this post, I show something that might be in your way when you are manipulating string functions.</p>
+<p>As we all know, in C programming language, functions in <em>string.h</em> is very error-prone! In this post, I show something that might be in your way when you are using C.</p>
 <hr>
-<h2 id="static-keyword"><a class="header-anchor" href="#static-keyword">¶</a>static keyword</h2>
-<p>prologue about initialized value:</p>
-<ul>
-<li>global or static
-<ul>
-<li>allocated in static field
-<ul>
-<li>live with process and is 0</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>local and not static
-<ul>
-<li>on stackframe -&gt; random</li>
-</ul>
-</li>
-</ul>
-<h4 id="static-on-local-variable"><a class="header-anchor" href="#static-on-local-variable">¶</a>static on local variable</h4>
-<p>the static local variable declared in a function is <strong>initialized when the process started, and always initialized to 0</strong>, not <strong>when function is called</strong>.</p>
-<p>the static local variable resides at the beginning of process’s address space (static field), and <strong>only destructed when process exists</strong></p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">function</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">int</span> foo; <span class="comment">// static variable are initialized to zero</span></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;call %d\n&quot;</span>, foo++);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span></span></span><br><span class="line"><span class="function"><span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; <span class="number">3</span>; ++i)</span><br><span class="line">        function();</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">outputs: </span><br><span class="line">call <span class="number">0</span></span><br><span class="line">call <span class="number">1</span></span><br><span class="line">call <span class="number">2</span></span><br></pre></td></tr></table></figure>
-<h4 id="static-on-global-variable"><a class="header-anchor" href="#static-on-global-variable">¶</a>static on global variable</h4>
-<p>global variable itself is saved in static field, so <em>static</em> keyword does not change its position in memory.</p>
-<p>However, it restricts its link-attribute. The global variable declared with <em>static</em> <strong>can only be accessed by the files which included the file where the variable is declared</strong></p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// a.h</span></span><br><span class="line"><span class="meta"># <span class="meta-keyword">pragma</span> once</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">int</span> a = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// b.h</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;a.h&quot;</span></span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">func</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;%d\n&quot;</span>, a);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// a.c</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;a.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;b.h&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span></span></span><br><span class="line"><span class="function"><span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    func();</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;%d\n&quot;</span>, a);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">outputs:</span><br><span class="line"><span class="number">2</span></span><br><span class="line"><span class="number">2</span></span><br></pre></td></tr></table></figure>
-<h4 id="static-on-function"><a class="header-anchor" href="#static-on-function">¶</a>static on function</h4>
-<p>function declared with <em>static</em>, <strong>can only be accessed by the file which defines it</strong></p>
-<p>That is, you have to declare and implement the static function within one file.</p>
-<hr>
-<h2 id="string-literals-very-error-prone"><a class="header-anchor" href="#string-literals-very-error-prone">¶</a>string literals (very error-prone!!!)</h2>
-<p><a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/5717176/bus-error-while-running-a-simple-string-c-program">StackoverFlow-String literal problems</a></p>
-<p>Check out the code here (error code)</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span></span></span><br><span class="line"><span class="function"><span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">char</span> *s = <span class="string">&quot;this is &quot;</span>;</span><br><span class="line">    <span class="keyword">char</span> *s1 = <span class="string">&quot;me&quot;</span>;  </span><br><span class="line">    <span class="built_in">strcat</span>(s,s1); </span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;%s&quot;</span>,s);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line">output: bus error in MACOS</span><br></pre></td></tr></table></figure>
-<p>Why there is an error, the code seems to be fine!</p>
-<p>This is because string in this form <code>&quot;this is &quot;</code>, is a <strong>string literal</strong>.</p>
-<p>The string literal is allocated at the program startup and held until the program exits. The <strong>key problem</strong> is, the places where string literal resides <strong>may or may not be writable</strong>, so modify a string literal is a <strong>undefined behavior</strong>.</p>
-<p>This part of code has two problems.</p>
-<ul>
-<li>
-<p>Buffer overflow</p>
-<ul>
-<li>s has length 9, s1 has length 3. And the code is trying to write 11 character in a 9 character buffer.</li>
-</ul>
-</li>
-<li>
-<p>The string literal is not writable</p>
-</li>
-</ul>
-<p>The right way to do this is to <strong>copy the literal onto the stackframe</strong></p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">char</span> *s = <span class="string">&quot;this is &quot;</span>;</span><br><span class="line"><span class="keyword">char</span> *s1 = <span class="string">&quot;me&quot;</span>;</span><br><span class="line"><span class="keyword">char</span> target[<span class="built_in">strlen</span>(s) + <span class="built_in">strlen</span>(s1) + <span class="number">1</span>];</span><br><span class="line"></span><br><span class="line"><span class="built_in">strcpy</span>(target, s);</span><br><span class="line"><span class="built_in">strcat</span>(target, s1);</span><br><span class="line"><span class="comment">// or sprintf(target, &quot;%s%s&quot;, s, s1);</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// The recommended way (on heap)</span></span><br><span class="line"><span class="keyword">char</span> *target = <span class="built_in">malloc</span>(<span class="built_in">strlen</span>(s) + <span class="built_in">strlen</span>(s1) + <span class="number">1</span>);</span><br><span class="line">...</span><br><span class="line"><span class="built_in">free</span>(target);</span><br></pre></td></tr></table></figure>
-<hr>
-<h2 id="sizeof"><a class="header-anchor" href="#sizeof">¶</a>sizeof()</h2>
-<p>sizeof is a very error-prone function! The value of sizeof is determined when <strong>compiling, or runtime</strong>.</p>
-<p>One of the most problematic things about <em>sizeof()</em> is <code>sizeof(&lt;some_ptr&gt;)</code>, here are some examples.</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">char</span>* p = <span class="string">&quot;Hello world&quot;</span></span><br><span class="line"><span class="built_in">printf</span>(<span class="string">&quot;%lu&quot;</span>, <span class="keyword">sizeof</span>(p))</span><br></pre></td></tr></table></figure>
-<p>The output will be 8 in 64-bit word machines and 4 in 32-bit word machines.<br>
-You probably already notice why, because the <strong>pointer is actually a address!</strong>. And in a 64-bit word machines, addresses are 8-byte long.</p>
-<h3 id="sizeof-ptr-and-sizeof-array"><a class="header-anchor" href="#sizeof-ptr-and-sizeof-array">¶</a>sizeof(ptr) and sizeof(array)</h3>
-<p>Please notice the difference between <code>sizeof(&lt;some_array&gt;)</code> and <code>sizeof(&lt;some_ptr&gt;)</code></p>
-<p>The code below will show clearly the difference</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">bar</span><span class="params">(<span class="keyword">char</span> f[<span class="number">3</span>])</span> </span>&#123;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;%lu\n&quot;</span>, <span class="keyword">sizeof</span>(f));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span></span></span><br><span class="line"><span class="function"><span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">char</span> foo[<span class="number">3</span>];</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;%lu\n&quot;</span>, <span class="keyword">sizeof</span>(foo)); <span class="comment">// 3</span></span><br><span class="line">	bar(foo);                     <span class="comment">// 8</span></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>In the first <code>sizeof(foo)</code>, the compiler knows the array is three-elem long, so the value is 3.</p>
-<p>In the second sizeof(f), the compiler treats the <code>f</code> as a pointer. This is because when we pass an array to a function, we are actually passing the first-elem’s address of the array (i.e. a pointer).</p>
-<h3 id="sizeof-struct"><a class="header-anchor" href="#sizeof-struct">¶</a>sizeof(struct)</h3>
-<p>when using sizeof() on a struct, it returns the actual space occupied by the structure.</p>
-<p>In C, the struct are <strong>aligned</strong>.</p>
-<p>For example, assume this is on a <strong>32bit word machine</strong></p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">mystruct</span> &#123;</span></span><br><span class="line">    <span class="keyword">char</span> c1;</span><br><span class="line">    <span class="keyword">int</span>  i1;</span><br><span class="line">    <span class="keyword">char</span> c2;</span><br><span class="line">&#125; s1;</span><br><span class="line"></span><br><span class="line"><span class="built_in">printf</span>(<span class="string">&quot;%lu&quot;</span>, <span class="keyword">sizeof</span>(s1));</span><br></pre></td></tr></table></figure>
-<p>This will print <code>12</code>, because <code>c1</code> itself occupies a word, i1 occupies the next and c2 occupies the next. So in total three words (12 bytes) are occupies by s1.</p>
-<hr>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2022/01/28/Some-tricky-things-about-char-and-error-prone-string-ops-in-C/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -734,10 +511,16 @@ You probably already notice why, because the <strong>pointer is actually a addre
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
-              
 
-              <time title="Created: 2022-01-28 01:01:28 / Modified: 16:29:55" itemprop="dateCreated datePublished" datetime="2022-01-28T01:01:28+08:00">2022-01-28</time>
+              <time title="Created: 2022-01-28 01:01:28" itemprop="dateCreated datePublished" datetime="2022-01-28T01:01:28+08:00">2022-01-28</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2022-01-29 03:05:08" itemprop="dateModified" datetime="2022-01-29T03:05:08+08:00">2022-01-29</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -787,241 +570,14 @@ img{
 <li>exception</li>
 <li>device interrupt</li>
 </ul>
-<p>Trap stages (4 in total)</p>
-<ul>
-<li>hardware actions (from CPU)</li>
-<li>assembly instructions, to prepare the way for kernel C code (<strong>called vector</strong>)</li>
-<li>C function to handle the trap (<strong>called handler</strong>)</li>
-<li>system call/device driver service routine</li>
-</ul>
-<p>It is convenient to have separate code for different paths</p>
-<ul>
-<li>from user space</li>
-<li>from kernel space</li>
-<li>timer interrupts</li>
-</ul>
-<hr>
-<h2 id="RISC-V-trap-machiery"><a class="header-anchor" href="#RISC-V-trap-machiery">¶</a>RISC-V trap machiery</h2>
-<ul>
-<li>Control regs (some) for RISC-V
-<ul>
-<li>these regs cannot be written in user mode.</li>
-<li>in machine modes, similar set of regs are used -&gt; only for timer interrputs.</li>
-</ul>
-</li>
-</ul>
-<p><img src="../images/6S081/trapregs.png" alt=""></p>
-<ul>
-<li>
-<p>Steps when trap happens <strong>in hardware!!!</strong></p>
-<ol>
-<li>If the trap is device interrupt, clear SIE bit and do nothing following.</li>
-<li>Disable interrupts, i.e. clear the SIE bit in <em>sstatus</em></li>
-<li>Copy pc to sepc</li>
-<li>Save current permission (user or supervisor) in SPP</li>
-<li>Set scause</li>
-<li>Set mode to supervisor</li>
-<li>Copy stvec to pc</li>
-<li>Start executing at new pc</li>
-</ol>
-<ul>
-<li>The CPU does not switch to kernel pgtbl, does not switch to kernel stack, does not save any regs <strong>other than pc</strong>, which means <strong>all these jobs are done by kernel software!!!</strong></li>
-</ul>
-</li>
-<li>
-<p>This gives more flexibility to kernel software</p>
-</li>
-<li>
-<p>pc is always saved and changed because, if pc is not changed but the permission is changed from user to supervisor, a user process could run user commands in supervisor privilege, which is very dangerous.</p>
-</li>
-</ul>
-<hr>
-<h2 id="Traps-from-user-space"><a class="header-anchor" href="#Traps-from-user-space">¶</a>Traps from user space</h2>
-<p>Cases:</p>
-<ul>
-<li>ecall</li>
-<li>does sth illeagl</li>
-<li>device interrupts</li>
-</ul>
-<p>Highlevel path:</p>
-<ul>
-<li>uservec(trampoline.S:16) -&gt; usertrap(trap.c:37) -&gt; usertrapret(trap.c:90) -&gt; userret(trampoline.S:88)</li>
-</ul>
-<p><strong>The trampoline page does the magic.</strong></p>
-<ul>
-<li>The pc that stvec contains must have a mapping in all user pagetables!
-<ul>
-<li>Because the hardware does not change the pgtbl</li>
-</ul>
-</li>
-<li>After that, the handling code switch the pgtbl to kernel pgtbl, and in order to continue executing, the handler code must be mapped also in kernel page table!</li>
-<li><strong>The trampoline page(PTE_U set) is in both kernel pgtbl and every process’ pgtbl, containing the handler codes!</strong></li>
-</ul>
-<hr>
-<h3 id="uservec-in-process-pgtbl"><a class="header-anchor" href="#uservec-in-process-pgtbl">¶</a>uservec (in process pgtbl)</h3>
-<p><em>sscratch</em> reg helps to store process regs!</p>
-<ul>
-<li>process’ regs need to be stored somewhere in memory. And to store the memory, a register is needed to store the address! (no <strong>general-perpose reg</strong> offered in RISC-V)</li>
-<li><em>sscratch</em> does the magic! <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">csrrw a0, sscratch, a0 # swap the content</span><br></pre></td></tr></table></figure>
-now uservec has <strong>a0</strong> to play with!</li>
-</ul>
-<h4 id="store-the-regs"><a class="header-anchor" href="#store-the-regs">¶</a>store the regs!</h4>
-<p>Before entering user space, kernel <strong>set sscratch to point to a per-process trapframe, which is also mapped in user space pgtbl</strong></p>
-<ul>
-<li>For user process, the trapframe is high in address space.</li>
-<li>For kernel, the trapframe is in p-&gt;trapframe, pointing at its physical address.<br>
-so both can use trapframe.</li>
-</ul>
-<p><strong>Now a0 points to the current process’s trapframe, and all regs are saved in the trapframe</strong></p>
-<p>After saving, the <em>uservec</em> retrives the address of kernel pgtbl, address of <em>usertrap()</em> and call it.</p>
-<hr>
-<h2 id="usertrap-in-kernel-pgtbl"><a class="header-anchor" href="#usertrap-in-kernel-pgtbl">¶</a>usertrap (in kernel pgtbl)</h2>
-<p>job: determine the cause of the trap(ecall?interrupt?exception?) -&gt; process it -&gt; return</p>
-<ol>
-<li>we now in kernel space, set <em>stvec</em> to <em>kernelvec</em>. So the trap in kernel will be handled in kernelvec, rather than in uservec</li>
-<li>save the sepc (previously saved user’s pc). This is because <em>usertrap()</em> might call <em>yield()</em>(caused by timer interrupt) to switch to another process’s kernel thread, in whichi the sepc might be modified.</li>
-</ol>
-<p>Three cases of trap:</p>
-<ul>
-<li>systemcall(ecall)
-<ul>
-<li>call syscall to handle it</li>
-</ul>
-</li>
-<li>dev interrupt
-<ul>
-<li>call devintr</li>
-</ul>
-</li>
-<li>otherwise (exception)
-<ul>
-<li>kill the process</li>
-</ul>
-</li>
-</ul>
-<p>After handling, <em>usertrap()</em> checks</p>
-<ol>
-<li>whether the process is killed</li>
-<li>whether the process should yield the CPU</li>
-</ol>
-<p>Then, <strong>call usertrapret()</strong></p>
-<hr>
-<h2 id="usertrapret"><a class="header-anchor" href="#usertrapret">¶</a>usertrapret()</h2>
-<p>sets up the RISC-V control regs to prepare for a future trap from user space.</p>
-<ol>
-<li>changing stvec to usertrap()</li>
-<li>setting sepc to previously saved user pc</li>
-<li>calls userret() on the trampoline page</li>
-</ol>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">uint64 fn = TRAMPOLINE + (userret - trampoline)</span><br><span class="line">((<span class="keyword">void</span> (*)(uint64, uint64))fn)(TRAPFRAME, satp)</span><br></pre></td></tr></table></figure>
-<p>The code <strong>casts</strong> fn to a function pointer, pointing at a function which has a void return value and two uint64 arguments.</p>
-<p>The fn is the entry address of the function, namely the entry address of userret in trampoline.</p>
-<p>To be more clear, the TRAMPOLINE is the <strong>start address of Trampoline page</strong>, and we need to add the offset of userret(). The offset is userret - trampoline, externly declared as two char arrays.</p>
-<hr>
-<h2 id="userret"><a class="header-anchor" href="#userret">¶</a>userret()</h2>
-<p>From usertrapret(), two arguments TRAPFRAME and satp are in register <strong>a0 and a1</strong>.</p>
-<p>using <code>csrw satp, a1</code>, userret() restores the user pgtbl.</p>
-<p>Then it</p>
-<ol>
-<li>save the saved user a0 in sscratch <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ld t0, 112(a0)    # save a0(contains return value of syscall for example) to t0</span><br><span class="line">csrw sscratch, t0 # save t0 to sscratch</span><br></pre></td></tr></table></figure>
-<ol>
-<li>note that now <strong>a0 contains the address of the user’s TRAPFRAME</strong></li>
-</ol>
-</li>
-<li>restore all registers but a0</li>
-<li>swap the a0 and sscratch <code>csrrw a0, sscratch, a0</code>
-<ol>
-<li>after this, <em><strong>a0 contains original user’s a0, sscratch contains the address of TRAPFRAME</strong></em></li>
-</ol>
-</li>
-<li>call <code>sret</code> to return to user space.</li>
-</ol>
-<hr>
-<h3 id="Details-of-system-call"><a class="header-anchor" href="#Details-of-system-call">¶</a>Details of system call</h3>
-<h4 id="procedures"><a class="header-anchor" href="#procedures">¶</a>procedures</h4>
-<p>initcode.S invokes <em>exec</em> system call, we start from here.</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"># Initial process that execs /init.</span><br><span class="line"># This code runs in user space.</span><br><span class="line"></span><br><span class="line">#include &quot;syscall.h&quot;</span><br><span class="line"></span><br><span class="line"># exec(init, argv)</span><br><span class="line">.globl start</span><br><span class="line">start:</span><br><span class="line">        la a0, init</span><br><span class="line">        la a1, argv</span><br><span class="line">        li a7, SYS_exec</span><br><span class="line">        ecall</span><br><span class="line"></span><br><span class="line"># for(;;) exit();</span><br><span class="line">exit:</span><br><span class="line">        li a7, SYS_exit</span><br><span class="line">        ecall</span><br><span class="line">        jal exit</span><br><span class="line"></span><br><span class="line"># char init[] = &quot;/init\0&quot;;</span><br><span class="line">init:</span><br><span class="line">  .string &quot;/init\0&quot;</span><br><span class="line"></span><br><span class="line"># char *argv[] = &#123; init, 0 &#125;;</span><br><span class="line">.p2align 2</span><br><span class="line">argv:</span><br><span class="line">  .long init</span><br><span class="line">  .long 0</span><br></pre></td></tr></table></figure>
-<ul>
-<li>initcode.S places arguments of exec in <strong>a0 and a1</strong>, and puts the system call number in <strong>a7</strong></li>
-<li>then the <em>ecall</em> instruction cause the O/S to trap into <em>uservec()</em>
-<ul>
-<li>Recap: the uservec stores the registers in TRAPFRAME, change to kernel pgtbl and jump to usertrap()</li>
-</ul>
-</li>
-<li>then the uservec calls usertrap(), the usertrap calls syscall()
-<ul>
-<li>from a7, knows which syscall to run</li>
-<li>from a0 and a1 knows the argc and argv</li>
-</ul>
-</li>
-<li>after sys_exec returns, p-&gt;trapframe-&gt;a0 has the return value</li>
-<li>In userret(), the trapframe-&gt;a0 is restored to actual a0, as return value.</li>
-</ul>
-<h4 id="syscall-arguments"><a class="header-anchor" href="#syscall-arguments">¶</a>syscall arguments</h4>
-<p>In userspace, user calls the wrapper function of syscalls.</p>
-<p>When in kernel space, the kernel needs to find the arguments in where they reside -&gt; registers.</p>
-<ul>
-<li>Through <em>argint, argaddr, argfd</em>, kernel finds n’th syscall argument <strong>from TRAPFRAME</strong> as int, ptr, fd. They all call <em>argraw</em>, retrieving the trapframe regs.</li>
-</ul>
-<p><strong>Another Problem</strong></p>
-<ul>
-<li>The argument may be malicious, not pointing to its own memory</li>
-<li>kernel pgtbl are not the same as user pgtbl, so kernel cannot use directly user-supplied addr.</li>
-</ul>
-<p><strong>Solution</strong>:</p>
-<ul>
-<li>kernel impl functions safely transfer data <strong>to and from</strong> user-supplied addresses</li>
-<li>for example:
-<ul>
-<li><em>copyinstr() (vm.c:398)</em> copies <em>max</em> bytes to <em>dst</em> from <em>va srcva</em> in <strong>user’s pagetable</strong>.
-<ul>
-<li>Since user’s pgtbl is not current, <em>copyinstr()</em> use walkaddr() to look up the user’s va in user’s pgtbl
-<ul>
-<li>the function call yields the pa</li>
-<li>the function call checks the va is part of the process’s address space</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>copyout() is similar</li>
-</ul>
-</li>
-</ul>
-<p><strong>To wrapup, the kernel implements <em>copyin(), copyout(), etc.</em>, to safely uses the user-supplied address.</strong></p>
-<hr>
-<h2 id="Traps-from-kernel-space"><a class="header-anchor" href="#Traps-from-kernel-space">¶</a>Traps from kernel space</h2>
-<p>When traps happen in kernel space, <em>stvec</em> is already pointing at <em>kernelvec()</em>, so the pgtbl does not need to be changed.</p>
-<ul>
-<li><em>kernelvec()</em>
-<ul>
-<li>saves the registers on the kernel stack</li>
-<li>jumps to <em>kerneltrap()</em> (trap.c:134)
-<ul>
-<li>type1: dev interrupt
-<ul>
-<li>devintr()</li>
-</ul>
-</li>
-<li>type2: exceptions
-<ul>
-<li>panic()</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>restores the registers, and call <em>sret</em>
-<ul>
-<li>which copies sepc to pc</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<h3 id="stvec-and-interrupts"><a class="header-anchor" href="#stvec-and-interrupts">¶</a>stvec and interrupts</h3>
-<p>When trap comes from userspace, <em>usertrap()</em> sets stvec to <em>kernelvec()</em>. But there is a window of time when the kernel has started executed, but stvec is still set to uservec.</p>
-<p>At this time, no dev interrupt should happen, so RISC-V always disable interrupts when trap happens, and xv6 does not enable them again <strong>until after it sets <em>stvec</em></strong></p>
-<hr>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2022/01/28/xv6book-chap4-traps-and-syscall/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -1071,7 +627,7 @@ so both can use trapframe.</li>
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2022-01-28 13:43:36" itemprop="dateModified" datetime="2022-01-28T13:43:36+08:00">2022-01-28</time>
+                <time title="Modified: 2022-01-29 03:04:20" itemprop="dateModified" datetime="2022-01-29T03:04:20+08:00">2022-01-29</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1123,101 +679,14 @@ img{
 <li><strong>Callee Saved</strong> registers are reserved across function calls. The caller has to find someway to save those registers.</li>
 </ul>
 <hr>
-<h2 id="the-Stack"><a class="header-anchor" href="#the-Stack">¶</a>the Stack</h2>
-<ul>
-<li>The stack is created by function call! <strong>Each function call creates a stack frame for itself to use.</strong></li>
-<li>The stack starts from high address, growes down to low address. To make a new stack frame, decrement sp register.</li>
-<li>The stack size is <strong>not fixed</strong>, pay attention to the layout.
-<ul>
-<li>The return address is always at the first word
-<ul>
-<li>
-<pre><code class="language-asm">  addi sp, sp, 16 # alloc stack frame
-  sd ra, 0(sp)    # store the return address
-  ...
-  ld ra, 0(sp)    # recover the return address
-  addi sp, sp, 16 # delete the stack frame
-</code></pre>
-<ul>
-<li>This also shows that why $ra is a <strong>callee saved</strong> register.</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>The Prev. Frame address is always next to return address, to control frame callback.</li>
-</ul>
-</li>
-</ul>
-<p><img src="../images/6S081/stack.png" alt=""></p>
-<hr>
-<h2 id="GDB-commands"><a class="header-anchor" href="#GDB-commands">¶</a>GDB commands</h2>
-<ul>
-<li>
-<p><strong>To open the gdb mode of xv6</strong></p>
-<ul>
-<li>In one window type <strong>make qemu-gdb</strong> to start the gdb server</li>
-<li>In another window type <strong>riscv-unknown-elf-gdb</strong> to connect to the previous gdb server and start debugging!<br>
-<br/></li>
-</ul>
-</li>
-<li>
-<p><strong>layout split/asm/reg/src</strong></p>
-<ul>
-<li>-&gt; show the layout of (asm &amp; src)/asm/reg/ src</li>
-<li><strong>focus reg/asm</strong>…
-<ul>
-<li>-&gt; change the focus among windows<br>
-<br/></li>
-</ul>
-</li>
-</ul>
-</li>
-<li>
-<p><strong>info</strong></p>
-<ul>
-<li><strong>info breakpoints</strong>
-<ul>
-<li>-&gt; check the number of bp</li>
-</ul>
-</li>
-<li><strong>info frame</strong>
-<ul>
-<li>-&gt; check the info of current stack frame (frame 0)</li>
-<li><strong>backtrace (bt)</strong>
-<ul>
-<li>frame x -&gt; info frame
-<ul>
-<li>-&gt; change current frame to <strong>x</strong> and print the info<br>
-<br/></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>
-<p><strong>tui enable</strong></p>
-<ul>
-<li>show the tui<br>
-<br/></li>
-</ul>
-</li>
-<li>
-<p><strong>breakpoint/watchpoint &lt;tag&gt;</strong></p>
-<ul>
-<li><strong>delete &lt;bp_nr&gt;</strong></li>
-<li>info breakpoints/watchpoints<br>
-<br/></li>
-</ul>
-</li>
-<li>
-<p><strong>s &amp; si</strong> (step instruction)</p>
-</li>
-</ul>
-<hr>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2022/01/27/6-S081-lec5-RISCV-calling-conventions/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
