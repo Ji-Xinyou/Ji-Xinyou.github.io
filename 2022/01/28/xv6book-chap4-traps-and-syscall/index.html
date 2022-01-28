@@ -29,7 +29,7 @@
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://jerryji.site/2022/01/28/images/6S081/trapregs.png">
 <meta property="article:published_time" content="2022-01-27T17:01:28.000Z">
-<meta property="article:modified_time" content="2022-01-27T18:36:00.875Z">
+<meta property="article:modified_time" content="2022-01-28T06:22:52.176Z">
 <meta property="article:author" content="Ji-Xinyou(Jerry)">
 <meta property="article:tag" content="6.S081">
 <meta name="twitter:card" content="summary">
@@ -229,7 +229,7 @@
               <span class="post-meta-item-text">Posted on</span>
               
 
-              <time title="Created: 2022-01-28 01:01:28 / Modified: 02:36:00" itemprop="dateCreated datePublished" datetime="2022-01-28T01:01:28+08:00">2022-01-28</time>
+              <time title="Created: 2022-01-28 01:01:28 / Modified: 14:22:52" itemprop="dateCreated datePublished" datetime="2022-01-28T01:01:28+08:00">2022-01-28</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -237,7 +237,7 @@
               </span>
               <span class="post-meta-item-text">In</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/operating-system/" itemprop="url" rel="index"><span itemprop="name">operating system</span></a>
+                  <a href="/categories/O-S/" itemprop="url" rel="index"><span itemprop="name">O/S</span></a>
                 </span>
             </span>
 
@@ -357,7 +357,7 @@ img{
 <li>After that, the handling code switch the pgtbl to kernel pgtbl, and in order to continue executing, the handler code must be mapped also in kernel page table!</li>
 <li><strong>The trampoline page(PTE_U set) is in both kernel pgtbl and every process’ pgtbl, containing the handler codes!</strong></li>
 </ul>
-<h3 id="uservec"><a class="header-anchor" href="#uservec">¶</a>uservec</h3>
+<h3 id="uservec-in-process-pgtbl"><a class="header-anchor" href="#uservec-in-process-pgtbl">¶</a>uservec (in process pgtbl)</h3>
 <p><em>sscratch</em> reg helps to store process regs!</p>
 <ul>
 <li>process’ regs need to be stored somewhere in memory. And to store the memory, a register is needed to store the address! (no <strong>general-perpose reg</strong> offered in RISC-V)</li>
@@ -365,12 +365,40 @@ img{
 <ul>
 <li>
 <pre><code class="language-asm">csrrw a0, sscratch, a0 # swap the content
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line">  now uservec has **a0** to play with!</span><br><span class="line"></span><br><span class="line">#### store the regs!</span><br><span class="line">Before entering user space, kernel **set sscratch to point to a per-process trapframe, which is also mapped in user space pgtbl**</span><br><span class="line">* For user process, the trapframe is high in address space.</span><br><span class="line">* For kernel, the trapframe is in p-&gt;trapframe, pointing at its physical address.</span><br><span class="line">so both can use trapframe.</span><br><span class="line"></span><br><span class="line">**Now a0 points to the current process&#x27;s trapframe, and all regs are saved in the trapframe**</span><br><span class="line"></span><br><span class="line">After saving, the *uservec* retrives the address of kernel pgtbl, address of *usertrap()* and call it.</span><br><span class="line"></span><br><span class="line">---</span><br><span class="line"></span><br><span class="line">## usertrap (in kernel pgtbl)</span><br><span class="line"></span><br><span class="line">job: determine the cause of the trap(ecall?interrupt?exception?) -&gt; process it -&gt; return</span><br><span class="line"></span><br><span class="line">1. we now in kernel space, set *stvec* to *kernelvec*. So the trap in kernel will be handled in kernelvec, rather than in uservec</span><br><span class="line">2. save the sepc (previously saved user&#x27;s pc). This is because *usertrap()* might call *yield()*(caused by timer interrupt) to switch to another process&#x27;s kernel thread, in whichi the sepc might be modified.</span><br><span class="line">   </span><br><span class="line">Three cases of trap:</span><br><span class="line">* systemcall(ecall)</span><br><span class="line">  * call syscall to handle it</span><br><span class="line">* dev interrupt</span><br><span class="line">  * call devintr</span><br><span class="line">* otherwise (exception)</span><br><span class="line">  * kill the process</span><br><span class="line"></span><br><span class="line">After handling, *usertrap()* checks</span><br><span class="line">1. whether the process is killed</span><br><span class="line">2. whether the process should yield the CPU</span><br><span class="line"></span><br><span class="line">Then, **call usertrapret()**</span><br><span class="line"></span><br><span class="line">---</span><br><span class="line"></span><br><span class="line">## usertrapret()</span><br><span class="line">sets up the RISC-V control regs to prepare for a future trap from user space.</span><br><span class="line">1. changing stvec to usertrap()</span><br><span class="line">2. setting sepc to previously saved user pc</span><br><span class="line">3. calls userret() on the trampoline page</span><br><span class="line"></span><br><span class="line">```c</span><br><span class="line">uint64 fn = TRAMPOLINE + (userret - trampoline)</span><br><span class="line">((void (*)(uint64, uint64))fn)(TRAPFRAME, satp)</span><br></pre></td></tr></table></figure>
+
 </code></pre>
 </li>
 </ul>
-now uservec has <strong>a0</strong> to play with!</li>
+</li>
 </ul>
-<h4 id="store-the-regs"><a class="header-anchor" href="#store-the-regs">¶</a>store the regs!</h4>
+<p>The code <strong>casts</strong> fn to a function pointer, pointing at a function which has a void return value and two uint64 arguments.</p>
+<p>The fn is the entry address of the function, namely the entry address of userret in trampoline.</p>
+<p>To be more clear, the TRAMPOLINE is the <strong>start address of Trampoline page</strong>, and we need to add the offset of userret(). The offset is userret - trampoline, externly declared as two char arrays.</p>
+<hr>
+<h2 id="userret"><a class="header-anchor" href="#userret">¶</a>userret()</h2>
+<p>From usertrapret(), two arguments TRAPFRAME and satp are in register <strong>a0 and a1</strong>.</p>
+<p>using <code>csrw satp, a1</code>, userret() restores the user pgtbl.</p>
+<p>Then it</p>
+<ol>
+<li>save the saved user a0 in sscratch
+<ol>
+<li>
+<pre><code>ld t0, 112(a0)    # save original a0 to t0
+csrw sscratch, t0 # save t0 to sscratch
+</code></pre>
+</li>
+<li>note that now <strong>a0 contains the address of the user’s TRAPFRAME</strong></li>
+</ol>
+</li>
+<li>restore all registers but a0</li>
+<li>swap the a0 and sscratch <code>csrrw a0, sscratch, a0</code>
+<ol>
+<li>after this, *<em>a0 contains original user’s a0, sscratch contains the address of TRAPFRAME</em></li>
+</ol>
+</li>
+<li>call <code>sret</code> to return to user space.</li>
+</ol>
 
     </div>
 
@@ -452,7 +480,7 @@ now uservec has <strong>a0</strong> to play with!</li>
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">xv6 book - Traps and syscall</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Trap"><span class="nav-number">1.1.</span> <span class="nav-text">Trap</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RISC-V-trap-machiery"><span class="nav-number">1.2.</span> <span class="nav-text">RISC-V trap machiery</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Traps-from-user-space"><span class="nav-number">1.3.</span> <span class="nav-text">Traps from user space</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#uservec"><span class="nav-number">1.3.1.</span> <span class="nav-text">uservec</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#store-the-regs"><span class="nav-number">1.3.1.1.</span> <span class="nav-text">store the regs!</span></a></li></ol></li></ol></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">xv6 book - Traps and syscall</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Trap"><span class="nav-number">1.1.</span> <span class="nav-text">Trap</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RISC-V-trap-machiery"><span class="nav-number">1.2.</span> <span class="nav-text">RISC-V trap machiery</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Traps-from-user-space"><span class="nav-number">1.3.</span> <span class="nav-text">Traps from user space</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#uservec-in-process-pgtbl"><span class="nav-number">1.3.1.</span> <span class="nav-text">uservec (in process pgtbl)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#userret"><span class="nav-number">1.4.</span> <span class="nav-text">userret()</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -475,7 +503,7 @@ now uservec has <strong>a0</strong> to play with!</li>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-count">1</span>
         <span class="site-state-item-name">categories</span></a>
       </div>
       <div class="site-state-item site-state-tags">
