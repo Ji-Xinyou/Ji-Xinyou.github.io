@@ -251,17 +251,58 @@ img{
 <p><em>sscratch</em> reg helps to store process regs!</p>
 <ul>
 <li>process’ regs need to be stored somewhere in memory. And to store the memory, a register is needed to store the address! (no <strong>general-perpose reg</strong> offered in RISC-V)</li>
-<li><em>sscratch</em> does the magic!
+<li><em>sscratch</em> does the magic! <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">csrrw a0, sscratch, a0 # swap the content</span><br></pre></td></tr></table></figure>
+now uservec has <strong>a0</strong> to play with!</li>
+</ul>
+<h4 id="store-the-regs"><a class="header-anchor" href="#store-the-regs">¶</a>store the regs!</h4>
+<p>Before entering user space, kernel <strong>set sscratch to point to a per-process trapframe, which is also mapped in user space pgtbl</strong></p>
 <ul>
-<li>
-<pre><code class="language-asm">csrrw a0, sscratch, a0 # swap the content
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">  now uservec has **a0** to play with!</span><br><span class="line"></span><br><span class="line">#### store the regs!</span><br><span class="line">Before entering user space, kernel **set sscratch to point to a per-process trapframe, which is also mapped in user space pgtbl**</span><br><span class="line">* For user process, the trapframe is high in address space.</span><br><span class="line">* For kernel, the trapframe is in p-&gt;trapframe, pointing at its physical address.</span><br><span class="line">so both can use trapframe.</span><br><span class="line"></span><br><span class="line">**Now a0 points to the current process&#x27;s trapframe, and all regs are saved in the trapframe**</span><br><span class="line"></span><br><span class="line">After saving, the *uservec* retrives the address of kernel pgtbl, address of *usertrap()* and call it.</span><br><span class="line"></span><br><span class="line">---</span><br><span class="line"></span><br><span class="line">## usertrap (in kernel pgtbl)</span><br><span class="line"></span><br><span class="line">job: determine the cause of the trap(ecall?interrupt?exception?) -&gt; process it -&gt; return</span><br><span class="line"></span><br><span class="line">1. we now in kernel space, set *stvec* to *kernelvec*. So the trap in kernel will be handled in kernelvec, rather than in uservec</span><br><span class="line">2. save the sepc (previously saved user&#x27;s pc). This is because *usertrap()* might call *yield()*(caused by timer interrupt) to switch to another process&#x27;s kernel thread, in whichi the sepc might be modified.</span><br><span class="line">   </span><br><span class="line">Three cases of trap:</span><br><span class="line">* systemcall(ecall)</span><br><span class="line">  * call syscall to handle it</span><br><span class="line">* dev interrupt</span><br><span class="line">  * call devintr</span><br><span class="line">* otherwise (exception)</span><br><span class="line">  * kill the process</span><br><span class="line"></span><br><span class="line">After handling, *usertrap()* checks</span><br><span class="line">1. whether the process is killed</span><br><span class="line">2. whether the process should yield the CPU</span><br><span class="line"></span><br><span class="line">Then, **call usertrapret()**</span><br><span class="line"></span><br><span class="line">---</span><br><span class="line"></span><br><span class="line">## usertrapret()</span><br><span class="line">sets up the RISC-V control regs to prepare for a future trap from user space.</span><br><span class="line">1. changing stvec to usertrap()</span><br><span class="line">2. setting sepc to previously saved user pc</span><br><span class="line">3. calls userret() on the trampoline page</span><br><span class="line"></span><br><span class="line">```c</span><br><span class="line">uint64 fn = TRAMPOLINE + (userret - trampoline)</span><br><span class="line">((void (*)(uint64, uint64))fn)(TRAPFRAME, satp)</span><br></pre></td></tr></table></figure>
-
-</code></pre>
+<li>For user process, the trapframe is high in address space.</li>
+<li>For kernel, the trapframe is in p-&gt;trapframe, pointing at its physical address.<br>
+so both can use trapframe.</li>
+</ul>
+<p><strong>Now a0 points to the current process’s trapframe, and all regs are saved in the trapframe</strong></p>
+<p>After saving, the <em>uservec</em> retrives the address of kernel pgtbl, address of <em>usertrap()</em> and call it.</p>
+<hr>
+<h2 id="usertrap-in-kernel-pgtbl"><a class="header-anchor" href="#usertrap-in-kernel-pgtbl">¶</a>usertrap (in kernel pgtbl)</h2>
+<p>job: determine the cause of the trap(ecall?interrupt?exception?) -&gt; process it -&gt; return</p>
+<ol>
+<li>we now in kernel space, set <em>stvec</em> to <em>kernelvec</em>. So the trap in kernel will be handled in kernelvec, rather than in uservec</li>
+<li>save the sepc (previously saved user’s pc). This is because <em>usertrap()</em> might call <em>yield()</em>(caused by timer interrupt) to switch to another process’s kernel thread, in whichi the sepc might be modified.</li>
+</ol>
+<p>Three cases of trap:</p>
+<ul>
+<li>systemcall(ecall)
+<ul>
+<li>call syscall to handle it</li>
+</ul>
 </li>
+<li>dev interrupt
+<ul>
+<li>call devintr</li>
+</ul>
+</li>
+<li>otherwise (exception)
+<ul>
+<li>kill the process</li>
 </ul>
 </li>
 </ul>
+<p>After handling, <em>usertrap()</em> checks</p>
+<ol>
+<li>whether the process is killed</li>
+<li>whether the process should yield the CPU</li>
+</ol>
+<p>Then, <strong>call usertrapret()</strong></p>
+<hr>
+<h2 id="usertrapret"><a class="header-anchor" href="#usertrapret">¶</a>usertrapret()</h2>
+<p>sets up the RISC-V control regs to prepare for a future trap from user space.</p>
+<ol>
+<li>changing stvec to usertrap()</li>
+<li>setting sepc to previously saved user pc</li>
+<li>calls userret() on the trampoline page</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">uint64 fn = TRAMPOLINE + (userret - trampoline)</span><br><span class="line">((<span class="keyword">void</span> (*)(uint64, uint64))fn)(TRAPFRAME, satp)</span><br></pre></td></tr></table></figure>
 <p>The code <strong>casts</strong> fn to a function pointer, pointing at a function which has a void return value and two uint64 arguments.</p>
 <p>The fn is the entry address of the function, namely the entry address of userret in trampoline.</p>
 <p>To be more clear, the TRAMPOLINE is the <strong>start address of Trampoline page</strong>, and we need to add the offset of userret(). The offset is userret - trampoline, externly declared as two char arrays.</p>
@@ -271,24 +312,20 @@ img{
 <p>using <code>csrw satp, a1</code>, userret() restores the user pgtbl.</p>
 <p>Then it</p>
 <ol>
-<li>save the saved user a0 in sscratch
+<li>save the saved user a0 in sscratch <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ld t0, 112(a0)    # save original a0 to t0</span><br><span class="line">csrw sscratch, t0 # save t0 to sscratch</span><br></pre></td></tr></table></figure>
 <ol>
-<li>
-<pre><code>ld t0, 112(a0)    # save original a0 to t0
-csrw sscratch, t0 # save t0 to sscratch
-</code></pre>
-</li>
 <li>note that now <strong>a0 contains the address of the user’s TRAPFRAME</strong></li>
 </ol>
 </li>
 <li>restore all registers but a0</li>
 <li>swap the a0 and sscratch <code>csrrw a0, sscratch, a0</code>
 <ol>
-<li>after this, *<em>a0 contains original user’s a0, sscratch contains the address of TRAPFRAME</em></li>
+<li>after this, <em><strong>a0 contains original user’s a0, sscratch contains the address of TRAPFRAME</strong></em></li>
 </ol>
 </li>
 <li>call <code>sret</code> to return to user space.</li>
 </ol>
+<hr>
 ]]></content>
       <categories>
         <category>O/S</category>
