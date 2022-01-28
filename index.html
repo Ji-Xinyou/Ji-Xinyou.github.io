@@ -222,8 +222,18 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
+              
 
-              <time title="Created: 2022-01-28 20:31:29" itemprop="dateCreated datePublished" datetime="2022-01-28T20:31:29+08:00">2022-01-28</time>
+              <time title="Created: 2022-01-28 20:31:29 / Modified: 22:47:14" itemprop="dateCreated datePublished" datetime="2022-01-28T20:31:29+08:00">2022-01-28</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/C/" itemprop="url" rel="index"><span itemprop="name">C</span></a>
+                </span>
             </span>
 
           
@@ -251,7 +261,49 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          
+          <h1>How to setup gdb in macOS</h1>
+<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/68398728">referencelink-zhihu</a></p>
+<h2 id="Step1-install-gdb"><a class="header-anchor" href="#Step1-install-gdb">¶</a>Step1: install gdb</h2>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">brew install gdb</span><br></pre></td></tr></table></figure>
+<p>The gdb executable is in /usr/local/bin/gdb</p>
+<p><strong>GDB is not plug-and-play in macOS, it needs setup since macOS does not allow debugger to debug codes. macOS does not want its kernel be debugged</strong></p>
+<h2 id="Step2-setup-certificate"><a class="header-anchor" href="#Step2-setup-certificate">¶</a>Step2: setup certificate</h2>
+<ul>
+<li>
+<p><code>cmd + space</code> open spotline, and type <code>keychain access</code></p>
+</li>
+<li>
+<p>In upper-left menu, select <code>certificate assistant -&gt; create a certificate</code></p>
+</li>
+<li>
+<p>name it <code>gdb-cert</code> or what ever you like</p>
+<ul>
+<li>Identity Type: Self Signed Root</li>
+<li>Certificate Type: Code Signing</li>
+</ul>
+</li>
+<li>
+<p>Continue ahead, until <code>position of certificate (select system)</code></p>
+</li>
+<li>
+<p>double-click the certificate, <code>Trust -&gt; When using this certificate -&gt; Always Trust</code></p>
+</li>
+</ul>
+<h2 id="Step3-in-terminal"><a class="header-anchor" href="#Step3-in-terminal">¶</a>Step3: in terminal</h2>
+<ul>
+<li>create a file named <code>gdb-entitlement.xml</code></li>
+</ul>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span></span><br><span class="line"><span class="meta">&lt;!DOCTYPE <span class="meta-keyword">plist</span> <span class="meta-keyword">PUBLIC</span> <span class="meta-string">&quot;-//Apple//DTD PLIST 1.0//EN&quot;</span> <span class="meta-string">&quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">plist</span> <span class="attr">version</span>=<span class="string">&quot;1.0&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dict</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">key</span>&gt;</span>com.apple.security.cs.debugger<span class="tag">&lt;/<span class="name">key</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">true</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dict</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">plist</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>open the terminal
+<ul>
+<li><code>codesign --entitlements gdb-entitlement.xml -fs gdb-cert /usr/loacl/bin/gdb</code></li>
+<li><code>echo &quot;set startup-with-shell off&quot; &gt;&gt; ~/.gdbinit</code></li>
+</ul>
+</li>
+</ul>
+<p><strong>You are all set! Enjoy gdb!</strong></p>
+
       
     </div>
 
@@ -1135,7 +1187,7 @@ There are mainly <strong>3️⃣</strong> reasons for me to start the blog.</p>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-count">3</span>
         <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>

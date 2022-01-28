@@ -20,16 +20,17 @@
     var CONFIG = {"hostname":"jerryji.site","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":null,"activeClass":"valine"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="Lives should be diverse.">
+  <meta name="description" content="How to setup gdb in macOS referencelink-zhihu ¶Step1: install gdb 1brew install gdb The gdb executable is in &#x2F;usr&#x2F;local&#x2F;bin&#x2F;gdb GDB is not plug-and-play in macOS, it needs setup since macOS does not a">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Set up gdb in macOS">
 <meta property="og:url" content="https://jerryji.site/2022/01/28/Set-up-gdb-in-macOS/index.html">
 <meta property="og:site_name" content="Ji-Xinyou&#39;s page">
-<meta property="og:description" content="Lives should be diverse.">
+<meta property="og:description" content="How to setup gdb in macOS referencelink-zhihu ¶Step1: install gdb 1brew install gdb The gdb executable is in &#x2F;usr&#x2F;local&#x2F;bin&#x2F;gdb GDB is not plug-and-play in macOS, it needs setup since macOS does not a">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2022-01-28T12:31:29.000Z">
-<meta property="article:modified_time" content="2022-01-28T12:31:29.148Z">
+<meta property="article:modified_time" content="2022-01-28T14:47:14.844Z">
 <meta property="article:author" content="Ji-Xinyou(Jerry)">
+<meta property="article:tag" content="gdb">
 <meta name="twitter:card" content="summary">
 
 <link rel="canonical" href="https://jerryji.site/2022/01/28/Set-up-gdb-in-macOS/">
@@ -224,8 +225,18 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
+              
 
-              <time title="Created: 2022-01-28 20:31:29" itemprop="dateCreated datePublished" datetime="2022-01-28T20:31:29+08:00">2022-01-28</time>
+              <time title="Created: 2022-01-28 20:31:29 / Modified: 22:47:14" itemprop="dateCreated datePublished" datetime="2022-01-28T20:31:29+08:00">2022-01-28</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/C/" itemprop="url" rel="index"><span itemprop="name">C</span></a>
+                </span>
             </span>
 
           
@@ -260,7 +271,49 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        
+        <h1>How to setup gdb in macOS</h1>
+<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/68398728">referencelink-zhihu</a></p>
+<h2 id="Step1-install-gdb"><a class="header-anchor" href="#Step1-install-gdb">¶</a>Step1: install gdb</h2>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">brew install gdb</span><br></pre></td></tr></table></figure>
+<p>The gdb executable is in /usr/local/bin/gdb</p>
+<p><strong>GDB is not plug-and-play in macOS, it needs setup since macOS does not allow debugger to debug codes. macOS does not want its kernel be debugged</strong></p>
+<h2 id="Step2-setup-certificate"><a class="header-anchor" href="#Step2-setup-certificate">¶</a>Step2: setup certificate</h2>
+<ul>
+<li>
+<p><code>cmd + space</code> open spotline, and type <code>keychain access</code></p>
+</li>
+<li>
+<p>In upper-left menu, select <code>certificate assistant -&gt; create a certificate</code></p>
+</li>
+<li>
+<p>name it <code>gdb-cert</code> or what ever you like</p>
+<ul>
+<li>Identity Type: Self Signed Root</li>
+<li>Certificate Type: Code Signing</li>
+</ul>
+</li>
+<li>
+<p>Continue ahead, until <code>position of certificate (select system)</code></p>
+</li>
+<li>
+<p>double-click the certificate, <code>Trust -&gt; When using this certificate -&gt; Always Trust</code></p>
+</li>
+</ul>
+<h2 id="Step3-in-terminal"><a class="header-anchor" href="#Step3-in-terminal">¶</a>Step3: in terminal</h2>
+<ul>
+<li>create a file named <code>gdb-entitlement.xml</code></li>
+</ul>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span></span><br><span class="line"><span class="meta">&lt;!DOCTYPE <span class="meta-keyword">plist</span> <span class="meta-keyword">PUBLIC</span> <span class="meta-string">&quot;-//Apple//DTD PLIST 1.0//EN&quot;</span> <span class="meta-string">&quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">plist</span> <span class="attr">version</span>=<span class="string">&quot;1.0&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dict</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">key</span>&gt;</span>com.apple.security.cs.debugger<span class="tag">&lt;/<span class="name">key</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">true</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dict</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">plist</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>open the terminal
+<ul>
+<li><code>codesign --entitlements gdb-entitlement.xml -fs gdb-cert /usr/loacl/bin/gdb</code></li>
+<li><code>echo &quot;set startup-with-shell off&quot; &gt;&gt; ~/.gdbinit</code></li>
+</ul>
+</li>
+</ul>
+<p><strong>You are all set! Enjoy gdb!</strong></p>
+
     </div>
 
     
@@ -268,6 +321,9 @@
     
 
       <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/gdb/" rel="tag"># gdb</a>
+          </div>
 
         
 
@@ -338,6 +394,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">How to setup gdb in macOS</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Step1-install-gdb"><span class="nav-number">1.1.</span> <span class="nav-text">Step1: install gdb</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Step2-setup-certificate"><span class="nav-number">1.2.</span> <span class="nav-text">Step2: setup certificate</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Step3-in-terminal"><span class="nav-number">1.3.</span> <span class="nav-text">Step3: in terminal</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -366,7 +423,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-count">3</span>
         <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>
