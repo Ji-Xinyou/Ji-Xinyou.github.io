@@ -29,7 +29,7 @@
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://jerryji.site/2022/01/28/images/6S081/trapregs.png">
 <meta property="article:published_time" content="2022-01-27T17:01:28.000Z">
-<meta property="article:modified_time" content="2022-01-28T07:18:05.985Z">
+<meta property="article:modified_time" content="2022-01-28T08:29:55.224Z">
 <meta property="article:author" content="Ji-Xinyou(Jerry)">
 <meta property="article:tag" content="6.S081">
 <meta name="twitter:card" content="summary">
@@ -229,7 +229,7 @@
               <span class="post-meta-item-text">Posted on</span>
               
 
-              <time title="Created: 2022-01-28 01:01:28 / Modified: 15:18:05" itemprop="dateCreated datePublished" datetime="2022-01-28T01:01:28+08:00">2022-01-28</time>
+              <time title="Created: 2022-01-28 01:01:28 / Modified: 16:29:55" itemprop="dateCreated datePublished" datetime="2022-01-28T01:01:28+08:00">2022-01-28</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -490,6 +490,37 @@ so both can use trapframe.</li>
 <p><strong>To wrapup, the kernel implements <em>copyin(), copyout(), etc.</em>, to safely uses the user-supplied address.</strong></p>
 <hr>
 <h2 id="Traps-from-kernel-space"><a class="header-anchor" href="#Traps-from-kernel-space">¶</a>Traps from kernel space</h2>
+<p>When traps happen in kernel space, <em>stvec</em> is already pointing at <em>kernelvec()</em>, so the pgtbl does not need to be changed.</p>
+<ul>
+<li><em>kernelvec()</em>
+<ul>
+<li>saves the registers on the kernel stack</li>
+<li>jumps to <em>kerneltrap()</em> (trap.c:134)
+<ul>
+<li>type1: dev interrupt
+<ul>
+<li>devintr()</li>
+</ul>
+</li>
+<li>type2: exceptions
+<ul>
+<li>panic()</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>restores the registers, and call <em>sret</em>
+<ul>
+<li>which copies sepc to pc</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="stvec-and-interrupts"><a class="header-anchor" href="#stvec-and-interrupts">¶</a>stvec and interrupts</h3>
+<p>When trap comes from userspace, <em>usertrap()</em> sets stvec to <em>kernelvec()</em>. But there is a window of time when the kernel has started executed, but stvec is still set to uservec.</p>
+<p>At this time, no dev interrupt should happen, so RISC-V always disable interrupts when trap happens, and xv6 does not enable them again <strong>until after it sets <em>stvec</em></strong></p>
+<hr>
 
     </div>
 
@@ -511,7 +542,10 @@ so both can use trapframe.</li>
     <a href="/2022/01/27/6-S081-lec5-RISCV-calling-conventions/" rel="prev" title="6.S081 lec5: RISCV-calling conventions">
       <i class="fa fa-chevron-left"></i> 6.S081 lec5: RISCV-calling conventions
     </a></div>
-      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2022/01/28/Some-tricky-things-about-char-and-error-prone-string-ops-in-C/" rel="next" title="Some detailed things in C (1)">
+      Some detailed things in C (1) <i class="fa fa-chevron-right"></i>
+    </a></div>
     </div>
       </footer>
     
@@ -571,7 +605,7 @@ so both can use trapframe.</li>
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">xv6 book - Traps and syscall</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Trap"><span class="nav-number">1.1.</span> <span class="nav-text">Trap</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RISC-V-trap-machiery"><span class="nav-number">1.2.</span> <span class="nav-text">RISC-V trap machiery</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Traps-from-user-space"><span class="nav-number">1.3.</span> <span class="nav-text">Traps from user space</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#uservec-in-process-pgtbl"><span class="nav-number">1.3.1.</span> <span class="nav-text">uservec (in process pgtbl)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#store-the-regs"><span class="nav-number">1.3.1.1.</span> <span class="nav-text">store the regs!</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#usertrap-in-kernel-pgtbl"><span class="nav-number">1.4.</span> <span class="nav-text">usertrap (in kernel pgtbl)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#usertrapret"><span class="nav-number">1.5.</span> <span class="nav-text">usertrapret()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#userret"><span class="nav-number">1.6.</span> <span class="nav-text">userret()</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Details-of-system-call"><span class="nav-number">1.6.1.</span> <span class="nav-text">Details of system call</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#procedures"><span class="nav-number">1.6.1.1.</span> <span class="nav-text">procedures</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#syscall-arguments"><span class="nav-number">1.6.1.2.</span> <span class="nav-text">syscall arguments</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Traps-from-kernel-space"><span class="nav-number">1.7.</span> <span class="nav-text">Traps from kernel space</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">xv6 book - Traps and syscall</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Trap"><span class="nav-number">1.1.</span> <span class="nav-text">Trap</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RISC-V-trap-machiery"><span class="nav-number">1.2.</span> <span class="nav-text">RISC-V trap machiery</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Traps-from-user-space"><span class="nav-number">1.3.</span> <span class="nav-text">Traps from user space</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#uservec-in-process-pgtbl"><span class="nav-number">1.3.1.</span> <span class="nav-text">uservec (in process pgtbl)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#store-the-regs"><span class="nav-number">1.3.1.1.</span> <span class="nav-text">store the regs!</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#usertrap-in-kernel-pgtbl"><span class="nav-number">1.4.</span> <span class="nav-text">usertrap (in kernel pgtbl)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#usertrapret"><span class="nav-number">1.5.</span> <span class="nav-text">usertrapret()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#userret"><span class="nav-number">1.6.</span> <span class="nav-text">userret()</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Details-of-system-call"><span class="nav-number">1.6.1.</span> <span class="nav-text">Details of system call</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#procedures"><span class="nav-number">1.6.1.1.</span> <span class="nav-text">procedures</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#syscall-arguments"><span class="nav-number">1.6.1.2.</span> <span class="nav-text">syscall arguments</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Traps-from-kernel-space"><span class="nav-number">1.7.</span> <span class="nav-text">Traps from kernel space</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#stvec-and-interrupts"><span class="nav-number">1.7.1.</span> <span class="nav-text">stvec and interrupts</span></a></li></ol></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -587,20 +621,20 @@ so both can use trapframe.</li>
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">3</span>
+          <span class="site-state-item-count">5</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-count">2</span>
         <span class="site-state-item-name">categories</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-count">2</span>
         <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>

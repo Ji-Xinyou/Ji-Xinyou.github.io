@@ -20,30 +20,33 @@
     var CONFIG = {"hostname":"jerryji.site","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":null,"activeClass":"valine"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="Lives should be diverse.">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Ji-Xinyou&#39;s page">
-<meta property="og:url" content="https://jerryji.site/index.html">
+  <meta name="description" content="detailed error-prone things in C (1st)  As we all know, in C programming language, functions in string.h is very error-prone! In this post, I show something that might be in your way when you are mani">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Some detailed things in C (1)">
+<meta property="og:url" content="https://jerryji.site/2022/01/28/Some-tricky-things-about-char-and-error-prone-string-ops-in-C/index.html">
 <meta property="og:site_name" content="Ji-Xinyou&#39;s page">
-<meta property="og:description" content="Lives should be diverse.">
+<meta property="og:description" content="detailed error-prone things in C (1st)  As we all know, in C programming language, functions in string.h is very error-prone! In this post, I show something that might be in your way when you are mani">
 <meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2022-01-28T12:03:38.000Z">
+<meta property="article:modified_time" content="2022-01-28T14:28:45.460Z">
 <meta property="article:author" content="Ji-Xinyou(Jerry)">
+<meta property="article:tag" content="detail">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="https://jerryji.site/">
+<link rel="canonical" href="https://jerryji.site/2022/01/28/Some-tricky-things-about-char-and-error-prone-string-ops-in-C/">
 
 
 <script id="page-configurations">
   // https://hexo.io/docs/variables.html
   CONFIG.page = {
     sidebar: "",
-    isHome : true,
-    isPost : false,
+    isHome : false,
+    isPost : true,
     lang   : 'en'
   };
 </script>
 
-  <title>Ji-Xinyou's page</title>
+  <title>Some detailed things in C (1) | Ji-Xinyou's page</title>
   
 
 
@@ -193,80 +196,10 @@
         <div class="content-wrap">
           
 
-          <div class="content index posts-expand">
+          <div class="content post posts-expand">
             
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="https://jerryji.site/2022/01/28/Set-up-gdb-in-macOS/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avtdisney.JPG">
-      <meta itemprop="name" content="Ji-Xinyou(Jerry)">
-      <meta itemprop="description" content="Lives should be diverse.">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Ji-Xinyou's page">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/01/28/Set-up-gdb-in-macOS/" class="post-title-link" itemprop="url">Set up gdb in macOS</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2022-01-28 20:31:29" itemprop="dateCreated datePublished" datetime="2022-01-28T20:31:29+08:00">2022-01-28</time>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine: </span>
-    
-    <a title="valine" href="/2022/01/28/Set-up-gdb-in-macOS/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/01/28/Set-up-gdb-in-macOS/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
 
     
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
@@ -282,10 +215,9 @@
       <meta itemprop="name" content="Ji-Xinyou's page">
     </span>
       <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/01/28/Some-tricky-things-about-char-and-error-prone-string-ops-in-C/" class="post-title-link" itemprop="url">Some detailed things in C (1)</a>
-        </h2>
+        <h1 class="post-title" itemprop="name headline">
+          Some detailed things in C (1)
+        </h1>
 
         <div class="post-meta">
             <span class="post-meta-item">
@@ -308,6 +240,13 @@
             </span>
 
           
+            <span class="post-meta-item" title="Views" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">Views: </span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
   
   <span class="post-meta-item">
     
@@ -332,7 +271,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1>detailed error-prone things in C (1st)</h1>
+        <h1>detailed error-prone things in C (1st)</h1>
 <hr>
 <p>As we all know, in C programming language, functions in <em>string.h</em> is very error-prone! In this post, I show something that might be in your way when you are manipulating string functions.</p>
 <hr>
@@ -391,659 +330,43 @@ You probably already notice why, because the <strong>pointer is actually a addre
 <p>This will print <code>12</code>, because <code>c1</code> itself occupies a word, i1 occupies the next and c2 occupies the next. So in total three words (12 bytes) are occupies by s1.</p>
 <hr>
 
-      
     </div>
 
     
     
     
+
       <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
+          <div class="post-tags">
+              <a href="/tags/detail/" rel="tag"># detail</a>
+          </div>
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="https://jerryji.site/2022/01/28/xv6book-chap4-traps-and-syscall/">
+        
 
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avtdisney.JPG">
-      <meta itemprop="name" content="Ji-Xinyou(Jerry)">
-      <meta itemprop="description" content="Lives should be diverse.">
-    </span>
 
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Ji-Xinyou's page">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/01/28/xv6book-chap4-traps-and-syscall/" class="post-title-link" itemprop="url">xv6book-chap4: traps and syscall</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-              
-
-              <time title="Created: 2022-01-28 01:01:28 / Modified: 16:29:55" itemprop="dateCreated datePublished" datetime="2022-01-28T01:01:28+08:00">2022-01-28</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/O-S/" itemprop="url" rel="index"><span itemprop="name">O/S</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine: </span>
-    
-    <a title="valine" href="/2022/01/28/xv6book-chap4-traps-and-syscall/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/01/28/xv6book-chap4-traps-and-syscall/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1>xv6 book - Traps and syscall</h1>
-<hr>
-<style>
-img{
-    width: 60%;
-}
-</style>
-<h2 id="Trap"><a class="header-anchor" href="#Trap">¶</a>Trap</h2>
-<p>There are three events cause CPU to trap</p>
-<ul>
-<li>ecall</li>
-<li>exception</li>
-<li>device interrupt</li>
-</ul>
-<p>Trap stages (4 in total)</p>
-<ul>
-<li>hardware actions (from CPU)</li>
-<li>assembly instructions, to prepare the way for kernel C code (<strong>called vector</strong>)</li>
-<li>C function to handle the trap (<strong>called handler</strong>)</li>
-<li>system call/device driver service routine</li>
-</ul>
-<p>It is convenient to have separate code for different paths</p>
-<ul>
-<li>from user space</li>
-<li>from kernel space</li>
-<li>timer interrupts</li>
-</ul>
-<hr>
-<h2 id="RISC-V-trap-machiery"><a class="header-anchor" href="#RISC-V-trap-machiery">¶</a>RISC-V trap machiery</h2>
-<ul>
-<li>Control regs (some) for RISC-V
-<ul>
-<li>these regs cannot be written in user mode.</li>
-<li>in machine modes, similar set of regs are used -&gt; only for timer interrputs.</li>
-</ul>
-</li>
-</ul>
-<p><img src="../images/6S081/trapregs.png" alt=""></p>
-<ul>
-<li>
-<p>Steps when trap happens <strong>in hardware!!!</strong></p>
-<ol>
-<li>If the trap is device interrupt, clear SIE bit and do nothing following.</li>
-<li>Disable interrupts, i.e. clear the SIE bit in <em>sstatus</em></li>
-<li>Copy pc to sepc</li>
-<li>Save current permission (user or supervisor) in SPP</li>
-<li>Set scause</li>
-<li>Set mode to supervisor</li>
-<li>Copy stvec to pc</li>
-<li>Start executing at new pc</li>
-</ol>
-<ul>
-<li>The CPU does not switch to kernel pgtbl, does not switch to kernel stack, does not save any regs <strong>other than pc</strong>, which means <strong>all these jobs are done by kernel software!!!</strong></li>
-</ul>
-</li>
-<li>
-<p>This gives more flexibility to kernel software</p>
-</li>
-<li>
-<p>pc is always saved and changed because, if pc is not changed but the permission is changed from user to supervisor, a user process could run user commands in supervisor privilege, which is very dangerous.</p>
-</li>
-</ul>
-<hr>
-<h2 id="Traps-from-user-space"><a class="header-anchor" href="#Traps-from-user-space">¶</a>Traps from user space</h2>
-<p>Cases:</p>
-<ul>
-<li>ecall</li>
-<li>does sth illeagl</li>
-<li>device interrupts</li>
-</ul>
-<p>Highlevel path:</p>
-<ul>
-<li>uservec(trampoline.S:16) -&gt; usertrap(trap.c:37) -&gt; usertrapret(trap.c:90) -&gt; userret(trampoline.S:88)</li>
-</ul>
-<p><strong>The trampoline page does the magic.</strong></p>
-<ul>
-<li>The pc that stvec contains must have a mapping in all user pagetables!
-<ul>
-<li>Because the hardware does not change the pgtbl</li>
-</ul>
-</li>
-<li>After that, the handling code switch the pgtbl to kernel pgtbl, and in order to continue executing, the handler code must be mapped also in kernel page table!</li>
-<li><strong>The trampoline page(PTE_U set) is in both kernel pgtbl and every process’ pgtbl, containing the handler codes!</strong></li>
-</ul>
-<hr>
-<h3 id="uservec-in-process-pgtbl"><a class="header-anchor" href="#uservec-in-process-pgtbl">¶</a>uservec (in process pgtbl)</h3>
-<p><em>sscratch</em> reg helps to store process regs!</p>
-<ul>
-<li>process’ regs need to be stored somewhere in memory. And to store the memory, a register is needed to store the address! (no <strong>general-perpose reg</strong> offered in RISC-V)</li>
-<li><em>sscratch</em> does the magic! <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">csrrw a0, sscratch, a0 # swap the content</span><br></pre></td></tr></table></figure>
-now uservec has <strong>a0</strong> to play with!</li>
-</ul>
-<h4 id="store-the-regs"><a class="header-anchor" href="#store-the-regs">¶</a>store the regs!</h4>
-<p>Before entering user space, kernel <strong>set sscratch to point to a per-process trapframe, which is also mapped in user space pgtbl</strong></p>
-<ul>
-<li>For user process, the trapframe is high in address space.</li>
-<li>For kernel, the trapframe is in p-&gt;trapframe, pointing at its physical address.<br>
-so both can use trapframe.</li>
-</ul>
-<p><strong>Now a0 points to the current process’s trapframe, and all regs are saved in the trapframe</strong></p>
-<p>After saving, the <em>uservec</em> retrives the address of kernel pgtbl, address of <em>usertrap()</em> and call it.</p>
-<hr>
-<h2 id="usertrap-in-kernel-pgtbl"><a class="header-anchor" href="#usertrap-in-kernel-pgtbl">¶</a>usertrap (in kernel pgtbl)</h2>
-<p>job: determine the cause of the trap(ecall?interrupt?exception?) -&gt; process it -&gt; return</p>
-<ol>
-<li>we now in kernel space, set <em>stvec</em> to <em>kernelvec</em>. So the trap in kernel will be handled in kernelvec, rather than in uservec</li>
-<li>save the sepc (previously saved user’s pc). This is because <em>usertrap()</em> might call <em>yield()</em>(caused by timer interrupt) to switch to another process’s kernel thread, in whichi the sepc might be modified.</li>
-</ol>
-<p>Three cases of trap:</p>
-<ul>
-<li>systemcall(ecall)
-<ul>
-<li>call syscall to handle it</li>
-</ul>
-</li>
-<li>dev interrupt
-<ul>
-<li>call devintr</li>
-</ul>
-</li>
-<li>otherwise (exception)
-<ul>
-<li>kill the process</li>
-</ul>
-</li>
-</ul>
-<p>After handling, <em>usertrap()</em> checks</p>
-<ol>
-<li>whether the process is killed</li>
-<li>whether the process should yield the CPU</li>
-</ol>
-<p>Then, <strong>call usertrapret()</strong></p>
-<hr>
-<h2 id="usertrapret"><a class="header-anchor" href="#usertrapret">¶</a>usertrapret()</h2>
-<p>sets up the RISC-V control regs to prepare for a future trap from user space.</p>
-<ol>
-<li>changing stvec to usertrap()</li>
-<li>setting sepc to previously saved user pc</li>
-<li>calls userret() on the trampoline page</li>
-</ol>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">uint64 fn = TRAMPOLINE + (userret - trampoline)</span><br><span class="line">((<span class="keyword">void</span> (*)(uint64, uint64))fn)(TRAPFRAME, satp)</span><br></pre></td></tr></table></figure>
-<p>The code <strong>casts</strong> fn to a function pointer, pointing at a function which has a void return value and two uint64 arguments.</p>
-<p>The fn is the entry address of the function, namely the entry address of userret in trampoline.</p>
-<p>To be more clear, the TRAMPOLINE is the <strong>start address of Trampoline page</strong>, and we need to add the offset of userret(). The offset is userret - trampoline, externly declared as two char arrays.</p>
-<hr>
-<h2 id="userret"><a class="header-anchor" href="#userret">¶</a>userret()</h2>
-<p>From usertrapret(), two arguments TRAPFRAME and satp are in register <strong>a0 and a1</strong>.</p>
-<p>using <code>csrw satp, a1</code>, userret() restores the user pgtbl.</p>
-<p>Then it</p>
-<ol>
-<li>save the saved user a0 in sscratch <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ld t0, 112(a0)    # save a0(contains return value of syscall for example) to t0</span><br><span class="line">csrw sscratch, t0 # save t0 to sscratch</span><br></pre></td></tr></table></figure>
-<ol>
-<li>note that now <strong>a0 contains the address of the user’s TRAPFRAME</strong></li>
-</ol>
-</li>
-<li>restore all registers but a0</li>
-<li>swap the a0 and sscratch <code>csrrw a0, sscratch, a0</code>
-<ol>
-<li>after this, <em><strong>a0 contains original user’s a0, sscratch contains the address of TRAPFRAME</strong></em></li>
-</ol>
-</li>
-<li>call <code>sret</code> to return to user space.</li>
-</ol>
-<hr>
-<h3 id="Details-of-system-call"><a class="header-anchor" href="#Details-of-system-call">¶</a>Details of system call</h3>
-<h4 id="procedures"><a class="header-anchor" href="#procedures">¶</a>procedures</h4>
-<p>initcode.S invokes <em>exec</em> system call, we start from here.</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"># Initial process that execs /init.</span><br><span class="line"># This code runs in user space.</span><br><span class="line"></span><br><span class="line">#include &quot;syscall.h&quot;</span><br><span class="line"></span><br><span class="line"># exec(init, argv)</span><br><span class="line">.globl start</span><br><span class="line">start:</span><br><span class="line">        la a0, init</span><br><span class="line">        la a1, argv</span><br><span class="line">        li a7, SYS_exec</span><br><span class="line">        ecall</span><br><span class="line"></span><br><span class="line"># for(;;) exit();</span><br><span class="line">exit:</span><br><span class="line">        li a7, SYS_exit</span><br><span class="line">        ecall</span><br><span class="line">        jal exit</span><br><span class="line"></span><br><span class="line"># char init[] = &quot;/init\0&quot;;</span><br><span class="line">init:</span><br><span class="line">  .string &quot;/init\0&quot;</span><br><span class="line"></span><br><span class="line"># char *argv[] = &#123; init, 0 &#125;;</span><br><span class="line">.p2align 2</span><br><span class="line">argv:</span><br><span class="line">  .long init</span><br><span class="line">  .long 0</span><br></pre></td></tr></table></figure>
-<ul>
-<li>initcode.S places arguments of exec in <strong>a0 and a1</strong>, and puts the system call number in <strong>a7</strong></li>
-<li>then the <em>ecall</em> instruction cause the O/S to trap into <em>uservec()</em>
-<ul>
-<li>Recap: the uservec stores the registers in TRAPFRAME, change to kernel pgtbl and jump to usertrap()</li>
-</ul>
-</li>
-<li>then the uservec calls usertrap(), the usertrap calls syscall()
-<ul>
-<li>from a7, knows which syscall to run</li>
-<li>from a0 and a1 knows the argc and argv</li>
-</ul>
-</li>
-<li>after sys_exec returns, p-&gt;trapframe-&gt;a0 has the return value</li>
-<li>In userret(), the trapframe-&gt;a0 is restored to actual a0, as return value.</li>
-</ul>
-<h4 id="syscall-arguments"><a class="header-anchor" href="#syscall-arguments">¶</a>syscall arguments</h4>
-<p>In userspace, user calls the wrapper function of syscalls.</p>
-<p>When in kernel space, the kernel needs to find the arguments in where they reside -&gt; registers.</p>
-<ul>
-<li>Through <em>argint, argaddr, argfd</em>, kernel finds n’th syscall argument <strong>from TRAPFRAME</strong> as int, ptr, fd. They all call <em>argraw</em>, retrieving the trapframe regs.</li>
-</ul>
-<p><strong>Another Problem</strong></p>
-<ul>
-<li>The argument may be malicious, not pointing to its own memory</li>
-<li>kernel pgtbl are not the same as user pgtbl, so kernel cannot use directly user-supplied addr.</li>
-</ul>
-<p><strong>Solution</strong>:</p>
-<ul>
-<li>kernel impl functions safely transfer data <strong>to and from</strong> user-supplied addresses</li>
-<li>for example:
-<ul>
-<li><em>copyinstr() (vm.c:398)</em> copies <em>max</em> bytes to <em>dst</em> from <em>va srcva</em> in <strong>user’s pagetable</strong>.
-<ul>
-<li>Since user’s pgtbl is not current, <em>copyinstr()</em> use walkaddr() to look up the user’s va in user’s pgtbl
-<ul>
-<li>the function call yields the pa</li>
-<li>the function call checks the va is part of the process’s address space</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>copyout() is similar</li>
-</ul>
-</li>
-</ul>
-<p><strong>To wrapup, the kernel implements <em>copyin(), copyout(), etc.</em>, to safely uses the user-supplied address.</strong></p>
-<hr>
-<h2 id="Traps-from-kernel-space"><a class="header-anchor" href="#Traps-from-kernel-space">¶</a>Traps from kernel space</h2>
-<p>When traps happen in kernel space, <em>stvec</em> is already pointing at <em>kernelvec()</em>, so the pgtbl does not need to be changed.</p>
-<ul>
-<li><em>kernelvec()</em>
-<ul>
-<li>saves the registers on the kernel stack</li>
-<li>jumps to <em>kerneltrap()</em> (trap.c:134)
-<ul>
-<li>type1: dev interrupt
-<ul>
-<li>devintr()</li>
-</ul>
-</li>
-<li>type2: exceptions
-<ul>
-<li>panic()</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>restores the registers, and call <em>sret</em>
-<ul>
-<li>which copies sepc to pc</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<h3 id="stvec-and-interrupts"><a class="header-anchor" href="#stvec-and-interrupts">¶</a>stvec and interrupts</h3>
-<p>When trap comes from userspace, <em>usertrap()</em> sets stvec to <em>kernelvec()</em>. But there is a window of time when the kernel has started executed, but stvec is still set to uservec.</p>
-<p>At this time, no dev interrupt should happen, so RISC-V always disable interrupts when trap happens, and xv6 does not enable them again <strong>until after it sets <em>stvec</em></strong></p>
-<hr>
-
-      
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/01/28/xv6book-chap4-traps-and-syscall/" rel="prev" title="xv6book-chap4: traps and syscall">
+      <i class="fa fa-chevron-left"></i> xv6book-chap4: traps and syscall
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/01/28/Set-up-gdb-in-macOS/" rel="next" title="Set up gdb in macOS">
+      Set up gdb in macOS <i class="fa fa-chevron-right"></i>
+    </a></div>
     </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
       </footer>
+    
   </article>
   
   
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="https://jerryji.site/2022/01/27/6-S081-lec5-RISCV-calling-conventions/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avtdisney.JPG">
-      <meta itemprop="name" content="Ji-Xinyou(Jerry)">
-      <meta itemprop="description" content="Lives should be diverse.">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Ji-Xinyou's page">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/01/27/6-S081-lec5-RISCV-calling-conventions/" class="post-title-link" itemprop="url">6.S081 lec5: RISCV-calling conventions</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2022-01-27 22:06:59" itemprop="dateCreated datePublished" datetime="2022-01-27T22:06:59+08:00">2022-01-27</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2022-01-28 13:43:36" itemprop="dateModified" datetime="2022-01-28T13:43:36+08:00">2022-01-28</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/O-S/" itemprop="url" rel="index"><span itemprop="name">O/S</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine: </span>
-    
-    <a title="valine" href="/2022/01/27/6-S081-lec5-RISCV-calling-conventions/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/01/27/6-S081-lec5-RISCV-calling-conventions/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <style>
-img{
-    width: 70%;
-}
-</style>
-<h1>6.S081 lec5: RISCV calling conventions</h1>
-<hr>
-<h2 id="Caller-Saved-and-Callee-Saved"><a class="header-anchor" href="#Caller-Saved-and-Callee-Saved">¶</a>Caller Saved and Callee Saved</h2>
-<p>Registers are categorized as <strong>caller saved</strong> and <strong>callee saved</strong>. The difference between them is very important.</p>
-<p><img src="../images/6S081/regs.png" alt=""></p>
-<ul>
-<li><strong>Caller Saved</strong> registers are <strong>not</strong> reserved across function calls.</li>
-<li><strong>Callee Saved</strong> registers are reserved across function calls. The caller has to find someway to save those registers.</li>
-</ul>
-<hr>
-<h2 id="the-Stack"><a class="header-anchor" href="#the-Stack">¶</a>the Stack</h2>
-<ul>
-<li>The stack is created by function call! <strong>Each function call creates a stack frame for itself to use.</strong></li>
-<li>The stack starts from high address, growes down to low address. To make a new stack frame, decrement sp register.</li>
-<li>The stack size is <strong>not fixed</strong>, pay attention to the layout.
-<ul>
-<li>The return address is always at the first word
-<ul>
-<li>
-<pre><code class="language-asm">  addi sp, sp, 16 # alloc stack frame
-  sd ra, 0(sp)    # store the return address
-  ...
-  ld ra, 0(sp)    # recover the return address
-  addi sp, sp, 16 # delete the stack frame
-</code></pre>
-<ul>
-<li>This also shows that why $ra is a <strong>callee saved</strong> register.</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>The Prev. Frame address is always next to return address, to control frame callback.</li>
-</ul>
-</li>
-</ul>
-<p><img src="../images/6S081/stack.png" alt=""></p>
-<hr>
-<h2 id="GDB-commands"><a class="header-anchor" href="#GDB-commands">¶</a>GDB commands</h2>
-<ul>
-<li>
-<p><strong>To open the gdb mode of xv6</strong></p>
-<ul>
-<li>In one window type <strong>make qemu-gdb</strong> to start the gdb server</li>
-<li>In another window type <strong>riscv-unknown-elf-gdb</strong> to connect to the previous gdb server and start debugging!<br>
-<br/></li>
-</ul>
-</li>
-<li>
-<p><strong>layout split/asm/reg/src</strong></p>
-<ul>
-<li>-&gt; show the layout of (asm &amp; src)/asm/reg/ src</li>
-<li><strong>focus reg/asm</strong>…
-<ul>
-<li>-&gt; change the focus among windows<br>
-<br/></li>
-</ul>
-</li>
-</ul>
-</li>
-<li>
-<p><strong>info</strong></p>
-<ul>
-<li><strong>info breakpoints</strong>
-<ul>
-<li>-&gt; check the number of bp</li>
-</ul>
-</li>
-<li><strong>info frame</strong>
-<ul>
-<li>-&gt; check the info of current stack frame (frame 0)</li>
-<li><strong>backtrace (bt)</strong>
-<ul>
-<li>frame x -&gt; info frame
-<ul>
-<li>-&gt; change current frame to <strong>x</strong> and print the info<br>
-<br/></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>
-<p><strong>tui enable</strong></p>
-<ul>
-<li>show the tui<br>
-<br/></li>
-</ul>
-</li>
-<li>
-<p><strong>breakpoint/watchpoint &lt;tag&gt;</strong></p>
-<ul>
-<li><strong>delete &lt;bp_nr&gt;</strong></li>
-<li>info breakpoints/watchpoints<br>
-<br/></li>
-</ul>
-</li>
-<li>
-<p><strong>s &amp; si</strong> (step instruction)</p>
-</li>
-</ul>
-<hr>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="https://jerryji.site/2022/01/23/homepage/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avtdisney.JPG">
-      <meta itemprop="name" content="Ji-Xinyou(Jerry)">
-      <meta itemprop="description" content="Lives should be diverse.">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Ji-Xinyou's page">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/01/23/homepage/" class="post-title-link" itemprop="url">Welcome!</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-              
-
-              <time title="Created: 2022-01-23 00:16:57 / Modified: 20:23:07" itemprop="dateCreated datePublished" datetime="2022-01-23T00:16:57+08:00">2022-01-23</time>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine: </span>
-    
-    <a title="valine" href="/2022/01/23/homepage/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/01/23/homepage/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <style>
-img{
-    width: 60%;
-}
-</style>
-<h2 id="Welcome-to-my-homepage-💤"><a class="header-anchor" href="#Welcome-to-my-homepage-💤">¶</a>Welcome to my homepage! 💤</h2>
-<p>This is my first post to this blog website! 😋<br>
-It is really exciting for me to have the chance to really say something on the Internet.<br>
-There are mainly <strong>3️⃣</strong> reasons for me to start the blog.</p>
-<ul>
-<li>
-<p>⭐ <strong>Reading others’ blog really inspires me</strong></p>
-<ul>
-<li>Others’ sharing experiences on blogs really helps me through many mind-windling 😱 situations, and I really want to be one of them. Hopefully my experience will help the readers as well 😄<br>
-<br/></li>
-</ul>
-</li>
-<li>
-<p>☝️ <strong>Learning without recording is not as effective</strong></p>
-<ul>
-<li>This came across to my mind when I am taking 6.S081: Operating System Engineering (great course btw). There are so many important details and great minds inside an O/S, which I think should be well-learned and recorded.<br>
-<br/></li>
-</ul>
-</li>
-<li>
-<p>💥 <strong>SHARING IS ALWAYS FUN!</strong></p>
-<ul>
-<li>The thrill of sharing takes up the most part of why I am starting this blog! Not only sharing the experience is rewarding 😋, but sharing my daily life is also exciting.<br>
-<br/></li>
-</ul>
-</li>
-</ul>
-<p><strong>To everyone read this page:</strong></p>
-<p><em>May the force be with you</em></p>
-<p><img src="./../images/grogu.jpeg" alt="grogu"></p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-
   
 
 
 
           </div>
           
+    <div class="comments" id="valine-comments"></div>
 
 <script>
   window.addEventListener('tabs:register', () => {
@@ -1090,6 +413,7 @@ There are mainly <strong>3️⃣</strong> reasons for me to start the blog.</p>
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">detailed error-prone things in C (1st)</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#static-keyword"><span class="nav-number">1.1.</span> <span class="nav-text">static keyword</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#static-on-local-variable"><span class="nav-number">1.1.0.1.</span> <span class="nav-text">static on local variable</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#static-on-global-variable"><span class="nav-number">1.1.0.2.</span> <span class="nav-text">static on global variable</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#static-on-function"><span class="nav-number">1.1.0.3.</span> <span class="nav-text">static on function</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#string-literals-very-error-prone"><span class="nav-number">1.2.</span> <span class="nav-text">string literals (very error-prone!!!)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#sizeof"><span class="nav-number">1.3.</span> <span class="nav-text">sizeof()</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#sizeof-ptr-and-sizeof-array"><span class="nav-number">1.3.1.</span> <span class="nav-text">sizeof(ptr) and sizeof(array)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sizeof-struct"><span class="nav-number">1.3.2.</span> <span class="nav-text">sizeof(struct)</span></a></li></ol></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 

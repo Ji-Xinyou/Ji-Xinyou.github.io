@@ -380,12 +380,117 @@ so both can use trapframe.</li>
 <p><strong>To wrapup, the kernel implements <em>copyin(), copyout(), etc.</em>, to safely uses the user-supplied address.</strong></p>
 <hr>
 <h2 id="Traps-from-kernel-space"><a class="header-anchor" href="#Traps-from-kernel-space">¶</a>Traps from kernel space</h2>
+<p>When traps happen in kernel space, <em>stvec</em> is already pointing at <em>kernelvec()</em>, so the pgtbl does not need to be changed.</p>
+<ul>
+<li><em>kernelvec()</em>
+<ul>
+<li>saves the registers on the kernel stack</li>
+<li>jumps to <em>kerneltrap()</em> (trap.c:134)
+<ul>
+<li>type1: dev interrupt
+<ul>
+<li>devintr()</li>
+</ul>
+</li>
+<li>type2: exceptions
+<ul>
+<li>panic()</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>restores the registers, and call <em>sret</em>
+<ul>
+<li>which copies sepc to pc</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="stvec-and-interrupts"><a class="header-anchor" href="#stvec-and-interrupts">¶</a>stvec and interrupts</h3>
+<p>When trap comes from userspace, <em>usertrap()</em> sets stvec to <em>kernelvec()</em>. But there is a window of time when the kernel has started executed, but stvec is still set to uservec.</p>
+<p>At this time, no dev interrupt should happen, so RISC-V always disable interrupts when trap happens, and xv6 does not enable them again <strong>until after it sets <em>stvec</em></strong></p>
+<hr>
 ]]></content>
       <categories>
         <category>O/S</category>
       </categories>
       <tags>
         <tag>6.S081</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Set up gdb in macOS</title>
+    <url>/2022/01/28/Set-up-gdb-in-macOS/</url>
+    <content><![CDATA[]]></content>
+  </entry>
+  <entry>
+    <title>Some detailed things in C (1)</title>
+    <url>/2022/01/28/Some-tricky-things-about-char-and-error-prone-string-ops-in-C/</url>
+    <content><![CDATA[<h1>detailed error-prone things in C (1st)</h1>
+<hr>
+<p>As we all know, in C programming language, functions in <em>string.h</em> is very error-prone! In this post, I show something that might be in your way when you are manipulating string functions.</p>
+<hr>
+<h2 id="static-keyword"><a class="header-anchor" href="#static-keyword">¶</a>static keyword</h2>
+<h4 id="static-on-local-variable"><a class="header-anchor" href="#static-on-local-variable">¶</a>static on local variable</h4>
+<p>the static local variable declared in a function is <strong>initialized when the process started, and always initialized to 0</strong>, not <strong>when function is called</strong>.</p>
+<p>the static local variable resides at the beginning of process’s address space (static field), and <strong>only destructed when process exists</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">function</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">int</span> foo; <span class="comment">// static variable are initialized to zero</span></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;call %d\n&quot;</span>, foo++);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span></span></span><br><span class="line"><span class="function"><span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; <span class="number">3</span>; ++i)</span><br><span class="line">        function();</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">outputs: </span><br><span class="line">call <span class="number">0</span></span><br><span class="line">call <span class="number">1</span></span><br><span class="line">call <span class="number">2</span></span><br></pre></td></tr></table></figure>
+<h4 id="static-on-global-variable"><a class="header-anchor" href="#static-on-global-variable">¶</a>static on global variable</h4>
+<p>global variable itself is saved in static field, so <em>static</em> keyword does not change its position in memory.</p>
+<p>However, it restricts its link-attribute. The global variable declared with <em>static</em> <strong>can only be accessed by the files which included the file where the variable is declared</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">// a.h</span></span><br><span class="line"><span class="meta"># <span class="meta-keyword">pragma</span> once</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">int</span> a = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// b.h</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;a.h&quot;</span></span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">func</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;%d\n&quot;</span>, a);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// a.c</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;a.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;b.h&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span></span></span><br><span class="line"><span class="function"><span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    func();</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;%d\n&quot;</span>, a);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">outputs:</span><br><span class="line"><span class="number">2</span></span><br><span class="line"><span class="number">2</span></span><br></pre></td></tr></table></figure>
+<h4 id="static-on-function"><a class="header-anchor" href="#static-on-function">¶</a>static on function</h4>
+<p>function declared with <em>static</em>, <strong>can only be accessed by the file which defines it</strong></p>
+<p>That is, you have to declare and implement the static function within one file.</p>
+<hr>
+<h2 id="string-literals-very-error-prone"><a class="header-anchor" href="#string-literals-very-error-prone">¶</a>string literals (very error-prone!!!)</h2>
+<p><a href="https://stackoverflow.com/questions/5717176/bus-error-while-running-a-simple-string-c-program">StackoverFlow-String literal problems</a></p>
+<p>Check out the code here (error code)</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span></span></span><br><span class="line"><span class="function"><span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">char</span> *s = <span class="string">&quot;this is &quot;</span>;</span><br><span class="line">    <span class="keyword">char</span> *s1 = <span class="string">&quot;me&quot;</span>;  </span><br><span class="line">    <span class="built_in">strcat</span>(s,s1); </span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;%s&quot;</span>,s);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line">output: bus error in MACOS</span><br></pre></td></tr></table></figure>
+<p>Why there is an error, the code seems to be fine!</p>
+<p>This is because string in this form <code>&quot;this is &quot;</code>, is a <strong>string literal</strong>.</p>
+<p>The string literal is allocated at the program startup and held until the program exits. The <strong>key problem</strong> is, the places where string literal resides <strong>may or may not be writable</strong>, so modify a string literal is a <strong>undefined behavior</strong>.</p>
+<p>This part of code has two problems.</p>
+<ul>
+<li>
+<p>Buffer overflow</p>
+<ul>
+<li>s has length 9, s1 has length 3. And the code is trying to write 11 character in a 9 character buffer.</li>
+</ul>
+</li>
+<li>
+<p>The string literal is not writable</p>
+</li>
+</ul>
+<p>The right way to do this is to <strong>copy the literal onto the stackframe</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">char</span> *s = <span class="string">&quot;this is &quot;</span>;</span><br><span class="line"><span class="keyword">char</span> *s1 = <span class="string">&quot;me&quot;</span>;</span><br><span class="line"><span class="keyword">char</span> target[<span class="built_in">strlen</span>(s) + <span class="built_in">strlen</span>(s1) + <span class="number">1</span>];</span><br><span class="line"></span><br><span class="line"><span class="built_in">strcpy</span>(target, s);</span><br><span class="line"><span class="built_in">strcat</span>(target, s1);</span><br><span class="line"><span class="comment">// or sprintf(target, &quot;%s%s&quot;, s, s1);</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// The recommended way (on heap)</span></span><br><span class="line"><span class="keyword">char</span> *target = <span class="built_in">malloc</span>(<span class="built_in">strlen</span>(s) + <span class="built_in">strlen</span>(s1) + <span class="number">1</span>);</span><br><span class="line">...</span><br><span class="line"><span class="built_in">free</span>(target);</span><br></pre></td></tr></table></figure>
+<hr>
+<h2 id="sizeof"><a class="header-anchor" href="#sizeof">¶</a>sizeof()</h2>
+<p>sizeof is a very error-prone function! The value of sizeof is determined when <strong>compiling, or runtime</strong>.</p>
+<p>One of the most problematic things about <em>sizeof()</em> is <code>sizeof(&lt;some_ptr&gt;)</code>, here are some examples.</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">char</span>* p = <span class="string">&quot;Hello world&quot;</span></span><br><span class="line"><span class="built_in">printf</span>(<span class="string">&quot;%lu&quot;</span>, <span class="keyword">sizeof</span>(p))</span><br></pre></td></tr></table></figure>
+<p>The output will be 8 in 64-bit word machines and 4 in 32-bit word machines.<br>
+You probably already notice why, because the <strong>pointer is actually a address!</strong>. And in a 64-bit word machines, addresses are 8-byte long.</p>
+<h3 id="sizeof-ptr-and-sizeof-array"><a class="header-anchor" href="#sizeof-ptr-and-sizeof-array">¶</a>sizeof(ptr) and sizeof(array)</h3>
+<p>Please notice the difference between <code>sizeof(&lt;some_array&gt;)</code> and <code>sizeof(&lt;some_ptr&gt;)</code></p>
+<p>The code below will show clearly the difference</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">bar</span><span class="params">(<span class="keyword">char</span> f[<span class="number">3</span>])</span> </span>&#123;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;%lu\n&quot;</span>, <span class="keyword">sizeof</span>(f));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span></span></span><br><span class="line"><span class="function"><span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">char</span> foo[<span class="number">3</span>];</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;%lu\n&quot;</span>, <span class="keyword">sizeof</span>(foo)); <span class="comment">// 3</span></span><br><span class="line">	bar(foo);                     <span class="comment">// 8</span></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>In the first <code>sizeof(foo)</code>, the compiler knows the array is three-elem long, so the value is 3.</p>
+<p>In the second sizeof(f), the compiler treats the <code>f</code> as a pointer. This is because when we pass an array to a function, we are actually passing the first-elem’s address of the array (i.e. a pointer).</p>
+<h3 id="sizeof-struct"><a class="header-anchor" href="#sizeof-struct">¶</a>sizeof(struct)</h3>
+<p>when using sizeof() on a struct, it returns the actual space occupied by the structure.</p>
+<p>In C, the struct are <strong>aligned</strong>.</p>
+<p>For example, assume this is on a <strong>32bit word machine</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">mystruct</span> &#123;</span></span><br><span class="line">    <span class="keyword">char</span> c1;</span><br><span class="line">    <span class="keyword">int</span>  i1;</span><br><span class="line">    <span class="keyword">char</span> c2;</span><br><span class="line">&#125; s1;</span><br><span class="line"></span><br><span class="line"><span class="built_in">printf</span>(<span class="string">&quot;%lu&quot;</span>, <span class="keyword">sizeof</span>(s1));</span><br></pre></td></tr></table></figure>
+<p>This will print <code>12</code>, because <code>c1</code> itself occupies a word, i1 occupies the next and c2 occupies the next. So in total three words (12 bytes) are occupies by s1.</p>
+<hr>
+]]></content>
+      <categories>
+        <category>C</category>
+      </categories>
+      <tags>
+        <tag>detail</tag>
       </tags>
   </entry>
 </search>
