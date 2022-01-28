@@ -432,6 +432,23 @@ so both can use trapframe.</li>
 <p>As we all know, in C programming language, functions in <em>string.h</em> is very error-prone! In this post, I show something that might be in your way when you are manipulating string functions.</p>
 <hr>
 <h2 id="static-keyword"><a class="header-anchor" href="#static-keyword">¶</a>static keyword</h2>
+<p>prologue about initialized value:</p>
+<ul>
+<li>global or static
+<ul>
+<li>allocated in static field
+<ul>
+<li>live with process and is 0</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>local and not static
+<ul>
+<li>on stackframe -&gt; random</li>
+</ul>
+</li>
+</ul>
 <h4 id="static-on-local-variable"><a class="header-anchor" href="#static-on-local-variable">¶</a>static on local variable</h4>
 <p>the static local variable declared in a function is <strong>initialized when the process started, and always initialized to 0</strong>, not <strong>when function is called</strong>.</p>
 <p>the static local variable resides at the beginning of process’s address space (static field), and <strong>only destructed when process exists</strong></p>

@@ -28,7 +28,7 @@
 <meta property="og:description" content="detailed error-prone things in C (1st)  As we all know, in C programming language, functions in string.h is very error-prone! In this post, I show something that might be in your way when you are mani">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2022-01-28T12:03:38.000Z">
-<meta property="article:modified_time" content="2022-01-28T14:28:45.460Z">
+<meta property="article:modified_time" content="2022-01-28T14:31:06.717Z">
 <meta property="article:author" content="Ji-Xinyou(Jerry)">
 <meta property="article:tag" content="detail">
 <meta name="twitter:card" content="summary">
@@ -227,7 +227,7 @@
               <span class="post-meta-item-text">Posted on</span>
               
 
-              <time title="Created: 2022-01-28 20:03:38 / Modified: 22:28:45" itemprop="dateCreated datePublished" datetime="2022-01-28T20:03:38+08:00">2022-01-28</time>
+              <time title="Created: 2022-01-28 20:03:38 / Modified: 22:31:06" itemprop="dateCreated datePublished" datetime="2022-01-28T20:03:38+08:00">2022-01-28</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -276,6 +276,23 @@
 <p>As we all know, in C programming language, functions in <em>string.h</em> is very error-prone! In this post, I show something that might be in your way when you are manipulating string functions.</p>
 <hr>
 <h2 id="static-keyword"><a class="header-anchor" href="#static-keyword">¶</a>static keyword</h2>
+<p>prologue about initialized value:</p>
+<ul>
+<li>global or static
+<ul>
+<li>allocated in static field
+<ul>
+<li>live with process and is 0</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>local and not static
+<ul>
+<li>on stackframe -&gt; random</li>
+</ul>
+</li>
+</ul>
 <h4 id="static-on-local-variable"><a class="header-anchor" href="#static-on-local-variable">¶</a>static on local variable</h4>
 <p>the static local variable declared in a function is <strong>initialized when the process started, and always initialized to 0</strong>, not <strong>when function is called</strong>.</p>
 <p>the static local variable resides at the beginning of process’s address space (static field), and <strong>only destructed when process exists</strong></p>
