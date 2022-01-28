@@ -247,6 +247,7 @@ img{
 <li>After that, the handling code switch the pgtbl to kernel pgtbl, and in order to continue executing, the handler code must be mapped also in kernel page table!</li>
 <li><strong>The trampoline page(PTE_U set) is in both kernel pgtbl and every process’ pgtbl, containing the handler codes!</strong></li>
 </ul>
+<hr>
 <h3 id="uservec-in-process-pgtbl"><a class="header-anchor" href="#uservec-in-process-pgtbl">¶</a>uservec (in process pgtbl)</h3>
 <p><em>sscratch</em> reg helps to store process regs!</p>
 <ul>
@@ -312,7 +313,7 @@ so both can use trapframe.</li>
 <p>using <code>csrw satp, a1</code>, userret() restores the user pgtbl.</p>
 <p>Then it</p>
 <ol>
-<li>save the saved user a0 in sscratch <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ld t0, 112(a0)    # save original a0 to t0</span><br><span class="line">csrw sscratch, t0 # save t0 to sscratch</span><br></pre></td></tr></table></figure>
+<li>save the saved user a0 in sscratch <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ld t0, 112(a0)    # save a0(contains return value of syscall for example) to t0</span><br><span class="line">csrw sscratch, t0 # save t0 to sscratch</span><br></pre></td></tr></table></figure>
 <ol>
 <li>note that now <strong>a0 contains the address of the user’s TRAPFRAME</strong></li>
 </ol>
@@ -326,6 +327,59 @@ so both can use trapframe.</li>
 <li>call <code>sret</code> to return to user space.</li>
 </ol>
 <hr>
+<h3 id="Details-of-system-call"><a class="header-anchor" href="#Details-of-system-call">¶</a>Details of system call</h3>
+<h4 id="procedures"><a class="header-anchor" href="#procedures">¶</a>procedures</h4>
+<p>initcode.S invokes <em>exec</em> system call, we start from here.</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># Initial process that execs /init.</span><br><span class="line"># This code runs in user space.</span><br><span class="line"></span><br><span class="line">#include &quot;syscall.h&quot;</span><br><span class="line"></span><br><span class="line"># exec(init, argv)</span><br><span class="line">.globl start</span><br><span class="line">start:</span><br><span class="line">        la a0, init</span><br><span class="line">        la a1, argv</span><br><span class="line">        li a7, SYS_exec</span><br><span class="line">        ecall</span><br><span class="line"></span><br><span class="line"># for(;;) exit();</span><br><span class="line">exit:</span><br><span class="line">        li a7, SYS_exit</span><br><span class="line">        ecall</span><br><span class="line">        jal exit</span><br><span class="line"></span><br><span class="line"># char init[] = &quot;/init\0&quot;;</span><br><span class="line">init:</span><br><span class="line">  .string &quot;/init\0&quot;</span><br><span class="line"></span><br><span class="line"># char *argv[] = &#123; init, 0 &#125;;</span><br><span class="line">.p2align 2</span><br><span class="line">argv:</span><br><span class="line">  .long init</span><br><span class="line">  .long 0</span><br></pre></td></tr></table></figure>
+<ul>
+<li>initcode.S places arguments of exec in <strong>a0 and a1</strong>, and puts the system call number in <strong>a7</strong></li>
+<li>then the <em>ecall</em> instruction cause the O/S to trap into <em>uservec()</em>
+<ul>
+<li>Recap: the uservec stores the registers in TRAPFRAME, change to kernel pgtbl and jump to usertrap()</li>
+</ul>
+</li>
+<li>then the uservec calls usertrap(), the usertrap calls syscall()
+<ul>
+<li>from a7, knows which syscall to run</li>
+<li>from a0 and a1 knows the argc and argv</li>
+</ul>
+</li>
+<li>after sys_exec returns, p-&gt;trapframe-&gt;a0 has the return value</li>
+<li>In userret(), the trapframe-&gt;a0 is restored to actual a0, as return value.</li>
+</ul>
+<h4 id="syscall-arguments"><a class="header-anchor" href="#syscall-arguments">¶</a>syscall arguments</h4>
+<p>In userspace, user calls the wrapper function of syscalls.</p>
+<p>When in kernel space, the kernel needs to find the arguments in where they reside -&gt; registers.</p>
+<ul>
+<li>Through <em>argint, argaddr, argfd</em>, kernel finds n’th syscall argument <strong>from TRAPFRAME</strong> as int, ptr, fd. They all call <em>argraw</em>, retrieving the trapframe regs.</li>
+</ul>
+<p><strong>Another Problem</strong></p>
+<ul>
+<li>The argument may be malicious, not pointing to its own memory</li>
+<li>kernel pgtbl are not the same as user pgtbl, so kernel cannot use directly user-supplied addr.</li>
+</ul>
+<p><strong>Solution</strong>:</p>
+<ul>
+<li>kernel impl functions safely transfer data <strong>to and from</strong> user-supplied addresses</li>
+<li>for example:
+<ul>
+<li><em>copyinstr() (vm.c:398)</em> copies <em>max</em> bytes to <em>dst</em> from <em>va srcva</em> in <strong>user’s pagetable</strong>.
+<ul>
+<li>Since user’s pgtbl is not current, <em>copyinstr()</em> use walkaddr() to look up the user’s va in user’s pgtbl
+<ul>
+<li>the function call yields the pa</li>
+<li>the function call checks the va is part of the process’s address space</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>copyout() is similar</li>
+</ul>
+</li>
+</ul>
+<p><strong>To wrapup, the kernel implements <em>copyin(), copyout(), etc.</em>, to safely uses the user-supplied address.</strong></p>
+<hr>
+<h2 id="Traps-from-kernel-space"><a class="header-anchor" href="#Traps-from-kernel-space">¶</a>Traps from kernel space</h2>
 ]]></content>
       <categories>
         <category>O/S</category>
