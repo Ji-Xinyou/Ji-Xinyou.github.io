@@ -702,12 +702,107 @@ Why the next instuction is correctly executed instead of some garbage being run.
 <p><strong>OK! WE ARE NOW EXITING FROM uservec(), GOING INTO usertrap()</strong></p>
 <hr>
 <h4 id="in-usertrap-C-code"><a class="header-anchor" href="#in-usertrap-C-code">¶</a>in usertrap() (C code)</h4>
+<ul>
+<li><strong>First</strong> change the <em>stvec</em> to <em>kernelvec()</em></li>
+<li><strong>Second</strong> save the <em>sepc</em> on TRAPFRAME</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">p-&gt;trapframe-&gt;epc = r_sepc();</span><br></pre></td></tr></table></figure>
+<ul>
+<li>this is because the usertrap() might jump to another user process, which may overwrite the sepc</li>
+<li><strong>Third</strong>, check <em>scause</em> to figure out the cause of trap
+<ul>
+<li>
+<p><strong>if syscall()</strong></p>
+<ul>
+<li><code>p-&gt;trapframe-&gt;epc += 4</code> ,because it <strong>currently pointing at ecall</strong></li>
+<li><strong>enable interrupt</strong>, which was closed by RISC-V <strong>trap</strong> hardware
+<ul>
+<li>because some syscall might take a lot of time</li>
+</ul>
+</li>
+<li><strong>call syscall()</strong>
+<ul>
+<li>put the return value in <strong>trapframe-&gt;a0</strong>, when we go back to userspace, the value in a0 will be restored by <strong>userret()</strong>, which will further be treated as return value</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>if devintr()</strong></p>
+<ul>
+<li>call devintr()</li>
+</ul>
+</li>
+<li>
+<p>else <strong>exception</strong></p>
+<ul>
+<li>kill the process</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>finally</strong>, if there is a timer interrupt, the process yields the CPU
+<ul>
+<li><strong>CALL usertrapret()</strong></li>
+</ul>
+</li>
+</ul>
 <hr>
-<h3 id="IMPORTANT-THINGS-TO-FIGURE-OUT"><a class="header-anchor" href="#IMPORTANT-THINGS-TO-FIGURE-OUT">¶</a>IMPORTANT THINGS TO FIGURE OUT</h3>
+<p><strong>OK! FROM the last line of usertrap(), we enter the usertrapret(), and we have really done the things that a trap should have done. Now it’s time to go back to userspace</strong></p>
+<hr>
+<h4 id="in-usertrapret-C-code"><a class="header-anchor" href="#in-usertrapret-C-code">¶</a>in usertrapret() (C code)</h4>
+<ol>
+<li><strong>turns of interrupt</strong>
+<ol>
+<li>because we are about to change <em>stvec</em> to user TRAMPOLINE, if an intr happens, it goes back to userspace with supervisor privilege</li>
+<li><em>sret</em> opens interrupts</li>
+</ol>
+</li>
+<li><strong>fill in trapframe slot</strong>
+<ol>
+<li>satp, kernel_sp, <em>usertrap()</em>, hartid</li>
+</ol>
+</li>
+<li><strong>change SSTATUS reg</strong>
+<ol>
+<li>SPP controls the privilege mode when sret (clear it for user mode)</li>
+<li>SPIE controls whether the intr will be enable (set it for enabling)</li>
+</ol>
+</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">sret: <span class="built_in">set</span> the pc &lt;- <span class="function">sepc</span></span><br><span class="line"><span class="function"><span class="title">w_sepc</span><span class="params">(p-&gt;trapframe-&gt;epc)</span></span></span><br></pre></td></tr></table></figure>
+<ol start="4">
+<li><strong>switch the pgtbl to user’s</strong>
+<ol>
+<li>but this has to be done in TRAMPOLINE, because only TRAMPOLINE are mapped both <strong>in userspace and kernelspace</strong></li>
+</ol>
+ <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">uint64 satp = MAKE_SATP(p-&gt;pagetable); // this is used as an argument</span><br><span class="line"></span><br><span class="line">uint64 fn = TRAMPOLINE + (userret - trampoline);</span><br><span class="line">((void(*)(uint64, uint64))fn)(TRAPFRAME, satp);</span><br></pre></td></tr></table></figure>
+<strong>READ THE FOLLOWING CAREFULLY!!!</strong><br>
+2. if we change pgtbl here, next instruction will be garbage! because the pc mapped to another physical address in mapping other than TRAMPOLINE page. <strong>ONLY IN TRAMPOLINE PAGE, THE MAPPING IS IDENTITY between USERSPACE AND KERNELSPACE</strong></li>
+</ol>
+<p>FROM <code>fn(TRAPFRAME, satp)</code>, we jump into <em>userret()</em></p>
+<hr>
+<p><strong>WE JUMP TO TRAMPOLINE: userret() now, this happens by using a function pointer. The calculation of the address is <code>TRAMPOLINE + (userret - trampoline</code></strong></p>
+<hr>
+<h4 id="in-userret-assembly-code"><a class="header-anchor" href="#in-userret-assembly-code">¶</a>in userret() (assembly code)</h4>
+<p>only in TRAMPOLINE page’s code, we can change pgtbl between kernel and user.</p>
+<p>The <strong>very first</strong> things we do here, is set our pgtbl to user’s</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">csrw satp, a1</span><br></pre></td></tr></table></figure>
+<p>Next, we save user’s a0 in sscratch, because we need to swap it with a0 at last when we finally go back to userspace</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ld t0, 112(a0)</span><br><span class="line">csrw sscratch, t0</span><br></pre></td></tr></table></figure>
+<p>Next, ld all regs out of the TRAPFRAME.</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ld ra, 40(a0)</span><br><span class="line">ld sp, 48(a0)</span><br><span class="line">...</span><br><span class="line">ld t6, 280(a0)</span><br></pre></td></tr></table></figure>
+<p>Swap <em>sscratch</em> and <em>a0</em></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">cssrw a0, sscratch, a0</span><br></pre></td></tr></table></figure>
+<p>Now <em>sscratch</em> contains the original a0’s value, i.e. the address of the TRAPFRAME<br>
+<em>a0</em> contains the original <em>sscratch</em>’s value, i.e. a0 (return value of syscall)</p>
+<p><strong>Finally</strong>, call <em>sret</em>, we set pc to sepc, set the mode to usermode, enable interrupt, and <strong>WE ARE BACK IN USERSPACE, and moreover JUST AT WHERE WE CALLED ECALL (actually the next assembly inst since we +4 to epc)</strong></p>
+<hr>
+<h3 id="IMPORTANT-THINGS-TO-FIGURE-OUT-PLEASE-READ-THIS"><a class="header-anchor" href="#IMPORTANT-THINGS-TO-FIGURE-OUT-PLEASE-READ-THIS">¶</a>IMPORTANT THINGS TO FIGURE OUT (PLEASE READ THIS!)</h3>
 <ol>
 <li>
 <p><strong>Why do we need TRAMPOLINE page</strong></p>
-<p>I think this is because, when we trap from userspace, we are using user’s pgtbl. To <strong>run the code helping us jump into kernel space</strong>, we need this code text be mapped in every user process’ pgtbl. And this is the TRAMPOLINE page.</p>
+<p>The main reason for this is we need to <strong>change pgtbl between kernel’s and user’s</strong>. When we are running instructions, the pc holds a virtual address, but the actually instruction resides in <strong>physically memory which corresponds to current pgtbl and va</strong>. But when we change pgtbl, the virtual address is the same, but the physical address is not the same anymore.</p>
 </li>
 </ol>
 <hr>
