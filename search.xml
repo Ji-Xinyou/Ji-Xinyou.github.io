@@ -17,6 +17,10 @@ img{
 <li><strong>Caller Saved</strong> registers are <strong>not</strong> reserved across function calls.</li>
 <li><strong>Callee Saved</strong> registers are reserved across function calls. The caller has to find someway to save those registers.</li>
 </ul>
+<p>The convention also states, the <strong>return value</strong> is in a0 and a1, and <strong>arguments</strong> of the function is in a0-a7.</p>
+<ul>
+<li>If more arguments are given, they should reside on stack.</li>
+</ul>
 <hr>
 <span id="more"></span>
 <h2 id="the-Stack"><a class="header-anchor" href="#the-Stack">¶</a>the Stack</h2>
@@ -820,5 +824,18 @@ Why the next instuction is correctly executed instead of some garbage being run.
       <tags>
         <tag>6.S081</tag>
       </tags>
+  </entry>
+  <entry>
+    <title>Vim-shortcuts (keep updating)</title>
+    <url>/2022/01/30/Vim-shortcuts-keep-updating/</url>
+    <content><![CDATA[<h1>Vim shortcuts</h1>
+<hr>
+<h2 id="Intro"><a class="header-anchor" href="#Intro">¶</a>Intro</h2>
+<p>The topic is in ##, the commands are in ###, the decription is below them.</p>
+<h2 id="screensplit"><a class="header-anchor" href="#screensplit">¶</a>screensplit</h2>
+]]></content>
+      <categories>
+        <category>Vim</category>
+      </categories>
   </entry>
 </search>
