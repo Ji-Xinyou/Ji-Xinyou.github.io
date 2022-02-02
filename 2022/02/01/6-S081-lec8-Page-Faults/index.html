@@ -20,23 +20,25 @@
     var CONFIG = {"hostname":"jerryji.site","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":null,"activeClass":"valine"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="img{     width: 70%; }  6.S081 lec5: RISCV calling conventions  ¶Caller Saved and Callee Saved Registers are categorized as caller saved and callee saved. The difference between them is very importan">
+  <meta name="description" content="img{     width: 80%; }  Lec8: Page Faults  PAGE FAULTS ARE EXCEPTIONS, using THE SAME MECHANISM as syscall, i.e. TRAP Using page fault, we can make mapping dynamic.  implement VM features using Page">
 <meta property="og:type" content="article">
-<meta property="og:title" content="6.S081 lec5: RISCV-calling conventions">
-<meta property="og:url" content="https://jerryji.site/2022/01/27/6-S081-lec5-RISCV-calling-conventions/index.html">
+<meta property="og:title" content="6.S081 lec8: Page Faults">
+<meta property="og:url" content="https://jerryji.site/2022/02/01/6-S081-lec8-Page-Faults/index.html">
 <meta property="og:site_name" content="Ji-Xinyou&#39;s page">
-<meta property="og:description" content="img{     width: 70%; }  6.S081 lec5: RISCV calling conventions  ¶Caller Saved and Callee Saved Registers are categorized as caller saved and callee saved. The difference between them is very importan">
+<meta property="og:description" content="img{     width: 80%; }  Lec8: Page Faults  PAGE FAULTS ARE EXCEPTIONS, using THE SAME MECHANISM as syscall, i.e. TRAP Using page fault, we can make mapping dynamic.  implement VM features using Page">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="https://jerryji.site/2022/01/27/images/6S081/regs.png">
-<meta property="og:image" content="https://jerryji.site/2022/01/27/images/6S081/stack.png">
-<meta property="article:published_time" content="2022-01-27T14:06:59.000Z">
-<meta property="article:modified_time" content="2022-01-31T18:57:18.696Z">
+<meta property="og:image" content="https://jerryji.site/2022/02/01/images/6S081/sbrk.jpeg">
+<meta property="og:image" content="https://jerryji.site/2022/02/01/images/6S081/zerofill.jpeg">
+<meta property="og:image" content="https://jerryji.site/2022/02/01/images/6S081/cowfork.jpeg">
+<meta property="og:image" content="https://jerryji.site/2022/02/01/images/6S081/demandpaging1.jpeg">
+<meta property="article:published_time" content="2022-02-01T14:36:37.000Z">
+<meta property="article:modified_time" content="2022-02-02T09:48:15.623Z">
 <meta property="article:author" content="Ji-Xinyou(Jerry)">
 <meta property="article:tag" content="6.S081">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://jerryji.site/2022/01/27/images/6S081/regs.png">
+<meta name="twitter:image" content="https://jerryji.site/2022/02/01/images/6S081/sbrk.jpeg">
 
-<link rel="canonical" href="https://jerryji.site/2022/01/27/6-S081-lec5-RISCV-calling-conventions/">
+<link rel="canonical" href="https://jerryji.site/2022/02/01/6-S081-lec8-Page-Faults/">
 
 
 <script id="page-configurations">
@@ -49,7 +51,7 @@
   };
 </script>
 
-  <title>6.S081 lec5: RISCV-calling conventions | Ji-Xinyou's page</title>
+  <title>6.S081 lec8: Page Faults | Ji-Xinyou's page</title>
   
 
 
@@ -206,7 +208,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="https://jerryji.site/2022/01/27/6-S081-lec5-RISCV-calling-conventions/">
+    <link itemprop="mainEntityOfPage" href="https://jerryji.site/2022/02/01/6-S081-lec8-Page-Faults/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avtdisney.JPG">
@@ -219,7 +221,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          6.S081 lec5: RISCV-calling conventions
+          6.S081 lec8: Page Faults
         </h1>
 
         <div class="post-meta">
@@ -229,14 +231,14 @@
               </span>
               <span class="post-meta-item-text">Posted on</span>
 
-              <time title="Created: 2022-01-27 22:06:59" itemprop="dateCreated datePublished" datetime="2022-01-27T22:06:59+08:00">2022-01-27</time>
+              <time title="Created: 2022-02-01 22:36:37" itemprop="dateCreated datePublished" datetime="2022-02-01T22:36:37+08:00">2022-02-01</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2022-02-01 02:57:18" itemprop="dateModified" datetime="2022-02-01T02:57:18+08:00">2022-02-01</time>
+                <time title="Modified: 2022-02-02 17:48:15" itemprop="dateModified" datetime="2022-02-02T17:48:15+08:00">2022-02-02</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -264,8 +266,8 @@
       </span>
       <span class="post-meta-item-text">Valine: </span>
     
-    <a title="valine" href="/2022/01/27/6-S081-lec5-RISCV-calling-conventions/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/01/27/6-S081-lec5-RISCV-calling-conventions/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/02/01/6-S081-lec8-Page-Faults/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/02/01/6-S081-lec8-Page-Faults/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -282,90 +284,59 @@
       
         <style>
 img{
-    width: 70%;
+    width: 80%;
 }
 </style>
-<h1>6.S081 lec5: RISCV calling conventions</h1>
+<h1>Lec8: Page Faults</h1>
 <hr>
-<h2 id="Caller-Saved-and-Callee-Saved"><a class="header-anchor" href="#Caller-Saved-and-Callee-Saved">¶</a>Caller Saved and Callee Saved</h2>
-<p>Registers are categorized as <strong>caller saved</strong> and <strong>callee saved</strong>. The difference between them is very important.</p>
-<p><img src="../images/6S081/regs.png" alt=""></p>
+<p><strong>PAGE FAULTS ARE EXCEPTIONS, using THE SAME MECHANISM as syscall, i.e. TRAP</strong></p>
+<p>Using page fault, we can make mapping dynamic.</p>
 <ul>
-<li><strong>Caller Saved</strong> registers are <strong>not</strong> reserved across function calls.</li>
-<li><strong>Callee Saved</strong> registers are reserved across function calls. The caller has to find someway to save those registers.</li>
+<li>implement VM features using Page Fault handler
+<ul>
+<li>lazy alloc</li>
+<li>cow fork</li>
+<li>mmap</li>
+<li>demand paging</li>
 </ul>
-<p>The convention also states, the <strong>return value</strong> is in a0 and a1, and <strong>arguments</strong> of the function is in a0-a7.</p>
-<ul>
-<li>If more arguments are given, they should reside on stack.</li>
+</li>
 </ul>
 <hr>
-<span id="more"></span>
-<h2 id="the-Stack"><a class="header-anchor" href="#the-Stack">¶</a>the Stack</h2>
-<ul>
-<li>The stack is created by function call! <strong>Each function call creates a stack frame for itself to use.</strong></li>
-<li>The stack starts from high address, growes down to low address. To make a new stack frame, decrement sp register.</li>
-<li>The stack size is <strong>not fixed</strong>, pay attention to the layout.
-<ul>
-<li>The return address is always at the first word
-<ul>
-<li>
-<pre><code class="language-asm">  addi sp, sp, 16 # alloc stack frame
-  sd ra, 0(sp)    # store the return address
-  ...
-  ld ra, 0(sp)    # recover the return address
-  addi sp, sp, 16 # delete the stack frame
-</code></pre>
-<ul>
-<li>This also shows that why $ra is a <strong>callee saved</strong> register.</li>
-</ul>
+<p>What we need for page fault</p>
+<ol>
+<li>faulting virtual address
+<ol>
+<li>the va is put in <em>stval</em> register</li>
+</ol>
 </li>
-</ul>
+<li><strong>type</strong> of fault
+<ol>
+<li>read, write and inst -&gt; in <em>scause</em> register</li>
+</ol>
 </li>
-<li>The Prev. Frame address is always next to return address, to control frame callback.</li>
-</ul>
+<li>the <strong>va of instruction</strong> that caused the Page Fault
+<ol>
+<li>in <em>sepc</em> register, when ecall is called</li>
+</ol>
 </li>
-</ul>
-<p><img src="../images/6S081/stack.png" alt=""></p>
+</ol>
 <hr>
-<h2 id="GDB-commands"><a class="header-anchor" href="#GDB-commands">¶</a>GDB commands</h2>
+<h2 id="Allocation"><a class="header-anchor" href="#Allocation">¶</a>Allocation</h2>
+<p><code>sbrk()</code> -&gt; eager allocation: the mem is allocated asap</p>
 <ul>
-<li>
-<p><strong>To open the gdb mode of xv6</strong></p>
-<ul>
-<li>In one window type <strong>make qemu-gdb</strong> to start the gdb server</li>
-<li>In another window type <strong>riscv-unknown-elf-gdb</strong> to connect to the previous gdb server and start debugging!<br>
-<br/></li>
+<li>applications tend to overask<br>
+<img src="../images/6S081/sbrk.jpeg" alt=""></li>
 </ul>
-</li>
-<li>
-<p><strong>layout split/asm/reg/src</strong></p>
+<h3 id="lazy-allocation"><a class="header-anchor" href="#lazy-allocation">¶</a>lazy allocation</h3>
+<p>When <em>sbrk()</em> is called, increment <code>p-&gt;sz += n</code>, but do not allocate memory.</p>
 <ul>
-<li>-&gt; show the layout of (asm &amp; src)/asm/reg/ src</li>
-<li><strong>focus reg/asm</strong>…
+<li>Causing page fault
 <ul>
-<li>-&gt; change the focus among windows<br>
-<br/></li>
-</ul>
-</li>
-</ul>
-</li>
-<li>
-<p><strong>info</strong></p>
+<li>When page fault, allocate if <code>va &lt; p-&gt;sz</code> (stval has va)
 <ul>
-<li><strong>info breakpoints</strong>
+<li>allocate a page, zero it and map
 <ul>
-<li>-&gt; check the number of bp</li>
-</ul>
-</li>
-<li><strong>info frame</strong>
-<ul>
-<li>-&gt; check the info of current stack frame (frame 0)</li>
-<li><strong>backtrace (bt)</strong>
-<ul>
-<li>frame x -&gt; info frame
-<ul>
-<li>-&gt; change current frame to <strong>x</strong> and print the info<br>
-<br/></li>
+<li>then restart the original instruction transparently</li>
 </ul>
 </li>
 </ul>
@@ -373,26 +344,112 @@ img{
 </ul>
 </li>
 </ul>
-</li>
-<li>
-<p><strong>tui enable</strong></p>
+<p>In lazy page allocation, when a faulting va is accessed, we mapped a page.<br>
+But there is also <strong>an important thing</strong> we need to pay attention on, that is<br>
+when <em>uvmunmap()</em> is called.</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span></span></span><br><span class="line"><span class="function"><span class="title">uvmunmap</span><span class="params">(<span class="keyword">pagetable_t</span> pagetable, uint64 va, uint64 npages, <span class="keyword">int</span> do_free)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  uint64 a;</span><br><span class="line">  <span class="keyword">pte_t</span> *pte;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span>((va % PGSIZE) != <span class="number">0</span>)</span><br><span class="line">    panic(<span class="string">&quot;uvmunmap: not aligned&quot;</span>);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">for</span>(a = va; a &lt; va + npages*PGSIZE; a += PGSIZE)&#123;</span><br><span class="line">    <span class="keyword">if</span>((pte = walk(pagetable, a, <span class="number">0</span>)) == <span class="number">0</span>)</span><br><span class="line">      panic(<span class="string">&quot;uvmunmap: walk&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span>((*pte &amp; PTE_V) == <span class="number">0</span>)</span><br><span class="line">      <span class="comment">// panic(&quot;uvmunmap: not mapped&quot;);  &lt;----- this is the problem</span></span><br><span class="line">      <span class="keyword">continue</span>; <span class="comment">// WHY? Because when sys_sbrk() is called, maybe more than one page is growed (p-&gt;sz += x*PGSIZE)</span></span><br><span class="line">                <span class="comment">// however, in lazy alloc, we only allocate **one** page when a faulting va is accessed</span></span><br><span class="line">                <span class="comment">// therefore, when the process exits. The lazily allocated mapping will cause panic</span></span><br><span class="line">                <span class="comment">// IF YOU ARE NOT CLEAR</span></span><br><span class="line">                <span class="comment">// read uvmunmap(), sys_sbrk(), mappages()</span></span><br><span class="line">                <span class="comment">// CORE:</span></span><br><span class="line">                <span class="comment">// keep in mind that the core is: sbrk() gives conceptually more than one page, </span></span><br><span class="line">                <span class="comment">// but actually allocate one when page fault.</span></span><br><span class="line">                <span class="comment">// howevery uvmunmap() unmaps too many of them</span></span><br><span class="line">    <span class="keyword">if</span>(PTE_FLAGS(*pte) == PTE_V)</span><br><span class="line">      panic(<span class="string">&quot;uvmunmap: not a leaf&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span>(do_free)&#123;</span><br><span class="line">      uint64 pa = PTE2PA(*pte);</span><br><span class="line">      kfree((<span class="keyword">void</span>*)pa);</span><br><span class="line">    &#125;</span><br><span class="line">    *pte = <span class="number">0</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>The so called <strong>an important thing</strong> is stated in code section.</p>
+<hr>
+<h2 id="zero-fill-on-demand"><a class="header-anchor" href="#zero-fill-on-demand">¶</a>zero-fill on demand</h2>
+<p><img src="../images/6S081/zerofill.jpeg" alt=""><br>
+BSS is <strong>zero-filled</strong>, containing many pages with zero only. &lt;- that’s what we have in Virtual Address Space</p>
+<p>But in PA, we only have <strong>one page</strong> filled with zero. And we map all BSS pages to the zero-filled physical page.<br>
+The physical page should not be <strong>written-allowing</strong></p>
+<p>When page fault, we kalloc() a new page, and map faulting page to the new one with R/W perm.</p>
+<hr>
+<h2 id="COW-fork"><a class="header-anchor" href="#COW-fork">¶</a>COW fork()</h2>
+<p>First share the same physical page with parent.</p>
 <ul>
-<li>show the tui<br>
-<br/></li>
+<li>manipulate pte</li>
 </ul>
-</li>
-<li>
-<p><strong>breakpoint/watchpoint &lt;tag&gt;</strong></p>
+<p>When child want to modify some page, kalloc() a new page.</p>
 <ul>
-<li><strong>delete &lt;bp_nr&gt;</strong></li>
-<li>info breakpoints/watchpoints<br>
-<br/></li>
+<li>for parent and child, PTE_R only
+<ul>
+<li>when page fault, kalloc() -&gt; copy the original page, and map with PTE_W | PTE_R for both parent and child
+<ul>
+<li>check the figure to be more clear</li>
 </ul>
 </li>
-<li>
-<p><strong>s &amp; si</strong> (step instruction)</p>
+<li>How to find the faulting page for <strong>parent</strong>
+<ul>
+<li>the same va, since the child is a <strong>duplicate</strong></li>
+</ul>
 </li>
 </ul>
+</li>
+</ul>
+<p><img src="../images/6S081/cowfork.jpeg" alt=""></p>
+<p><strong>pgfault</strong></p>
+<ul>
+<li>copy page</li>
+<li>map it</li>
+<li>restart instruction
+<ul>
+<li><em>userret</em>()</li>
+</ul>
+</li>
+</ul>
+<p>Flag bit in pte, the 8, 9, 10 bit (<strong>RSW</strong>) can be used for supervisor software.</p>
+<ul>
+<li>help kernel recognize whether it is a invalid access or COW</li>
+</ul>
+<h3 id="exiting"><a class="header-anchor" href="#exiting">¶</a>exiting</h3>
+<p>a <strong>ref count</strong> for each physical page</p>
+<ul>
+<li>when a process stops referencing the page, <code>--refcount</code>, when refcount is zero, free the page.</li>
+</ul>
+<hr>
+<h2 id="Demand-Paging"><a class="header-anchor" href="#Demand-Paging">¶</a>Demand Paging</h2>
+<p>In <em>exec()</em>, we do not eagerly load the text, data segment <strong>from disk to mem</strong> (expensive).</p>
+<p>Instead, we set the PTE, but <strong>without the PTE_V bit set, and do not actually load it</strong></p>
+<p><img src="../images/6S081/demandpaging1.jpeg" alt=""></p>
+<p><strong>When page fault</strong></p>
+<ul>
+<li>read the block of data from file(disk) to mem</li>
+<li>map the memory into pgtbl</li>
+<li>restart instuction</li>
+</ul>
+<p><strong>Benefit</strong>:</p>
+<ul>
+<li>If program does not use all data/text segment, we use less memory. Load less from disk (faster)</li>
+<li><strong>Worst case</strong>: a page fault for every page</li>
+</ul>
+<h3 id="If-Out-Of-Memory"><a class="header-anchor" href="#If-Out-Of-Memory">¶</a>If Out-Of-Memory</h3>
+<p><em>kalloc()</em> returns zero, running out of memory.</p>
+<ul>
+<li>-&gt; <strong>evict</strong> a page to fs, use the <strong>just-free</strong> page -&gt;restart</li>
+</ul>
+<p><strong>WHICH one to evict tho?</strong></p>
+<ul>
+<li>Least-Recently used (LRU)</li>
+<li>Prefer <strong>not-dirty</strong> pages
+<ul>
+<li>We can do nothing more than <strong>invalidate the page by setting the PTE_V to 0</strong></li>
+<li>If dirty page is evicted, we may have to write it back <strong>twice</strong></li>
+</ul>
+</li>
+<li>Prefer <strong>not-recently-accessed</strong> page
+<ul>
+<li>PTE_A bit is used to impl LRU strategy
+<ul>
+<li>reset PTE_A bit every once in a while</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="memory-mapped-files-mmap"><a class="header-anchor" href="#memory-mapped-files-mmap">¶</a>memory mapped files (mmap)</h2>
+<p><code>mmap(va, len, prot, flags, fd, off)</code><br>
+map file descriptor <code>fd</code> with offset <code>off</code> to a virtual address <code>va</code>, with protection <code>prot</code> and <code>flags</code></p>
+<p>kernel copy <code>len</code> bytes from <code>offset</code> into memory, setting pte to the physical memory.<br>
+From now on, application use load and store to modify file.</p>
+<p><code>unmap(va, len)</code>, to write back the <strong>dirty blocks</strong></p>
+<h3 id="do-it-lazily"><a class="header-anchor" href="#do-it-lazily">¶</a>do it lazily</h3>
+<p>do not map the file immediately<br>
+<strong>keep a record</strong>, PTE belongs to fd, saved in VMA (virtual mem area)</p>
+<p>When page fault, load disk from mem</p>
 <hr>
 
     </div>
@@ -412,13 +469,10 @@ img{
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2022/01/23/homepage/" rel="prev" title="Welcome!">
-      <i class="fa fa-chevron-left"></i> Welcome!
+    <a href="/2022/01/30/Vim-shortcuts-keep-updating/" rel="prev" title="Vim-shortcuts (keep updating)">
+      <i class="fa fa-chevron-left"></i> Vim-shortcuts (keep updating)
     </a></div>
-      <div class="post-nav-item">
-    <a href="/2022/01/28/xv6book-chap4-traps-and-syscall/" rel="next" title="xv6book-chap4: traps and syscall">
-      xv6book-chap4: traps and syscall <i class="fa fa-chevron-right"></i>
-    </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     
@@ -478,7 +532,7 @@ img{
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">6.S081 lec5: RISCV calling conventions</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Caller-Saved-and-Callee-Saved"><span class="nav-number">1.1.</span> <span class="nav-text">Caller Saved and Callee Saved</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#the-Stack"><span class="nav-number">1.2.</span> <span class="nav-text">the Stack</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GDB-commands"><span class="nav-number">1.3.</span> <span class="nav-text">GDB commands</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">Lec8: Page Faults</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Allocation"><span class="nav-number">1.1.</span> <span class="nav-text">Allocation</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#lazy-allocation"><span class="nav-number">1.1.1.</span> <span class="nav-text">lazy allocation</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#zero-fill-on-demand"><span class="nav-number">1.2.</span> <span class="nav-text">zero-fill on demand</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#COW-fork"><span class="nav-number">1.3.</span> <span class="nav-text">COW fork()</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#exiting"><span class="nav-number">1.3.1.</span> <span class="nav-text">exiting</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Demand-Paging"><span class="nav-number">1.4.</span> <span class="nav-text">Demand Paging</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#If-Out-Of-Memory"><span class="nav-number">1.4.1.</span> <span class="nav-text">If Out-Of-Memory</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#memory-mapped-files-mmap"><span class="nav-number">1.5.</span> <span class="nav-text">memory mapped files (mmap)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#do-it-lazily"><span class="nav-number">1.5.1.</span> <span class="nav-text">do it lazily</span></a></li></ol></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 

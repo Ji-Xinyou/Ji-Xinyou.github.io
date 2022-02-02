@@ -199,6 +199,262 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://jerryji.site/2022/02/01/6-S081-lec8-Page-Faults/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avtdisney.JPG">
+      <meta itemprop="name" content="Ji-Xinyou(Jerry)">
+      <meta itemprop="description" content="Lives should be diverse.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ji-Xinyou's page">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/02/01/6-S081-lec8-Page-Faults/" class="post-title-link" itemprop="url">6.S081 lec8: Page Faults</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2022-02-01 22:36:37" itemprop="dateCreated datePublished" datetime="2022-02-01T22:36:37+08:00">2022-02-01</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2022-02-02 17:48:15" itemprop="dateModified" datetime="2022-02-02T17:48:15+08:00">2022-02-02</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/O-S/" itemprop="url" rel="index"><span itemprop="name">O/S</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine: </span>
+    
+    <a title="valine" href="/2022/02/01/6-S081-lec8-Page-Faults/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/02/01/6-S081-lec8-Page-Faults/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <style>
+img{
+    width: 80%;
+}
+</style>
+<h1>Lec8: Page Faults</h1>
+<hr>
+<p><strong>PAGE FAULTS ARE EXCEPTIONS, using THE SAME MECHANISM as syscall, i.e. TRAP</strong></p>
+<p>Using page fault, we can make mapping dynamic.</p>
+<ul>
+<li>implement VM features using Page Fault handler
+<ul>
+<li>lazy alloc</li>
+<li>cow fork</li>
+<li>mmap</li>
+<li>demand paging</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p>What we need for page fault</p>
+<ol>
+<li>faulting virtual address
+<ol>
+<li>the va is put in <em>stval</em> register</li>
+</ol>
+</li>
+<li><strong>type</strong> of fault
+<ol>
+<li>read, write and inst -&gt; in <em>scause</em> register</li>
+</ol>
+</li>
+<li>the <strong>va of instruction</strong> that caused the Page Fault
+<ol>
+<li>in <em>sepc</em> register, when ecall is called</li>
+</ol>
+</li>
+</ol>
+<hr>
+<h2 id="Allocation"><a class="header-anchor" href="#Allocation">¶</a>Allocation</h2>
+<p><code>sbrk()</code> -&gt; eager allocation: the mem is allocated asap</p>
+<ul>
+<li>applications tend to overask<br>
+<img src="../images/6S081/sbrk.jpeg" alt=""></li>
+</ul>
+<h3 id="lazy-allocation"><a class="header-anchor" href="#lazy-allocation">¶</a>lazy allocation</h3>
+<p>When <em>sbrk()</em> is called, increment <code>p-&gt;sz += n</code>, but do not allocate memory.</p>
+<ul>
+<li>Causing page fault
+<ul>
+<li>When page fault, allocate if <code>va &lt; p-&gt;sz</code> (stval has va)
+<ul>
+<li>allocate a page, zero it and map
+<ul>
+<li>then restart the original instruction transparently</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>In lazy page allocation, when a faulting va is accessed, we mapped a page.<br>
+But there is also <strong>an important thing</strong> we need to pay attention on, that is<br>
+when <em>uvmunmap()</em> is called.</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span></span></span><br><span class="line"><span class="function"><span class="title">uvmunmap</span><span class="params">(<span class="keyword">pagetable_t</span> pagetable, uint64 va, uint64 npages, <span class="keyword">int</span> do_free)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  uint64 a;</span><br><span class="line">  <span class="keyword">pte_t</span> *pte;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span>((va % PGSIZE) != <span class="number">0</span>)</span><br><span class="line">    panic(<span class="string">&quot;uvmunmap: not aligned&quot;</span>);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">for</span>(a = va; a &lt; va + npages*PGSIZE; a += PGSIZE)&#123;</span><br><span class="line">    <span class="keyword">if</span>((pte = walk(pagetable, a, <span class="number">0</span>)) == <span class="number">0</span>)</span><br><span class="line">      panic(<span class="string">&quot;uvmunmap: walk&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span>((*pte &amp; PTE_V) == <span class="number">0</span>)</span><br><span class="line">      <span class="comment">// panic(&quot;uvmunmap: not mapped&quot;);  &lt;----- this is the problem</span></span><br><span class="line">      <span class="keyword">continue</span>; <span class="comment">// WHY? Because when sys_sbrk() is called, maybe more than one page is growed (p-&gt;sz += x*PGSIZE)</span></span><br><span class="line">                <span class="comment">// however, in lazy alloc, we only allocate **one** page when a faulting va is accessed</span></span><br><span class="line">                <span class="comment">// therefore, when the process exits. The lazily allocated mapping will cause panic</span></span><br><span class="line">                <span class="comment">// IF YOU ARE NOT CLEAR</span></span><br><span class="line">                <span class="comment">// read uvmunmap(), sys_sbrk(), mappages()</span></span><br><span class="line">                <span class="comment">// CORE:</span></span><br><span class="line">                <span class="comment">// keep in mind that the core is: sbrk() gives conceptually more than one page, </span></span><br><span class="line">                <span class="comment">// but actually allocate one when page fault.</span></span><br><span class="line">                <span class="comment">// howevery uvmunmap() unmaps too many of them</span></span><br><span class="line">    <span class="keyword">if</span>(PTE_FLAGS(*pte) == PTE_V)</span><br><span class="line">      panic(<span class="string">&quot;uvmunmap: not a leaf&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span>(do_free)&#123;</span><br><span class="line">      uint64 pa = PTE2PA(*pte);</span><br><span class="line">      kfree((<span class="keyword">void</span>*)pa);</span><br><span class="line">    &#125;</span><br><span class="line">    *pte = <span class="number">0</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>The so called <strong>an important thing</strong> is stated in code section.</p>
+<hr>
+<h2 id="zero-fill-on-demand"><a class="header-anchor" href="#zero-fill-on-demand">¶</a>zero-fill on demand</h2>
+<p><img src="../images/6S081/zerofill.jpeg" alt=""><br>
+BSS is <strong>zero-filled</strong>, containing many pages with zero only. &lt;- that’s what we have in Virtual Address Space</p>
+<p>But in PA, we only have <strong>one page</strong> filled with zero. And we map all BSS pages to the zero-filled physical page.<br>
+The physical page should not be <strong>written-allowing</strong></p>
+<p>When page fault, we kalloc() a new page, and map faulting page to the new one with R/W perm.</p>
+<hr>
+<h2 id="COW-fork"><a class="header-anchor" href="#COW-fork">¶</a>COW fork()</h2>
+<p>First share the same physical page with parent.</p>
+<ul>
+<li>manipulate pte</li>
+</ul>
+<p>When child want to modify some page, kalloc() a new page.</p>
+<ul>
+<li>for parent and child, PTE_R only
+<ul>
+<li>when page fault, kalloc() -&gt; copy the original page, and map with PTE_W | PTE_R for both parent and child
+<ul>
+<li>check the figure to be more clear</li>
+</ul>
+</li>
+<li>How to find the faulting page for <strong>parent</strong>
+<ul>
+<li>the same va, since the child is a <strong>duplicate</strong></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><img src="../images/6S081/cowfork.jpeg" alt=""></p>
+<p><strong>pgfault</strong></p>
+<ul>
+<li>copy page</li>
+<li>map it</li>
+<li>restart instruction
+<ul>
+<li><em>userret</em>()</li>
+</ul>
+</li>
+</ul>
+<p>Flag bit in pte, the 8, 9, 10 bit (<strong>RSW</strong>) can be used for supervisor software.</p>
+<ul>
+<li>help kernel recognize whether it is a invalid access or COW</li>
+</ul>
+<h3 id="exiting"><a class="header-anchor" href="#exiting">¶</a>exiting</h3>
+<p>a <strong>ref count</strong> for each physical page</p>
+<ul>
+<li>when a process stops referencing the page, <code>--refcount</code>, when refcount is zero, free the page.</li>
+</ul>
+<hr>
+<h2 id="Demand-Paging"><a class="header-anchor" href="#Demand-Paging">¶</a>Demand Paging</h2>
+<p>In <em>exec()</em>, we do not eagerly load the text, data segment <strong>from disk to mem</strong> (expensive).</p>
+<p>Instead, we set the PTE, but <strong>without the PTE_V bit set, and do not actually load it</strong></p>
+<p><img src="../images/6S081/demandpaging1.jpeg" alt=""></p>
+<p><strong>When page fault</strong></p>
+<ul>
+<li>read the block of data from file(disk) to mem</li>
+<li>map the memory into pgtbl</li>
+<li>restart instuction</li>
+</ul>
+<p><strong>Benefit</strong>:</p>
+<ul>
+<li>If program does not use all data/text segment, we use less memory. Load less from disk (faster)</li>
+<li><strong>Worst case</strong>: a page fault for every page</li>
+</ul>
+<h3 id="If-Out-Of-Memory"><a class="header-anchor" href="#If-Out-Of-Memory">¶</a>If Out-Of-Memory</h3>
+<p><em>kalloc()</em> returns zero, running out of memory.</p>
+<ul>
+<li>-&gt; <strong>evict</strong> a page to fs, use the <strong>just-free</strong> page -&gt;restart</li>
+</ul>
+<p><strong>WHICH one to evict tho?</strong></p>
+<ul>
+<li>Least-Recently used (LRU)</li>
+<li>Prefer <strong>not-dirty</strong> pages
+<ul>
+<li>We can do nothing more than <strong>invalidate the page by setting the PTE_V to 0</strong></li>
+<li>If dirty page is evicted, we may have to write it back <strong>twice</strong></li>
+</ul>
+</li>
+<li>Prefer <strong>not-recently-accessed</strong> page
+<ul>
+<li>PTE_A bit is used to impl LRU strategy
+<ul>
+<li>reset PTE_A bit every once in a while</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="memory-mapped-files-mmap"><a class="header-anchor" href="#memory-mapped-files-mmap">¶</a>memory mapped files (mmap)</h2>
+<p><code>mmap(va, len, prot, flags, fd, off)</code><br>
+map file descriptor <code>fd</code> with offset <code>off</code> to a virtual address <code>va</code>, with protection <code>prot</code> and <code>flags</code></p>
+<p>kernel copy <code>len</code> bytes from <code>offset</code> into memory, setting pte to the physical memory.<br>
+From now on, application use load and store to modify file.</p>
+<p><code>unmap(va, len)</code>, to write back the <strong>dirty blocks</strong></p>
+<h3 id="do-it-lazily"><a class="header-anchor" href="#do-it-lazily">¶</a>do it lazily</h3>
+<p>do not map the file immediately<br>
+<strong>keep a record</strong>, PTE belongs to fd, saved in VMA (virtual mem area)</p>
+<p>When page fault, load disk from mem</p>
+<hr>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
     <link itemprop="mainEntityOfPage" href="https://jerryji.site/2022/01/30/Vim-shortcuts-keep-updating/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -966,7 +1222,7 @@ There are mainly <strong>3️⃣</strong> reasons for me to start the blog.</p>
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-count">8</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
