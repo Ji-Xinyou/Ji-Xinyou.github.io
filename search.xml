@@ -8,6 +8,7 @@ img{
     width: 70%;
 }
 </style>
+<span id="more"></span>
 <h1>6.S081 lec5: RISCV calling conventions</h1>
 <hr>
 <h2 id="Caller-Saved-and-Callee-Saved"><a class="header-anchor" href="#Caller-Saved-and-Callee-Saved">¶</a>Caller Saved and Callee Saved</h2>
@@ -22,7 +23,6 @@ img{
 <li>If more arguments are given, they should reside on stack.</li>
 </ul>
 <hr>
-<span id="more"></span>
 <h2 id="the-Stack"><a class="header-anchor" href="#the-Stack">¶</a>the Stack</h2>
 <ul>
 <li>The stack is created by function call! <strong>Each function call creates a stack frame for itself to use.</strong></li>
@@ -168,13 +168,14 @@ There are mainly <strong>3️⃣</strong> reasons for me to start the blog.</p>
   <entry>
     <title>xv6book-chap4: traps and syscall</title>
     <url>/2022/01/28/xv6book-chap4-traps-and-syscall/</url>
-    <content><![CDATA[<h1>xv6 book - Traps and syscall</h1>
-<hr>
-<style>
+    <content><![CDATA[<style>
 img{
     width: 60%;
 }
 </style>
+<span id="more"></span>
+<h1>xv6 book - Traps and syscall</h1>
+<hr>
 <h2 id="Trap"><a class="header-anchor" href="#Trap">¶</a>Trap</h2>
 <p>There are three events cause CPU to trap</p>
 <ul>
@@ -182,7 +183,6 @@ img{
 <li>exception</li>
 <li>device interrupt</li>
 </ul>
-<span id="more"></span>
 <p>Trap stages (4 in total)</p>
 <ul>
 <li>hardware actions (from CPU)</li>
@@ -482,11 +482,11 @@ so both can use trapframe.</li>
   <entry>
     <title>Some detailed things in C (1)</title>
     <url>/2022/01/28/Some-tricky-things-about-char-and-error-prone-string-ops-in-C/</url>
-    <content><![CDATA[<h1>detailed error-prone things in C (1st)</h1>
+    <content><![CDATA[<hr>
+<span id="more"></span>
+<h1>detailed error-prone things in C (1st)</h1>
 <hr>
 <p>As we all know, in C programming language, functions in <em>string.h</em> is very error-prone! In this post, I show something that might be in your way when you are using C.</p>
-<hr>
-<span id="more"></span>
 <h2 id="static-keyword"><a class="header-anchor" href="#static-keyword">¶</a>static keyword</h2>
 <p>prologue about initialized value:</p>
 <ul>
@@ -574,9 +574,9 @@ img{
     width: 80%;
 }
 </style>
+<span id="more"></span>
 <h1>6.S081 lec6: Traps</h1>
 <p>From user space to kernel space</p>
-<span id="more"></span>
 <ul>
 <li>Hardware state
 <ul>
@@ -828,7 +828,8 @@ Why the next instuction is correctly executed instead of some garbage being run.
   <entry>
     <title>Vim-shortcuts (keep updating)</title>
     <url>/2022/01/30/Vim-shortcuts-keep-updating/</url>
-    <content><![CDATA[<h1>Vim shortcuts</h1>
+    <content><![CDATA[<span id="more"></span>
+<h1>Vim shortcuts</h1>
 <hr>
 <h2 id="Intro"><a class="header-anchor" href="#Intro">¶</a>Intro</h2>
 <p>The topic is in ##, the commands are in ###, the decription is below them.</p>
@@ -846,9 +847,9 @@ img{
     width: 80%;
 }
 </style>
+<span id="more"></span>
 <h1>Lec8: Page Faults</h1>
 <hr>
-<span id="more"></span>
 <p><strong>PAGE FAULTS ARE EXCEPTIONS, using THE SAME MECHANISM as syscall, i.e. TRAP</strong></p>
 <p>Using page fault, we can make mapping dynamic.</p>
 <ul>
@@ -1022,8 +1023,8 @@ From now on, application use load and store to modify file.</p>
   <entry>
     <title>6.S081 cowlab</title>
     <url>/2022/02/02/6-S081-cowlab/</url>
-    <content><![CDATA[<h1>6.S081 Copy-On-Write fork() : COW lab</h1>
-<span id="more"></span>
+    <content><![CDATA[<span id="more"></span>
+<h1>6.S081 Copy-On-Write fork() : COW lab</h1>
 <p>At this point, I think maybe the lab should be recorded as well.<br>
 This record is not really for everyone originally. At least for now, I record this just because I think maybe I will reference here someday for recap.</p>
 <p>I will show mainly the core part of the code, and try to explain it clear for both me and potentially you 😃</p>
@@ -1037,7 +1038,9 @@ This record is not really for everyone originally. At least for now, I record th
 <h2 id="Implementation"><a class="header-anchor" href="#Implementation">¶</a>Implementation</h2>
 <h3 id="Add-reference-count-to-kalloc-c"><a class="header-anchor" href="#Add-reference-count-to-kalloc-c">¶</a>Add reference count to kalloc.c</h3>
 <h4 id="Add-refcount-to-kmem-struct"><a class="header-anchor" href="#Add-refcount-to-kmem-struct">¶</a>Add refcount to kmem struct</h4>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">spinlock</span> <span class="title">lock</span>;</span></span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">run</span> *<span class="title">freelist</span>;</span></span><br><span class="line">  uint64 rc[<span class="number">32768</span>]; <span class="comment">// refcount</span></span><br><span class="line">&#125; kmem;</span><br><span class="line">The <span class="number">32768</span> <span class="function">here is counted <span class="title">by</span> <span class="params">(PHYSTOP - end)</span> &gt;&gt; 12</span></span><br><span class="line"><span class="function">It is <span class="keyword">not</span> exact, but it is close <span class="keyword">and</span> enough</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">spinlock</span> <span class="title">lock</span>;</span></span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">run</span> *<span class="title">freelist</span>;</span></span><br><span class="line">  uint64 rc[<span class="number">32768</span>]; <span class="comment">// refcount</span></span><br><span class="line">&#125; kmem;</span><br></pre></td></tr></table></figure>
+<p>The 32768 here is counted by (PHYSTOP - end) &gt;&gt; 12<br>
+It is not exact, but it is close and enough</p>
 <hr>
 <h4 id="Define-refcount-operations"><a class="header-anchor" href="#Define-refcount-operations">¶</a>Define refcount operations</h4>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">// return refcount corresponds to the pa</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">int</span></span><br><span class="line">__pa2index(<span class="keyword">void</span> *pa)</span><br><span class="line">&#123;</span><br><span class="line">  <span class="comment">// return ((char*)pa - (char*)PGROUNDUP((uint64)end)) / PGSIZE;</span></span><br><span class="line">  <span class="keyword">return</span> ((uint64)pa - (uint64)end) &gt;&gt; <span class="number">12</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span></span><br><span class="line">__pa2rc(<span class="keyword">void</span> *pa)</span><br><span class="line">&#123;</span><br><span class="line">  <span class="keyword">return</span> kmem.rc[__pa2index(pa)];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span></span><br><span class="line">__inc_rc(<span class="keyword">void</span> *pa)</span><br><span class="line">&#123;</span><br><span class="line">  ++kmem.rc[__pa2index(pa)];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span></span><br><span class="line">__dec_rc(<span class="keyword">void</span> *pa)</span><br><span class="line">&#123;</span><br><span class="line">  <span class="keyword">if</span> (__pa2rc(pa) == <span class="number">0</span>)</span><br><span class="line">    <span class="keyword">return</span>; <span class="comment">// already zero</span></span><br><span class="line">  --kmem.rc[__pa2index(pa)];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -1067,5 +1070,23 @@ The reason why copyout() needs to be modified is that…</p>
 <p>Therefore, when we meet a <strong>COW and unwritable</strong> page in <em>copyout()</em>, we copy it to a new page and map the <strong>user’s pte</strong> to the new page.</p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> (va0 &gt;= MAXVA)</span><br><span class="line">  <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line"></span><br><span class="line">pte = walk(pagetable, va0, <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (pte == <span class="number">0</span>)</span><br><span class="line">  <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line"><span class="keyword">if</span> ((*pte &amp; PTE_V) == <span class="number">0</span>)</span><br><span class="line">  <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line"><span class="keyword">if</span> ((*pte &amp; PTE_U) == <span class="number">0</span>)</span><br><span class="line">  <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span>((*pte &amp; PTE_C) &amp;&amp; ((*pte &amp; PTE_W) == <span class="number">0</span>)) &#123;</span><br><span class="line">  uint64 pa, npa;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span>((pa = walkaddr(pagetable, va0)) == <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;copyout(): bad walkaddr()\n&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span>(__pa2rc((<span class="keyword">void</span>*)pa) == <span class="number">1</span>) &#123;</span><br><span class="line">    *pte = (*pte | PTE_W) &amp; ~PTE_C;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">if</span>((npa = (uint64)kalloc()) == <span class="number">0</span>) &#123;</span><br><span class="line">      <span class="built_in">printf</span>(<span class="string">&quot;copyout(): bad kalloc\n&quot;</span>);</span><br><span class="line">      <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    memmove((<span class="keyword">void</span>*)npa, (<span class="keyword">void</span>*)pa, PGSIZE);</span><br><span class="line"></span><br><span class="line">    uint64 flag = (PTE_FLAGS(*pte) | PTE_W) &amp; ~PTE_C;</span><br><span class="line">    *pte = (*pte | PTE_W) &amp; ~PTE_C;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// uvmunmap(pagetable, va0, 1, 0);</span></span><br><span class="line">    <span class="keyword">if</span>(mappages(pagetable, va0, PGSIZE, npa, flag) != <span class="number">0</span>) &#123;</span><br><span class="line">      <span class="built_in">printf</span>(<span class="string">&quot;copyout(): bad mappages()\n&quot;</span>);</span><br><span class="line">      <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    kfree((<span class="keyword">void</span>*)pa);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 ]]></content>
+  </entry>
+  <entry>
+    <title>6.S081-lec9 Interrupts</title>
+    <url>/2022/02/05/6-S081-lec9-Interrupts/</url>
+    <content><![CDATA[<style>
+img{
+    width: 80%;
+}
+</style>
+<span id="more"></span>
+<h1>6.S081</h1>
+]]></content>
+      <categories>
+        <category>O/S</category>
+      </categories>
+      <tags>
+        <tag>6.S081</tag>
+      </tags>
   </entry>
 </search>
