@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"jerryji.site","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":null,"activeClass":"valine"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="6.S081 Copy-On-Write fork() : COW lab">
+<meta property="og:type" content="article">
+<meta property="og:title" content="6.S081 cowlab">
+<meta property="og:url" content="https://jerryji.site/2022/02/02/6-S081-cowlab/index.html">
+<meta property="og:site_name" content="Ji-Xinyou&#39;s page">
+<meta property="og:description" content="6.S081 Copy-On-Write fork() : COW lab">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2022-02-02T10:09:08.000Z">
+<meta property="article:modified_time" content="2022-02-04T15:11:09.767Z">
+<meta property="article:author" content="Ji-Xinyou(Jerry)">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://jerryji.site/2022/02/02/6-S081-cowlab/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>6.S081 cowlab | Ji-Xinyou's page</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?60f7fcebe8358f50c04bd3e4852dcffa";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Ji-Xinyou's page</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://jerryji.site/2022/02/02/6-S081-cowlab/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avtdisney.JPG">
+      <meta itemprop="name" content="Ji-Xinyou(Jerry)">
+      <meta itemprop="description" content="Lives should be diverse.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ji-Xinyou's page">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          6.S081 cowlab
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2022-02-02 18:09:08" itemprop="dateCreated datePublished" datetime="2022-02-02T18:09:08+08:00">2022-02-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2022-02-04 23:11:09" itemprop="dateModified" datetime="2022-02-04T23:11:09+08:00">2022-02-04</time>
+              </span>
+
+          
+            <span class="post-meta-item" title="Views" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">Views: </span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine: </span>
+    
+    <a title="valine" href="/2022/02/02/6-S081-cowlab/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/02/02/6-S081-cowlab/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1>6.S081 Copy-On-Write fork() : COW lab</h1>
+<span id="more"></span>
+<p>At this point, I think maybe the lab should be recorded as well.<br>
+This record is not really for everyone originally. At least for now, I record this just because I think maybe I will reference here someday for recap.</p>
+<p>I will show mainly the core part of the code, and try to explain it clear for both me and potentially you 😃</p>
+<h2 id="The-requirements"><a class="header-anchor" href="#The-requirements">¶</a>The requirements</h2>
+<h2 id="Background-from-xv6-course-website"><a class="header-anchor" href="#Background-from-xv6-course-website">¶</a>Background (from xv6 course website)</h2>
+<p>The fork() system call in xv6 copies all of the parent process’s user-space memory into the child. If the parent is large, copying can take a long time. Worse, the work is often largely wasted; for example, a fork() followed by exec() in the child will cause the child to discard the copied memory, probably without ever using most of it. On the other hand, if both parent and child use a page, and one or both writes it, a copy is truly needed.</p>
+<h2 id="Solution-from-xv6-course-website"><a class="header-anchor" href="#Solution-from-xv6-course-website">¶</a>Solution (from xv6 course website)</h2>
+<p>The goal of copy-on-write (COW) fork() is to defer allocating and copying physical memory pages for the child until the copies are actually needed, if ever.</p>
+<p>COW fork() creates just a pagetable for the child, with PTEs for user memory pointing to the parent’s physical pages. COW fork() marks all the user PTEs in both parent and child as not writable. When either process tries to write one of these COW pages, the CPU will force a page fault. The kernel page-fault handler detects this case, allocates a page of physical memory for the faulting process, copies the original page into the new page, and modifies the relevant PTE in the faulting process to refer to the new page, this time with the PTE marked writeable. When the page fault handler returns, the user process will be able to write its copy of the page.</p>
+<p>COW fork() makes freeing of the physical pages that implement user memory a little trickier. A given physical page may be referred to by multiple processes’ page tables, and should be freed only when the last reference disappears.</p>
+<h2 id="Implementation"><a class="header-anchor" href="#Implementation">¶</a>Implementation</h2>
+<h3 id="Add-reference-count-to-kalloc-c"><a class="header-anchor" href="#Add-reference-count-to-kalloc-c">¶</a>Add reference count to kalloc.c</h3>
+<h4 id="Add-refcount-to-kmem-struct"><a class="header-anchor" href="#Add-refcount-to-kmem-struct">¶</a>Add refcount to kmem struct</h4>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">spinlock</span> <span class="title">lock</span>;</span></span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">run</span> *<span class="title">freelist</span>;</span></span><br><span class="line">  uint64 rc[<span class="number">32768</span>]; <span class="comment">// refcount</span></span><br><span class="line">&#125; kmem;</span><br><span class="line">The <span class="number">32768</span> <span class="function">here is counted <span class="title">by</span> <span class="params">(PHYSTOP - end)</span> &gt;&gt; 12</span></span><br><span class="line"><span class="function">It is <span class="keyword">not</span> exact, but it is close <span class="keyword">and</span> enough</span></span><br></pre></td></tr></table></figure>
+<hr>
+<h4 id="Define-refcount-operations"><a class="header-anchor" href="#Define-refcount-operations">¶</a>Define refcount operations</h4>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// return refcount corresponds to the pa</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">int</span></span><br><span class="line">__pa2index(<span class="keyword">void</span> *pa)</span><br><span class="line">&#123;</span><br><span class="line">  <span class="comment">// return ((char*)pa - (char*)PGROUNDUP((uint64)end)) / PGSIZE;</span></span><br><span class="line">  <span class="keyword">return</span> ((uint64)pa - (uint64)end) &gt;&gt; <span class="number">12</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span></span><br><span class="line">__pa2rc(<span class="keyword">void</span> *pa)</span><br><span class="line">&#123;</span><br><span class="line">  <span class="keyword">return</span> kmem.rc[__pa2index(pa)];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span></span><br><span class="line">__inc_rc(<span class="keyword">void</span> *pa)</span><br><span class="line">&#123;</span><br><span class="line">  ++kmem.rc[__pa2index(pa)];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span></span><br><span class="line">__dec_rc(<span class="keyword">void</span> *pa)</span><br><span class="line">&#123;</span><br><span class="line">  <span class="keyword">if</span> (__pa2rc(pa) == <span class="number">0</span>)</span><br><span class="line">    <span class="keyword">return</span>; <span class="comment">// already zero</span></span><br><span class="line">  --kmem.rc[__pa2index(pa)];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<h4 id="Modify-kalloc-and-kfree"><a class="header-anchor" href="#Modify-kalloc-and-kfree">¶</a>Modify kalloc() and kfree()</h4>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> *</span></span><br><span class="line"><span class="function"><span class="title">kalloc</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">run</span> *<span class="title">r</span>;</span></span><br><span class="line"></span><br><span class="line">  acquire(&amp;kmem.lock);</span><br><span class="line">  r = kmem.freelist;</span><br><span class="line">  <span class="keyword">if</span>(r) &#123;</span><br><span class="line">    kmem.freelist = r-&gt;next;</span><br><span class="line">    kmem.rc[__pa2index(r)] = <span class="number">1</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  release(&amp;kmem.lock);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span>(r)</span><br><span class="line">    <span class="built_in">memset</span>((<span class="keyword">char</span>*)r, <span class="number">5</span>, PGSIZE); <span class="comment">// fill with junk</span></span><br><span class="line">  <span class="keyword">return</span> (<span class="keyword">void</span>*)r;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span></span></span><br><span class="line"><span class="function"><span class="title">kfree</span><span class="params">(<span class="keyword">void</span> *pa)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">run</span> *<span class="title">r</span>;</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span>(((uint64)pa % PGSIZE) != <span class="number">0</span> || (<span class="keyword">char</span>*)pa &lt; end || (uint64)pa &gt;= PHYSTOP)</span><br><span class="line">    panic(<span class="string">&quot;kfree&quot;</span>);</span><br><span class="line"></span><br><span class="line">  acquire(&amp;kmem.lock);</span><br><span class="line">  __dec_rc(pa);</span><br><span class="line">  <span class="keyword">if</span> (__pa2rc(pa) &gt; <span class="number">0</span>) &#123;</span><br><span class="line">    release(&amp;kmem.lock);</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  release(&amp;kmem.lock);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Fill with junk to catch dangling refs.</span></span><br><span class="line">  <span class="built_in">memset</span>(pa, <span class="number">1</span>, PGSIZE);</span><br><span class="line"></span><br><span class="line">  r = (struct run*)pa;</span><br><span class="line"></span><br><span class="line">  acquire(&amp;kmem.lock);</span><br><span class="line">  r-&gt;next = kmem.freelist;</span><br><span class="line">  kmem.freelist = r;</span><br><span class="line">  release(&amp;kmem.lock);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="initialize-refcount-in-freerange-I-don’t-think-it-is-necessary"><a class="header-anchor" href="#initialize-refcount-in-freerange-I-don’t-think-it-is-necessary">¶</a>initialize refcount in freerange() (I don’t think it is necessary)</h4>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span></span></span><br><span class="line"><span class="function"><span class="title">freerange</span><span class="params">(<span class="keyword">void</span> *pa_start, <span class="keyword">void</span> *pa_end)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">char</span> *p;</span><br><span class="line">  p = (<span class="keyword">char</span>*)PGROUNDUP((uint64)pa_start);</span><br><span class="line">  <span class="keyword">for</span>(; p + PGSIZE &lt;= (<span class="keyword">char</span>*)pa_end; p += PGSIZE) &#123;</span><br><span class="line">    kmem.rc[__pa2index(p)] = <span class="number">1</span>; <span class="comment">// The reason why it is 1 is that, kfree below decrements it by one</span></span><br><span class="line">    kfree(p);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<h3 id="Modify-uvmcopy-and-clear-the-PTE-W-for-both-child-and-parent"><a class="header-anchor" href="#Modify-uvmcopy-and-clear-the-PTE-W-for-both-child-and-parent">¶</a>Modify uvmcopy() and clear the PTE_W for both child and parent</h3>
+<p>The modifications in <em>uvmcopy()</em> is here.</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span></span></span><br><span class="line"><span class="function"><span class="title">uvmcopy</span><span class="params">(<span class="keyword">pagetable_t</span> old, <span class="keyword">pagetable_t</span> <span class="keyword">new</span>, uint64 sz)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">pte_t</span> *pte;</span><br><span class="line">  uint64 pa, i;</span><br><span class="line">  <span class="comment">// uint flags;</span></span><br><span class="line">  <span class="comment">// char *mem;</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">for</span>(i = <span class="number">0</span>; i &lt; sz; i += PGSIZE)&#123;</span><br><span class="line">    <span class="keyword">if</span>((pte = walk(old, i, <span class="number">0</span>)) == <span class="number">0</span>)</span><br><span class="line">      panic(<span class="string">&quot;uvmcopy: pte should exist&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span>((*pte &amp; PTE_V) == <span class="number">0</span>)</span><br><span class="line">      panic(<span class="string">&quot;uvmcopy: page not present&quot;</span>);</span><br><span class="line">    pa = PTE2PA(*pte);</span><br><span class="line">    <span class="keyword">if</span> (*pte &amp; PTE_W) <span class="comment">// We only COW writable pages</span></span><br><span class="line">      *pte = (*pte | PTE_C) &amp; ~PTE_W;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(mappages(<span class="keyword">new</span>, i, PGSIZE, pa, PTE_FLAGS(*pte)) != <span class="number">0</span>) &#123;</span><br><span class="line">      <span class="built_in">printf</span>(<span class="string">&quot;uvmcopy(): bad mappages\n&quot;</span>);</span><br><span class="line">      <span class="keyword">goto</span> err;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    __inc_rc((<span class="keyword">void</span>*)pa); <span class="comment">// increment refcount</span></span><br><span class="line">    <span class="comment">// if((mem = kalloc()) == 0)</span></span><br><span class="line">    <span class="comment">//   goto err;</span></span><br><span class="line">    <span class="comment">// memmove(mem, (char*)pa, PGSIZE);</span></span><br><span class="line">    <span class="comment">// if(mappages(new, i, PGSIZE, (uint64)mem, flags) != 0)&#123;</span></span><br><span class="line">    <span class="comment">//   kfree(mem);</span></span><br><span class="line">    <span class="comment">//   goto err;</span></span><br><span class="line">    <span class="comment">// &#125;</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;  </span><br></pre></td></tr></table></figure>
+<p><em>uvmcopy()</em> is called in the twelfth line of code in fork() (proc.c:273), which is just after <em>allocproc()</em>.<br>
+The usage of <em>uvmcopy()</em> is to copy both <code>pte and *pte</code> from parent to child.</p>
+<p>Here we modify it to only copy pte, and clear the PTE_W bit<br>
+Also, to sign the COW pte, we set the <strong>PTE_COW</strong> to one in child pgtbl</p>
+<h3 id="Modify-usertrap-to-recognize-pagefaults"><a class="header-anchor" href="#Modify-usertrap-to-recognize-pagefaults">¶</a>Modify usertrap() to recognize pagefaults</h3>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">else</span> <span class="keyword">if</span>(r_scause() == <span class="number">0xf</span>) &#123;</span><br><span class="line">    uint64 va = PGROUNDDOWN(r_stval());</span><br><span class="line">    <span class="keyword">pte_t</span> *pte;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (va &gt;= MAXVA || va &gt; p-&gt;sz) &#123;</span><br><span class="line">      <span class="built_in">printf</span>(<span class="string">&quot;utrap(): bad va\n&quot;</span>);</span><br><span class="line">      p-&gt;killed = <span class="number">1</span>;</span><br><span class="line">      <span class="keyword">goto</span> end;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> ((va &lt; PGROUNDDOWN(p-&gt;trapframe-&gt;sp)) &amp;&amp; (va &gt;= PGROUNDDOWN(p-&gt;trapframe-&gt;sp) - PGSIZE)) &#123;</span><br><span class="line">      <span class="built_in">printf</span>(<span class="string">&quot;utrap(): va in guard page\n&quot;</span>);</span><br><span class="line">      p-&gt;killed = <span class="number">1</span>;</span><br><span class="line">      <span class="keyword">goto</span> end;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> ((pte = walk(p-&gt;pagetable, va, <span class="number">0</span>)) == <span class="number">0</span>) &#123;</span><br><span class="line">      <span class="built_in">printf</span>(<span class="string">&quot;utrap(): bad walk\n&quot;</span>);</span><br><span class="line">      p-&gt;killed = <span class="number">1</span>;</span><br><span class="line">      <span class="keyword">goto</span> end;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (((*pte &amp; PTE_C) &amp;&amp; (*pte &amp; PTE_U) &amp;&amp; (*pte &amp; PTE_V)) == <span class="number">0</span>) &#123;</span><br><span class="line">      <span class="built_in">printf</span>(<span class="string">&quot;utrap(): bad flag bits\n&quot;</span>);</span><br><span class="line">      p-&gt;killed = <span class="number">1</span>;</span><br><span class="line">      <span class="keyword">goto</span> end;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    uint64 pa, npa;</span><br><span class="line">    <span class="keyword">if</span>((pa = walkaddr(p-&gt;pagetable, va)) == <span class="number">0</span>) &#123;</span><br><span class="line">      <span class="built_in">printf</span>(<span class="string">&quot;utrap(): bad walkaddr()\n&quot;</span>);</span><br><span class="line">      p-&gt;killed = <span class="number">1</span>;</span><br><span class="line">      <span class="keyword">goto</span> end;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (__pa2rc((<span class="keyword">void</span>*)pa) == <span class="number">1</span>) &#123;</span><br><span class="line">      *pte = (*pte | PTE_W) &amp; ~PTE_C;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">if</span>((npa = (uint64)kalloc()) == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;utrap(): bad kalloc()\n&quot;</span>);</span><br><span class="line">        p-&gt;killed = <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">goto</span> end;</span><br><span class="line">      &#125;</span><br><span class="line">      memmove((<span class="keyword">void</span>*)npa, (<span class="keyword">void</span>*)pa, PGSIZE);</span><br><span class="line"></span><br><span class="line">      uint64 flag;</span><br><span class="line">      flag = (PTE_FLAGS(*pte) | PTE_W) &amp; ~PTE_C;</span><br><span class="line">      *pte = (*pte | PTE_W) &amp; ~PTE_C;</span><br><span class="line"></span><br><span class="line">      <span class="comment">// The panic in mappages() is commented, so we do not unmap here</span></span><br><span class="line">      <span class="comment">// uvmunmap(p-&gt;pagetable, va, 1, 0);</span></span><br><span class="line">      <span class="keyword">if</span>(mappages(p-&gt;pagetable, va, PGSIZE, npa, flag) != <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;utrap(): bad mappages()\n&quot;</span>);</span><br><span class="line">        p-&gt;killed = <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">goto</span> end;</span><br><span class="line">      &#125;</span><br><span class="line">      kfree((<span class="keyword">void</span>*)pa);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; </span><br></pre></td></tr></table></figure>
+<hr>
+<h3 id="Modify-Copyout"><a class="header-anchor" href="#Modify-Copyout">¶</a>Modify Copyout()</h3>
+<p>At first, I am puzzled for not knowing why I need to modify this function.<br>
+The reason why copyout() needs to be modified is that…</p>
+<p>The function’s usage is to copy memory region <strong>from kernel to userspace</strong></p>
+<p>Therefore, if we are copying a <strong>COW page</strong>, it is often not <strong>writable</strong>.</p>
+<p>However, in userspace, a unwritable page will leads to exceptions.</p>
+<p>Therefore, when we meet a <strong>COW and unwritable</strong> page in <em>copyout()</em>, we copy it to a new page and map the <strong>user’s pte</strong> to the new page.</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (va0 &gt;= MAXVA)</span><br><span class="line">  <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line"></span><br><span class="line">pte = walk(pagetable, va0, <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (pte == <span class="number">0</span>)</span><br><span class="line">  <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line"><span class="keyword">if</span> ((*pte &amp; PTE_V) == <span class="number">0</span>)</span><br><span class="line">  <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line"><span class="keyword">if</span> ((*pte &amp; PTE_U) == <span class="number">0</span>)</span><br><span class="line">  <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span>((*pte &amp; PTE_C) &amp;&amp; ((*pte &amp; PTE_W) == <span class="number">0</span>)) &#123;</span><br><span class="line">  uint64 pa, npa;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span>((pa = walkaddr(pagetable, va0)) == <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;copyout(): bad walkaddr()\n&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span>(__pa2rc((<span class="keyword">void</span>*)pa) == <span class="number">1</span>) &#123;</span><br><span class="line">    *pte = (*pte | PTE_W) &amp; ~PTE_C;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">if</span>((npa = (uint64)kalloc()) == <span class="number">0</span>) &#123;</span><br><span class="line">      <span class="built_in">printf</span>(<span class="string">&quot;copyout(): bad kalloc\n&quot;</span>);</span><br><span class="line">      <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    memmove((<span class="keyword">void</span>*)npa, (<span class="keyword">void</span>*)pa, PGSIZE);</span><br><span class="line"></span><br><span class="line">    uint64 flag = (PTE_FLAGS(*pte) | PTE_W) &amp; ~PTE_C;</span><br><span class="line">    *pte = (*pte | PTE_W) &amp; ~PTE_C;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// uvmunmap(pagetable, va0, 1, 0);</span></span><br><span class="line">    <span class="keyword">if</span>(mappages(pagetable, va0, PGSIZE, npa, flag) != <span class="number">0</span>) &#123;</span><br><span class="line">      <span class="built_in">printf</span>(<span class="string">&quot;copyout(): bad mappages()\n&quot;</span>);</span><br><span class="line">      <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    kfree((<span class="keyword">void</span>*)pa);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/02/01/6-S081-lec8-Page-Faults/" rel="prev" title="6.S081 lec8: Page Faults">
+      <i class="fa fa-chevron-left"></i> 6.S081 lec8: Page Faults
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">6.S081 Copy-On-Write fork() : COW lab</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#The-requirements"><span class="nav-number">1.1.</span> <span class="nav-text">The requirements</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Background-from-xv6-course-website"><span class="nav-number">1.2.</span> <span class="nav-text">Background (from xv6 course website)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Solution-from-xv6-course-website"><span class="nav-number">1.3.</span> <span class="nav-text">Solution (from xv6 course website)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Implementation"><span class="nav-number">1.4.</span> <span class="nav-text">Implementation</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Add-reference-count-to-kalloc-c"><span class="nav-number">1.4.1.</span> <span class="nav-text">Add reference count to kalloc.c</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Add-refcount-to-kmem-struct"><span class="nav-number">1.4.1.1.</span> <span class="nav-text">Add refcount to kmem struct</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Define-refcount-operations"><span class="nav-number">1.4.1.2.</span> <span class="nav-text">Define refcount operations</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Modify-kalloc-and-kfree"><span class="nav-number">1.4.1.3.</span> <span class="nav-text">Modify kalloc() and kfree()</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#initialize-refcount-in-freerange-I-don%E2%80%99t-think-it-is-necessary"><span class="nav-number">1.4.1.4.</span> <span class="nav-text">initialize refcount in freerange() (I don’t think it is necessary)</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Modify-uvmcopy-and-clear-the-PTE-W-for-both-child-and-parent"><span class="nav-number">1.4.2.</span> <span class="nav-text">Modify uvmcopy() and clear the PTE_W for both child and parent</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Modify-usertrap-to-recognize-pagefaults"><span class="nav-number">1.4.3.</span> <span class="nav-text">Modify usertrap() to recognize pagefaults</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Modify-Copyout"><span class="nav-number">1.4.4.</span> <span class="nav-text">Modify Copyout()</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Ji-Xinyou(Jerry)"
+      src="/images/avtdisney.JPG">
+  <p class="site-author-name" itemprop="name">Ji-Xinyou(Jerry)</p>
+  <div class="site-description" itemprop="description">Lives should be diverse.</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">9</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Ji-Xinyou" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;Ji-Xinyou" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:jerryji0414@outlook.com" title="E-Mail → mailto:jerryji0414@outlook.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://instagram.com/ji_xinyou" title="Instagram → https:&#x2F;&#x2F;instagram.com&#x2F;ji_xinyou" rel="noopener" target="_blank"><i class="fab fa-instagram fa-fw"></i>Instagram</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-cat"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ji-Xinyou(Jerry)</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a>
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="Total Visitors">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="Total Views">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+  <script defer src="/lib/three/three.min.js"></script>
+    <script defer src="/lib/three/canvas_lines.min.js"></script>
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'FHggnYW6MTtvXagFltr5cu4J-gzGzoHsz',
+      appKey     : 'yYExghRJNoEtOOLEtU2VIRQt',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>
