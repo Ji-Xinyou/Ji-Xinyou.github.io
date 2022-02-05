@@ -1023,7 +1023,12 @@ From now on, application use load and store to modify file.</p>
   <entry>
     <title>6.S081 cowlab</title>
     <url>/2022/02/02/6-S081-cowlab/</url>
-    <content><![CDATA[<span id="more"></span>
+    <content><![CDATA[<style>
+img{
+    width: 80%;
+}
+</style>
+<span id="more"></span>
 <h1>6.S081 Copy-On-Write fork() : COW lab</h1>
 <p>At this point, I think maybe the lab should be recorded as well.<br>
 This record is not really for everyone originally. At least for now, I record this just because I think maybe I will reference here someday for recap.</p>
@@ -1070,6 +1075,12 @@ The reason why copyout() needs to be modified is that…</p>
 <p>Therefore, when we meet a <strong>COW and unwritable</strong> page in <em>copyout()</em>, we copy it to a new page and map the <strong>user’s pte</strong> to the new page.</p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> (va0 &gt;= MAXVA)</span><br><span class="line">  <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line"></span><br><span class="line">pte = walk(pagetable, va0, <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (pte == <span class="number">0</span>)</span><br><span class="line">  <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line"><span class="keyword">if</span> ((*pte &amp; PTE_V) == <span class="number">0</span>)</span><br><span class="line">  <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line"><span class="keyword">if</span> ((*pte &amp; PTE_U) == <span class="number">0</span>)</span><br><span class="line">  <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span>((*pte &amp; PTE_C) &amp;&amp; ((*pte &amp; PTE_W) == <span class="number">0</span>)) &#123;</span><br><span class="line">  uint64 pa, npa;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span>((pa = walkaddr(pagetable, va0)) == <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;copyout(): bad walkaddr()\n&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span>(__pa2rc((<span class="keyword">void</span>*)pa) == <span class="number">1</span>) &#123;</span><br><span class="line">    *pte = (*pte | PTE_W) &amp; ~PTE_C;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">if</span>((npa = (uint64)kalloc()) == <span class="number">0</span>) &#123;</span><br><span class="line">      <span class="built_in">printf</span>(<span class="string">&quot;copyout(): bad kalloc\n&quot;</span>);</span><br><span class="line">      <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    memmove((<span class="keyword">void</span>*)npa, (<span class="keyword">void</span>*)pa, PGSIZE);</span><br><span class="line"></span><br><span class="line">    uint64 flag = (PTE_FLAGS(*pte) | PTE_W) &amp; ~PTE_C;</span><br><span class="line">    *pte = (*pte | PTE_W) &amp; ~PTE_C;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// uvmunmap(pagetable, va0, 1, 0);</span></span><br><span class="line">    <span class="keyword">if</span>(mappages(pagetable, va0, PGSIZE, npa, flag) != <span class="number">0</span>) &#123;</span><br><span class="line">      <span class="built_in">printf</span>(<span class="string">&quot;copyout(): bad mappages()\n&quot;</span>);</span><br><span class="line">      <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    kfree((<span class="keyword">void</span>*)pa);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 ]]></content>
+      <categories>
+        <category>O/S</category>
+      </categories>
+      <tags>
+        <tag>6.S081</tag>
+      </tags>
   </entry>
   <entry>
     <title>6.S081-lec9 Interrupts</title>
@@ -1280,6 +1291,24 @@ img{
 <hr>
 <p>我们已经掌握了第三章的内容，我们现在去看第四章吧！<br>
 第四章也是Rust很核心的一个内容，即<code>ownership</code>机制，他让Rust无需GC就可以保障内存的安全！</p>
+]]></content>
+      <categories>
+        <category>ProgLang</category>
+      </categories>
+      <tags>
+        <tag>Rust</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>the book(Rust) - Chapt4</title>
+    <url>/2022/02/05/the-book-Rust-Chapt4/</url>
+    <content><![CDATA[<style>
+img{
+    width: 80%;
+}
+</style>
+<span id="more"></span>
+<h1>Ownership</h1>
 ]]></content>
       <categories>
         <category>ProgLang</category>
