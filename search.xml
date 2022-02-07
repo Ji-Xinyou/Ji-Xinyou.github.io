@@ -1092,6 +1092,191 @@ img{
 </style>
 <span id="more"></span>
 <h1>6.S081 lecture9: Interrupts</h1>
+<h2 id="Interrupts"><a class="header-anchor" href="#Interrupts">¶</a>Interrupts</h2>
+<p>Hardware wants attention now.</p>
+<p>SW saves its work</p>
+<ul>
+<li>set it aside</li>
+<li>process interupt</li>
+<li>resume</li>
+</ul>
+<p><strong>same mechanism</strong> w/ syscall and traps</p>
+<hr>
+<h2 id="Properties-of-Interrupt"><a class="header-anchor" href="#Properties-of-Interrupt">¶</a>Properties of Interrupt</h2>
+<p>Three things <strong>differs</strong> Interrupt from others<br>
+<strong>Interrupt</strong></p>
+<ul>
+<li>asynchronous
+<ul>
+<li>may have nothing to do with CPU’s context</li>
+</ul>
+</li>
+<li>concurrency</li>
+<li>programmed devices</li>
+</ul>
+<hr>
+<h2 id="Hardware-side"><a class="header-anchor" href="#Hardware-side">¶</a>Hardware side</h2>
+<p><strong>PLIC</strong> controls interrupts by <strong>routing</strong> them to cores<br>
+When no cores are available, PLIC <strong>holds</strong> them.</p>
+<p><img src="../images/6S081/plic.png" alt=""></p>
+<hr>
+<h2 id="Software-side"><a class="header-anchor" href="#Software-side">¶</a>Software side</h2>
+<p>code manages the device is called <strong>driver</strong></p>
+<p><strong>Driver structure</strong></p>
+<ul>
+<li>Top part (interact with user level processes)
+<ul>
+<li><strong>queue</strong> running in the driver, decouples top and bottom</li>
+</ul>
+</li>
+<li>Bottom part
+<ul>
+<li>Interrupt handler</li>
+</ul>
+</li>
+</ul>
+<p><img src="../images/6S081/driver.png" alt=""></p>
+<hr>
+<h2 id="Programming-device"><a class="header-anchor" href="#Programming-device">¶</a>Programming device</h2>
+<p>Typically done by <strong>memory mapped io</strong>.</p>
+<ul>
+<li>devices show on specfic physical addresses</li>
+<li>ld/st inst to those addresses
+<ul>
+<li>read, write <strong>control regs</strong> of the device</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="Case-study-ls"><a class="header-anchor" href="#Case-study-ls">¶</a>Case study: $ ls</h2>
+<ul>
+<li>
+<p>$: device puts $ into <strong>UART</strong></p>
+<ul>
+<li>UART generates interrupt when the character has been sent</li>
+<li>UART是用于串口通信的芯片</li>
+</ul>
+</li>
+<li>
+<p>ls: keyboard to the recv line</p>
+<ul>
+<li>generate interrupts to tell there a char available</li>
+<li>handler reads it</li>
+</ul>
+</li>
+</ul>
+<h3 id="RISC-V-support-for-interrupts"><a class="header-anchor" href="#RISC-V-support-for-interrupts">¶</a>RISC-V support for interrupts</h3>
+<p><strong>SIE</strong>: supervisor interrupt enable reg</p>
+<ul>
+<li>1 <strong>bit</strong> each for external intr, sw intr, timer intr</li>
+</ul>
+<p><strong>SSTATUS</strong></p>
+<ul>
+<li>1 <strong>bit</strong> to disable and enable intr</li>
+</ul>
+<p><strong>SIP</strong>: supervisor pending register</p>
+<ul>
+<li>what intr comes in</li>
+</ul>
+<p><strong>scause</strong></p>
+<ul>
+<li>indicate it is an interrupt</li>
+</ul>
+<p><strong>stvec</strong></p>
+<ul>
+<li>jump to handler</li>
+</ul>
+<hr>
+<h2 id="Interrupt-HW"><a class="header-anchor" href="#Interrupt-HW">¶</a>Interrupt (HW)</h2>
+<p>Let’s say the <strong>keyboard raises the intr line</strong><br>
+-&gt; The intr signal goes to <strong>PLIC</strong><br>
+-&gt; The PLIC routes the signal to <strong>core</strong></p>
+<ul>
+<li>If the core’s SIE bit is set
+<ul>
+<li>close the INTR by <strong>clearing SIE bit</strong></li>
+<li>epc &lt;- pc</li>
+<li>save the current mode</li>
+<li>mode &lt;- supervisor</li>
+<li>pc &lt;- stvec
+<ul>
+<li><em>usertrap()</em></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="Interrupt-and-concurrency"><a class="header-anchor" href="#Interrupt-and-concurrency">¶</a>Interrupt and concurrency</h2>
+<ol>
+<li>device and CPU run in <strong>parallel</strong>
+<ol>
+<li><strong>producer/consumer parallelism</strong></li>
+</ol>
+</li>
+<li>interrupt stops current runnning program
+<ol>
+<li>tricky when <strong>kernel</strong> gets interrupt</li>
+<li>intr enable/disable</li>
+</ol>
+</li>
+<li><strong>top of driver and bottom</strong> of the driver may run in parallel <strong>(on different CPUS)</strong>
+<ol>
+<li>use <strong>locks</strong>, because different CPU may look at the <strong>same</strong> queue.</li>
+</ol>
+</li>
+</ol>
+<hr>
+<h3 id="producer-consumer-parallelism"><a class="header-anchor" href="#producer-consumer-parallelism">¶</a>producer-consumer parallelism</h3>
+<p>A <strong>buffer</strong> in the driver.<br>
+Two <strong>ptrs</strong>, read ptr and write ptr.</p>
+<p>Producers: <em>putc()</em><br>
+Consumers: <em>getc()</em></p>
+<p>buffer full? buffer empty?</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">char</span> uart_tx_buf[UART_TX_BUF_SIZE];</span><br><span class="line"><span class="keyword">int</span> uart_tx_w;</span><br><span class="line"><span class="keyword">int</span> uart_tx_r;</span><br></pre></td></tr></table></figure>
+<h3 id="procedure-of-inputting-‘l’"><a class="header-anchor" href="#procedure-of-inputting-‘l’">¶</a>procedure of inputting ‘l’</h3>
+<p>User inputs char <strong>l</strong><br>
+-&gt; <strong>l</strong> sent from <strong>keyboard to UART</strong><br>
+-&gt; routed through <strong>PLIC</strong> to some <strong>core</strong><br>
+-&gt; interrupt, <em>devintr()</em> is called<br>
+-&gt; <em>uartintr()</em> is called<br>
+-&gt; <em>uartgetc()</em> gets the char input (i.e. ‘l’), then called <em>consoleintr()</em><br>
+-&gt; <em>consputc()</em> is called to show the char<br>
+-&gt; put the char into the buffer, and when a <strong>newline</strong> is called, <em>wakeup()</em> the shell to read the buffer</p>
+<h3 id="Interrupt-Evolution"><a class="header-anchor" href="#Interrupt-Evolution">¶</a>Interrupt Evolution</h3>
+<ul>
+<li>Used to be fast
+<ul>
+<li>hw simple</li>
+</ul>
+</li>
+<li>Now intr slow compared to <strong>CPU</strong>
+<ul>
+<li>device is more complex
+<ul>
+<li>to avoid intr too much</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>e.g. gbit eth card -&gt; 1.5mill pkts/s</p>
+<ul>
+<li>If intr per packet, too many interrupts</li>
+<li>Used <strong>polling</strong> to solve for <strong>fast devs</strong></li>
+</ul>
+<h4 id="Polling"><a class="header-anchor" href="#Polling">¶</a>Polling</h4>
+<p>If the dev is very fast, the cost of intr is high</p>
+<p>CPU <strong>spins</strong>(loop) on dev, until dev has data</p>
+<ul>
+<li>waste CPU cycles if the dev is slow</li>
+<li>but if dev is fast, it’s ok
+<ul>
+<li>saves entry/exit cost</li>
+</ul>
+</li>
+</ul>
+<hr>
 ]]></content>
       <categories>
         <category>O/S</category>
