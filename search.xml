@@ -1599,4 +1599,77 @@ Rust 不允许自身或其任何部分实现了 <code>Drop trait</code> 的类�
         <tag>Rust</tag>
       </tags>
   </entry>
+  <entry>
+    <title>6.S081-lec10 Multiprocesses and Locks</title>
+    <url>/2022/02/07/6-S081-lec10-Multiprocesses-and-Locks/</url>
+    <content><![CDATA[<style>
+img{
+    width: 80%;
+}
+</style>
+<span id="more"></span>
+<h1>6.S081-lec10 Multiprocesses and Locks</h1>
+<hr>
+]]></content>
+      <categories>
+        <category>O/S</category>
+      </categories>
+      <tags>
+        <tag>6.S081</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>the book(Rust) - Chapt5</title>
+    <url>/2022/02/07/the-book-Rust-Chapt5/</url>
+    <content><![CDATA[<style>
+img{
+    width: 80%;
+}
+</style>
+<span id="more"></span>
+<h1>结构体</h1>
+<p>结构体不可以指定某一个<strong>字段</strong>是否可变，但是可以让整一个实例可变</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">User</span></span> &#123;</span><br><span class="line">    active: <span class="built_in">bool</span>,</span><br><span class="line">    username: <span class="built_in">String</span>,</span><br><span class="line">    email: <span class="built_in">String</span>,</span><br><span class="line">    sign_in_count: <span class="built_in">u64</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> <span class="keyword">mut</span> user1 = User &#123;</span><br><span class="line">    email: <span class="built_in">String</span>::from(<span class="string">&quot;someone@example.com&quot;</span>),</span><br><span class="line">    username: <span class="built_in">String</span>::from(<span class="string">&quot;someusername123&quot;</span>),</span><br><span class="line">    active: <span class="literal">true</span>,</span><br><span class="line">    sign_in_count: <span class="number">1</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="字段初始化"><a class="header-anchor" href="#字段初始化">¶</a>字段初始化</h2>
+<p>使用和参数一样的名字的变量名，可以不写<code>email: email</code></p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">build_user</span></span>(email: <span class="built_in">String</span>, username: <span class="built_in">String</span>) -&gt; User &#123;</span><br><span class="line">    User &#123;</span><br><span class="line">        email,</span><br><span class="line">        username,</span><br><span class="line">        active: <span class="literal">true</span>,</span><br><span class="line">        sign_in_count: <span class="number">1</span>,</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> user1 = build_user(</span><br><span class="line">        <span class="built_in">String</span>::from(<span class="string">&quot;someone@example.com&quot;</span>),</span><br><span class="line">        <span class="built_in">String</span>::from(<span class="string">&quot;someusername123&quot;</span>),</span><br><span class="line">    );</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上下两段代码的效果是一样的，<br>
+<code>..user1</code>证明别的变量都是一样的，但是**必须放在最后。</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">User</span></span> &#123;</span><br><span class="line">    active: <span class="built_in">bool</span>,</span><br><span class="line">    username: <span class="built_in">String</span>,</span><br><span class="line">    email: <span class="built_in">String</span>,</span><br><span class="line">    sign_in_count: <span class="built_in">u64</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="comment">// --snip--</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> user1 = User &#123;</span><br><span class="line">        email: <span class="built_in">String</span>::from(<span class="string">&quot;someone@example.com&quot;</span>),</span><br><span class="line">        username: <span class="built_in">String</span>::from(<span class="string">&quot;someusername123&quot;</span>),</span><br><span class="line">        active: <span class="literal">true</span>,</span><br><span class="line">        sign_in_count: <span class="number">1</span>,</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> user2 = User &#123;</span><br><span class="line">        email: <span class="built_in">String</span>::from(<span class="string">&quot;another@example.com&quot;</span>),</span><br><span class="line">        ..user1</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>由于我们的user2使用了user1的username，user1<strong>不再有效</strong>，因为在堆上。</p>
+<p>但是如果仅仅使用了user1的<code>active</code>与<code>sign_in_count</code>是没关系的，他们有<code>copy trait</code>，在栈上。</p>
+<p>我们也可以使用<strong>没有命名字段</strong>的结构体</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Color</span></span>(<span class="built_in">i32</span>, <span class="built_in">i32</span>, <span class="built_in">i32</span>);</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Point</span></span>(<span class="built_in">i32</span>, <span class="built_in">i32</span>, <span class="built_in">i32</span>);</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> black = Color(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">    <span class="keyword">let</span> origin = Point(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以用<code>black.0, black.1, black.2</code>来访问</p>
+<p><strong>如果要在结构体内使用别的变量的引用</strong>，需要用<strong>生命周期</strong>，保证结构体引用的数据有效性与结构体本身一致。</p>
+<hr>
+<h2 id="println-宏打印"><a class="header-anchor" href="#println-宏打印">¶</a>println! 宏打印</h2>
+<p><code>println!(&quot;rect1 is &#123;&#125;&quot;, rect1);</code>需要我们实现<code>std::fmt::Display</code></p>
+<p><code>println!(&quot;rect1 is &#123;:?&#125;&quot;, rect1);</code>需要我们实现<code>Debug trait</code></p>
+<ul>
+<li>我们可以在结构体上面加上<code>#[derive(Debug)]</code>让编译器自动生成</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="meta">#[derive(Debug)]</span> </span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Rectangle</span></span> &#123;</span><br><span class="line">    width: <span class="built_in">u32</span>,</span><br><span class="line">    height: <span class="built_in">u32</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="dbg-宏"><a class="header-anchor" href="#dbg-宏">¶</a>dbg!宏</h2>
+<p>这是另外一种<code>Debug</code>格式打印数值的方法就是<code>dbg!</code></p>
+<ul>
+<li>他会接受一个表达式的所有权，打印出代码中调用它的文件与行号</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="meta">#[derive(Debug)]</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Rectangle</span></span> &#123;</span><br><span class="line">    width: <span class="built_in">u32</span>,</span><br><span class="line">    height: <span class="built_in">u32</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> scale = <span class="number">2</span>;</span><br><span class="line">    <span class="keyword">let</span> rect1 = Rectangle &#123;</span><br><span class="line">        width: dbg!(<span class="number">30</span> * scale),</span><br><span class="line">        height: <span class="number">50</span>,</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    dbg!(&amp;rect1);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们可以把 <code>dbg!</code> 放在表达式 <code>30 * scale</code> 周围，因为 <code>dbg!</code> <strong>返回表达式的值的所有权</strong>，所以 <code>width</code> 字段将获得相同的值，就像我们在那里没有 <code>dbg!</code> 调用一样。我们不希望 <code>dbg!</code> 拥有 <code>rect1</code> 的所有权，所以我们在下一次调用 <code>dbg!</code> 时传递一个引用。下面是这个例子的输出结果：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">$ cargo run</span><br><span class="line">   Compiling rectangles v0.1.0 (file:///projects/rectangles)</span><br><span class="line">    Finished dev [unoptimized + debuginfo] target(s) in 0.61s</span><br><span class="line">     Running `target/debug/rectangles`</span><br><span class="line">[src/main.rs:10] 30 * scale = 60</span><br><span class="line">[src/main.rs:14] &amp;rect1 = Rectangle &#123;</span><br><span class="line">    width: 60,</span><br><span class="line">    height: 50,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>除了<code>Debug</code>, derive关键字还有很多可以使用的trait</p>
+<hr>
+<h2 id="method-syntax-impl-block"><a class="header-anchor" href="#method-syntax-impl-block">¶</a>method syntax (impl block)</h2>
+<p>让我们给Rectangle定义一个area方法，作为成员函数<br>
+重点是下面的<code>impl块</code></p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="meta">#[derive(Debug)]</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Rectangle</span></span> &#123;</span><br><span class="line">    width: <span class="built_in">u32</span>,</span><br><span class="line">    height: <span class="built_in">u32</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span> Rectangle &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">area</span></span>(&amp;<span class="keyword">self</span>) -&gt; <span class="built_in">u32</span> &#123;</span><br><span class="line">        <span class="keyword">self</span>.width * <span class="keyword">self</span>.height</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> rect1 = Rectangle &#123;</span><br><span class="line">        width: <span class="number">30</span>,</span><br><span class="line">        height: <span class="number">50</span>,</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(</span><br><span class="line">        <span class="string">&quot;The area of the rectangle is &#123;&#125; square pixels.&quot;</span>,</span><br><span class="line">        rect1.area()</span><br><span class="line">    );</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>ProgLang</category>
+      </categories>
+      <tags>
+        <tag>Rust</tag>
+      </tags>
+  </entry>
 </search>
