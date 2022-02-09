@@ -20,23 +20,22 @@
     var CONFIG = {"hostname":"jerryji.site","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":null,"activeClass":"valine"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="img{     width: 70%; }">
+  <meta name="description" content="img{     width: 80%; }">
 <meta property="og:type" content="article">
-<meta property="og:title" content="6.S081 lec5: RISCV-calling conventions">
-<meta property="og:url" content="https://jerryji.site/2022/01/27/6-S081-lec5-RISCV-calling-conventions/index.html">
+<meta property="og:title" content="6.S081-lec11 threads">
+<meta property="og:url" content="https://jerryji.site/2022/02/08/6-S081-lec11-threads/index.html">
 <meta property="og:site_name" content="Ji-Xinyou&#39;s page">
-<meta property="og:description" content="img{     width: 70%; }">
+<meta property="og:description" content="img{     width: 80%; }">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="https://jerryji.site/2022/01/27/6-S081-lec5-RISCV-calling-conventions/regs.png">
-<meta property="og:image" content="https://jerryji.site/2022/01/27/6-S081-lec5-RISCV-calling-conventions/6-S081-lec5-RISCV-calling-conventions.assets/stack.png">
-<meta property="article:published_time" content="2022-01-27T14:06:59.000Z">
-<meta property="article:modified_time" content="2022-02-09T12:18:26.408Z">
+<meta property="og:image" content="https://jerryji.site/2022/02/08/6-S081-lec11-threads/ctx.png">
+<meta property="article:published_time" content="2022-02-08T12:14:37.000Z">
+<meta property="article:modified_time" content="2022-02-09T12:19:31.140Z">
 <meta property="article:author" content="Ji-Xinyou(Jerry)">
 <meta property="article:tag" content="6.S081">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://jerryji.site/2022/01/27/6-S081-lec5-RISCV-calling-conventions/regs.png">
+<meta name="twitter:image" content="https://jerryji.site/2022/02/08/6-S081-lec11-threads/ctx.png">
 
-<link rel="canonical" href="https://jerryji.site/2022/01/27/6-S081-lec5-RISCV-calling-conventions/">
+<link rel="canonical" href="https://jerryji.site/2022/02/08/6-S081-lec11-threads/">
 
 
 <script id="page-configurations">
@@ -49,7 +48,7 @@
   };
 </script>
 
-  <title>6.S081 lec5: RISCV-calling conventions | Ji-Xinyou's page</title>
+  <title>6.S081-lec11 threads | Ji-Xinyou's page</title>
   
 
 
@@ -206,7 +205,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="https://jerryji.site/2022/01/27/6-S081-lec5-RISCV-calling-conventions/">
+    <link itemprop="mainEntityOfPage" href="https://jerryji.site/2022/02/08/6-S081-lec11-threads/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avtdisney.JPG">
@@ -219,7 +218,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          6.S081 lec5: RISCV-calling conventions
+          6.S081-lec11 threads
         </h1>
 
         <div class="post-meta">
@@ -229,14 +228,14 @@
               </span>
               <span class="post-meta-item-text">Posted on</span>
 
-              <time title="Created: 2022-01-27 22:06:59" itemprop="dateCreated datePublished" datetime="2022-01-27T22:06:59+08:00">2022-01-27</time>
+              <time title="Created: 2022-02-08 20:14:37" itemprop="dateCreated datePublished" datetime="2022-02-08T20:14:37+08:00">2022-02-08</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2022-02-09 20:18:26" itemprop="dateModified" datetime="2022-02-09T20:18:26+08:00">2022-02-09</time>
+                <time title="Modified: 2022-02-09 20:19:31" itemprop="dateModified" datetime="2022-02-09T20:19:31+08:00">2022-02-09</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -264,8 +263,8 @@
       </span>
       <span class="post-meta-item-text">Valine: </span>
     
-    <a title="valine" href="/2022/01/27/6-S081-lec5-RISCV-calling-conventions/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/01/27/6-S081-lec5-RISCV-calling-conventions/" itemprop="commentCount"></span>
+    <a title="valine" href="/2022/02/08/6-S081-lec11-threads/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/02/08/6-S081-lec11-threads/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -282,118 +281,49 @@
       
         <style>
 img{
-    width: 70%;
+    width: 80%;
 }
 </style>
 <span id="more"></span>
-<h1>6.S081 lec5: RISCV calling conventions</h1>
+<h1>6.S081 lec11: Thread Switching</h1>
+<p><strong>THREAD</strong>: one serial execution</p>
+<ul>
+<li>PC, REGS, STACK</li>
+</ul>
+<p><strong>Interleave</strong></p>
+<ul>
+<li>Multiple-core</li>
+<li>Switch among threads <strong>each core</strong></li>
+</ul>
+<p><strong>share memory?</strong></p>
+<ul>
+<li>xv6 kernel threads share kernel memory</li>
+<li>xv6 user processes - each has <strong>only one thread</strong> -&gt; no share memory</li>
+<li>In Linux, multiple threads in a process -&gt; shares memory</li>
+</ul>
 <hr>
-<h2 id="Caller-Saved-and-Callee-Saved"><a class="header-anchor" href="#Caller-Saved-and-Callee-Saved">¶</a>Caller Saved and Callee Saved</h2>
-<p>Registers are categorized as <strong>caller saved</strong> and <strong>callee saved</strong>. The difference between them is very important.</p>
-<img src="/2022/01/27/6-S081-lec5-RISCV-calling-conventions/regs.png" class="" title="regs">
+<h2 id="Challenges"><a class="header-anchor" href="#Challenges">¶</a>Challenges</h2>
 <ul>
-<li><strong>Caller Saved</strong> registers are <strong>not</strong> reserved across function calls.</li>
-<li><strong>Callee Saved</strong> registers are reserved across function calls. The caller has to find someway to save those registers.</li>
-</ul>
-<p>The convention also states, the <strong>return value</strong> is in a0 and a1, and <strong>arguments</strong> of the function is in a0-a7.</p>
+<li>Switching - interleave
 <ul>
-<li>If more arguments are given, they should reside on stack.</li>
-</ul>
-<hr>
-<h2 id="the-Stack"><a class="header-anchor" href="#the-Stack">¶</a>the Stack</h2>
-<ul>
-<li>The stack is created by function call! <strong>Each function call creates a stack frame for itself to use.</strong></li>
-<li>The stack starts from high address, growes down to low address. To make a new stack frame, decrement sp register.</li>
-<li>The stack size is <strong>not fixed</strong>, pay attention to the layout.
-<ul>
-<li>The return address is always at the first word
-<ul>
-<li>
-<pre><code class="language-asm">  addi sp, sp, 16 # alloc stack frame
-  sd ra, 0(sp)    # store the return address
-  ...
-  ld ra, 0(sp)    # recover the return address
-  addi sp, sp, 16 # delete the stack frame
-</code></pre>
-<ul>
-<li>This also shows that why $ra is a <strong>callee saved</strong> register.</li>
+<li>Scheduling</li>
 </ul>
 </li>
-</ul>
-</li>
-<li>The Prev. Frame address is always next to return address, to control frame callback.</li>
-</ul>
-</li>
-</ul>
-<p><img src="6-S081-lec5-RISCV-calling-conventions.assets/stack.png" alt="stack"></p>
-<hr>
-<h2 id="GDB-commands"><a class="header-anchor" href="#GDB-commands">¶</a>GDB commands</h2>
+<li>what to save/restore</li>
+<li>compute-bound threads
 <ul>
-<li>
-<p><strong>To open the gdb mode of xv6</strong></p>
-<ul>
-<li>In one window type <strong>make qemu-gdb</strong> to start the gdb server</li>
-<li>In another window type <strong>riscv-unknown-elf-gdb</strong> to connect to the previous gdb server and start debugging!<br>
-<br/></li>
+<li>how to pause them</li>
 </ul>
-</li>
-<li>
-<p><strong>layout split/asm/reg/src</strong></p>
-<ul>
-<li>-&gt; show the layout of (asm &amp; src)/asm/reg/ src</li>
-<li><strong>focus reg/asm</strong>…
-<ul>
-<li>-&gt; change the focus among windows<br>
-<br/></li>
-</ul>
-</li>
-</ul>
-</li>
-<li>
-<p><strong>info</strong></p>
-<ul>
-<li><strong>info breakpoints</strong>
-<ul>
-<li>-&gt; check the number of bp</li>
-</ul>
-</li>
-<li><strong>info frame</strong>
-<ul>
-<li>-&gt; check the info of current stack frame (frame 0)</li>
-<li><strong>backtrace (bt)</strong>
-<ul>
-<li>frame x -&gt; info frame
-<ul>
-<li>-&gt; change current frame to <strong>x</strong> and print the info<br>
-<br/></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>
-<p><strong>tui enable</strong></p>
-<ul>
-<li>show the tui<br>
-<br/></li>
-</ul>
-</li>
-<li>
-<p><strong>breakpoint/watchpoint &lt;tag&gt;</strong></p>
-<ul>
-<li><strong>delete &lt;bp_nr&gt;</strong></li>
-<li>info breakpoints/watchpoints<br>
-<br/></li>
-</ul>
-</li>
-<li>
-<p><strong>s &amp; si</strong> (step instruction)</p>
 </li>
 </ul>
 <hr>
+<h3 id="Dealing-w-compute-bound-threads"><a class="header-anchor" href="#Dealing-w-compute-bound-threads">¶</a>Dealing w/ compute bound threads</h3>
+<p>Solution: timer interrupt</p>
+<img src="/2022/02/08/6-S081-lec11-threads/ctx.png" class="" title="ctx">
+<p>P1 interruptted by timer, save its state in <strong>Trapframe</strong><br>
+call <em>swtch()</em> to switch the kernel context to <strong>scheduler’s context</strong></p>
+<p>The scheduler thread state is saved <strong>per core</strong>, it then switches the context to P2’s kernel thread’s.</p>
+<p>The P2’s kernel thread <strong>returns to userspace</strong> and activate userlevel thread of P2.</p>
 
     </div>
 
@@ -412,13 +342,10 @@ img{
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2022/01/23/homepage/" rel="prev" title="Welcome!">
-      <i class="fa fa-chevron-left"></i> Welcome!
+    <a href="/2022/02/07/the-book-Rust-Chapt6/" rel="prev" title="the book(Rust) - Chapt6">
+      <i class="fa fa-chevron-left"></i> the book(Rust) - Chapt6
     </a></div>
-      <div class="post-nav-item">
-    <a href="/2022/01/28/xv6book-chap4-traps-and-syscall/" rel="next" title="xv6book-chap4: traps and syscall">
-      xv6book-chap4: traps and syscall <i class="fa fa-chevron-right"></i>
-    </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     
@@ -478,7 +405,7 @@ img{
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">6.S081 lec5: RISCV calling conventions</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Caller-Saved-and-Callee-Saved"><span class="nav-number">1.1.</span> <span class="nav-text">Caller Saved and Callee Saved</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#the-Stack"><span class="nav-number">1.2.</span> <span class="nav-text">the Stack</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GDB-commands"><span class="nav-number">1.3.</span> <span class="nav-text">GDB commands</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">6.S081 lec11: Thread Switching</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Challenges"><span class="nav-number">1.1.</span> <span class="nav-text">Challenges</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Dealing-w-compute-bound-threads"><span class="nav-number">1.1.1.</span> <span class="nav-text">Dealing w&#x2F; compute bound threads</span></a></li></ol></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
