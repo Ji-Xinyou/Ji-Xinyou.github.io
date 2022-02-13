@@ -22,14 +22,14 @@
 
   <meta name="description" content="img{     width: 80%; }">
 <meta property="og:type" content="article">
-<meta property="og:title" content="6.S081-lec11 threads">
+<meta property="og:title" content="6.S081-lec11, 12 threads">
 <meta property="og:url" content="https://jerryji.site/2022/02/08/6-S081-lec11-threads/index.html">
 <meta property="og:site_name" content="Ji-Xinyou&#39;s page">
 <meta property="og:description" content="img{     width: 80%; }">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://jerryji.site/2022/02/08/6-S081-lec11-threads/ctx.png">
 <meta property="article:published_time" content="2022-02-08T12:14:37.000Z">
-<meta property="article:modified_time" content="2022-02-09T12:42:02.783Z">
+<meta property="article:modified_time" content="2022-02-10T04:10:02.245Z">
 <meta property="article:author" content="Ji-Xinyou(Jerry)">
 <meta property="article:tag" content="6.S081">
 <meta name="twitter:card" content="summary">
@@ -48,7 +48,7 @@
   };
 </script>
 
-  <title>6.S081-lec11 threads | Ji-Xinyou's page</title>
+  <title>6.S081-lec11, 12 threads | Ji-Xinyou's page</title>
   
 
 
@@ -218,7 +218,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          6.S081-lec11 threads
+          6.S081-lec11, 12 threads
         </h1>
 
         <div class="post-meta">
@@ -235,7 +235,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2022-02-09 20:42:02" itemprop="dateModified" datetime="2022-02-09T20:42:02+08:00">2022-02-09</time>
+                <time title="Modified: 2022-02-10 12:10:02" itemprop="dateModified" datetime="2022-02-10T12:10:02+08:00">2022-02-10</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -285,7 +285,7 @@ img{
 }
 </style>
 <span id="more"></span>
-<h1>6.S081 lec11: Thread Switching</h1>
+<h1>6.S081 lec11, 12: Thread Switching</h1>
 <p><strong>THREAD</strong>: one serial execution</p>
 <ul>
 <li>PC, REGS, STACK</li>
@@ -325,6 +325,42 @@ call <em>swtch()</em> to switch the kernel context to <strong>scheduler’s cont
 <p>The scheduler thread state is saved <strong>per core</strong>, it then switches the context to P2’s kernel thread’s.</p>
 <p>The P2’s kernel thread <strong>returns to userspace</strong> and activate userlevel thread of P2.</p>
 <hr>
+<h2 id="How-scheduler-works-in-xv6"><a class="header-anchor" href="#How-scheduler-works-in-xv6">¶</a>How scheduler works in xv6</h2>
+<ol>
+<li>
+<p>timer interrupts, user process <strong>traps</strong> into kernel mode,</p>
+<p>and finally <em>yield()</em> is called</p>
+</li>
+<li>
+<p>In <em>yield()</em>, <code>p-&gt;state</code>is changed, and more importantly <code>sched()</code> is called</p>
+</li>
+<li>
+<p>In <code>sched()</code>, sanity checks are done. But the core is <code>swtch()</code></p>
+</li>
+<li>
+<p>In <code>swtch()</code>, the calling arguments are<code>swtch(&amp;p-&gt;context, &amp;mycpu()-&gt;context)</code>, namely swtching between <code>process's kernel thread</code> and <code>per-cpu scheduler thread</code></p>
+<ol>
+<li>I think the most important part here to figure out is that, <strong>scheduler() is permantly running per CPU, by the scheduler thread</strong>
+<ol>
+<li>In fact, itself <strong>is</strong> the scheduler thread</li>
+</ol>
+</li>
+</ol>
+</li>
+<li>
+<p>Then, in <code>scheduler()</code>, the thread changes the scheduler thread to <code>another process's kernel thread</code> and allows that kernel thread to return to userspace.</p>
+</li>
+<li>
+<p>The <code>scheduler()</code> finds a RUNNABLE process, swtch to that process and return to <code>sched()</code>, <strong>releases the lock</strong></p>
+<ol>
+<li>The lock of switched process is release in the last line of code in <code>scheduler()</code></li>
+</ol>
+</li>
+</ol>
+<hr>
+<h2 id="coordination-between-processes"><a class="header-anchor" href="#coordination-between-processes">¶</a>coordination (between processes)</h2>
+<p>Before <code>swtch()</code>, the lock is always acquired</p>
+<p>Called <code>swtch()</code> -&gt; scheduler thread releases the lock</p>
 
     </div>
 
@@ -346,7 +382,10 @@ call <em>swtch()</em> to switch the kernel context to <strong>scheduler’s cont
     <a href="/2022/02/07/the-book-Rust-Chapt6/" rel="prev" title="the book(Rust) - Chapt6">
       <i class="fa fa-chevron-left"></i> the book(Rust) - Chapt6
     </a></div>
-      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2022/02/10/the-book-Rust-Chapt7/" rel="next" title="the book(Rust) - Chapt7">
+      the book(Rust) - Chapt7 <i class="fa fa-chevron-right"></i>
+    </a></div>
     </div>
       </footer>
     
@@ -406,7 +445,7 @@ call <em>swtch()</em> to switch the kernel context to <strong>scheduler’s cont
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">6.S081 lec11: Thread Switching</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Challenges"><span class="nav-number">1.1.</span> <span class="nav-text">Challenges</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Dealing-w-compute-bound-threads"><span class="nav-number">1.1.1.</span> <span class="nav-text">Dealing w&#x2F; compute bound threads</span></a></li></ol></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">6.S081 lec11, 12: Thread Switching</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Challenges"><span class="nav-number">1.1.</span> <span class="nav-text">Challenges</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Dealing-w-compute-bound-threads"><span class="nav-number">1.1.1.</span> <span class="nav-text">Dealing w&#x2F; compute bound threads</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#How-scheduler-works-in-xv6"><span class="nav-number">1.2.</span> <span class="nav-text">How scheduler works in xv6</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#coordination-between-processes"><span class="nav-number">1.3.</span> <span class="nav-text">coordination (between processes)</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -422,7 +461,7 @@ call <em>swtch()</em> to switch the kernel context to <strong>scheduler’s cont
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">16</span>
+          <span class="site-state-item-count">17</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
