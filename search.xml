@@ -896,7 +896,38 @@ Consumers: <em>getc()</em></p>
   <entry>
     <title>Rust(course.rs)-generic&amp;trait</title>
     <url>/2022/02/14/Rust-course-rs-generic-trait/</url>
-    <content><![CDATA[<span id="more"></span>
+    <content><![CDATA[<div></div>
+<span id="more"></span>
+<h1>Generic and Trait</h1>
+<hr>
+<h2 id="Generic"><a class="header-anchor" href="#Generic">¶</a>Generic</h2>
+<p>下面这段代码<strong>无法编译</strong></p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">largest</span></span>&lt;T&gt;(list: &amp;[T]) -&gt; T &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> largest = list[<span class="number">0</span>];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> &amp;item <span class="keyword">in</span> list.iter() &#123;</span><br><span class="line">        <span class="keyword">if</span> item &gt; largest &#123;</span><br><span class="line">            largest = item;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    largest</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> number_list = <span class="built_in">vec!</span>[<span class="number">34</span>, <span class="number">50</span>, <span class="number">25</span>, <span class="number">100</span>, <span class="number">65</span>];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> result = largest(&amp;number_list);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;The largest number is &#123;&#125;&quot;</span>, result);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> char_list = <span class="built_in">vec!</span>[<span class="string">&#x27;y&#x27;</span>, <span class="string">&#x27;m&#x27;</span>, <span class="string">&#x27;a&#x27;</span>, <span class="string">&#x27;q&#x27;</span>];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> result = largest(&amp;char_list);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;The largest char is &#123;&#125;&quot;</span>, result);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>报错的原因是</p>
+<ul>
+<li>不是所有类型都可以进行<code>&gt;</code>的比较
+<ul>
+<li>因此我们需要给<code>T</code>天界一个类型限制 -&gt; trait</li>
+<li>我们使用<code>std::cmp::PartialOrd</code>Trait进行限制</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">add</span></span>&lt;T: std::ops::Add&lt;Output = T&gt;&gt;(a:T, b:T) -&gt; T &#123;</span><br><span class="line">    a + b</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<h3 id="Generic-in-methods"><a class="header-anchor" href="#Generic-in-methods">¶</a>Generic in methods</h3>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Point</span></span>&lt;T, U&gt; &#123;</span><br><span class="line">    x: T,</span><br><span class="line">    y: U,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T, U&gt; Point&lt;T, U&gt; &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">mixup</span></span>&lt;V, W&gt;(<span class="keyword">self</span>, other: Point&lt;V, W&gt;) -&gt; Point&lt;T, W&gt; &#123;</span><br><span class="line">        Point &#123;</span><br><span class="line">            x: <span class="keyword">self</span>.x,</span><br><span class="line">            y: other.y,</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> p1 = Point &#123; x: <span class="number">5</span>, y: <span class="number">10.4</span> &#125;;</span><br><span class="line">    <span class="keyword">let</span> p2 = Point &#123; x: <span class="string">&quot;Hello&quot;</span>, y: <span class="string">&#x27;c&#x27;</span>&#125;;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> p3 = p1.mixup(p2);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;p3.x = &#123;&#125;, p3.y = &#123;&#125;&quot;</span>, p3.x, p3.y);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<h3 id="Generic-in-const"><a class="header-anchor" href="#Generic-in-const">¶</a>Generic in const</h3>
+<p><code>[i32; 2], [i32; 3]</code>是两种类型，我们可以用泛型打印所有的数组元素</p>
+<p>通过<strong>引用</strong>，我们可以实现</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">display_array</span></span>&lt;T: std::fmt::<span class="built_in">Debug</span>&gt;(arr: &amp;[T]) &#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, arr);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> arr: [<span class="built_in">i32</span>; <span class="number">3</span>] = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];</span><br><span class="line">    display_array(&amp;arr);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> arr: [<span class="built_in">i32</span>;<span class="number">2</span>] = [<span class="number">1</span>,<span class="number">2</span>];</span><br><span class="line">    display_array(&amp;arr);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>需要注意的是，我们需要对类型<code>T</code>添加限制，因为我们需要他支持Debug输出<code>&#123;:?&#125;</code></li>
+</ul>
+<p><strong>有时候，引用是不合适的</strong>，对于任意的长度，我们可以使用const泛型</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">display_array</span></span>&lt;T: std::fmt::<span class="built_in">Debug</span>, <span class="keyword">const</span> N: <span class="built_in">usize</span>&gt;(arr: [T; N]) &#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, arr);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> arr: [<span class="built_in">i32</span>; <span class="number">3</span>] = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];</span><br><span class="line">    display_array(arr);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> arr: [<span class="built_in">i32</span>; <span class="number">2</span>] = [<span class="number">1</span>, <span class="number">2</span>];</span><br><span class="line">    display_array(arr);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<h2 id="Trait"><a class="header-anchor" href="#Trait">¶</a>Trait</h2>
 ]]></content>
   </entry>
   <entry>
@@ -1175,9 +1206,19 @@ call <em>swtch()</em> to switch the kernel context to <strong>scheduler’s cont
 </li>
 </ol>
 <hr>
-<h2 id="coordination-between-processes"><a class="header-anchor" href="#coordination-between-processes">¶</a>coordination (between processes)</h2>
-<p>Before <code>swtch()</code>, the lock is always acquired</p>
-<p>Called <code>swtch()</code> -&gt; scheduler thread releases the lock</p>
+<h2 id="coordination-between-processes-sleep-wakeup"><a class="header-anchor" href="#coordination-between-processes-sleep-wakeup">¶</a>coordination (between processes) - sleep/wakeup</h2>
+<ul>
+<li>A process waits for an event
+<ul>
+<li>wait for IO event, pipe, wait() …</li>
+</ul>
+</li>
+</ul>
+<p><strong>Sleep</strong> - sleeps on specfic <strong>channel</strong>, called <em>swtch()</em> to yield CPU for efficiency</p>
+<p><strong>Wakeup</strong> - wake up the thread sleeping on the <strong>channel</strong></p>
+<img src="6-S081-lec11-threads/Screen Shot 2022-02-14 at 10.23.31 AM.png" alt="Screen Shot 2022-02-14 at 10.23.31 AM" style="zoom:50%;" />
+<h3 id="lost-wakeups"><a class="header-anchor" href="#lost-wakeups">¶</a>lost wakeups</h3>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span></span></span><br><span class="line"><span class="function"><span class="title">broken_sleep</span><span class="params">(<span class="keyword">void</span>* chan)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  p-&gt;state = SLEEPING;</span><br><span class="line">  p-&gt;chan = chan;</span><br><span class="line">  swtch()</span><br><span class="line">  <span class="comment">// that it, and why it is broken :(</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span></span></span><br><span class="line"><span class="function"><span class="title">wakeup</span><span class="params">(<span class="keyword">void</span>* chan)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">for</span> each p in procs[]:</span><br><span class="line">    <span class="keyword">if</span> p-&gt;state == SLEEPING &amp;&amp; p-&gt;chan == chan:</span><br><span class="line">  		p-&gt;state = RUNNABLE</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 ]]></content>
       <categories>
         <category>O/S</category>
@@ -1620,7 +1661,8 @@ img{
   <entry>
     <title>the book(Rust) - Chapt7</title>
     <url>/2022/02/10/the-book-Rust-Chapt7/</url>
-    <content><![CDATA[<span id="more"></span>
+    <content><![CDATA[<div></div>
+<span id="more"></span>
 <h1>the book (Rust) - chapt7: module system</h1>
 <hr>
 ]]></content>
@@ -1634,7 +1676,8 @@ img{
   <entry>
     <title>the book(Rust) - Chapt6</title>
     <url>/2022/02/07/the-book-Rust-Chapt6/</url>
-    <content><![CDATA[<span id="more"></span>
+    <content><![CDATA[<div></div>
+<span id="more"></span>
 <h1>枚举与模式匹配</h1>
 <p>[toc]</p>
 <h2 id="定义"><a class="header-anchor" href="#定义">¶</a>定义</h2>
