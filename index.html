@@ -199,6 +199,78 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://jerryji.site/2022/02/14/Rust-course-rs-generic-trait/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avtdisney.JPG">
+      <meta itemprop="name" content="Ji-Xinyou(Jerry)">
+      <meta itemprop="description" content="Lives should be diverse.">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ji-Xinyou's page">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/02/14/Rust-course-rs-generic-trait/" class="post-title-link" itemprop="url">Rust(course.rs)-generic&trait</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2022-02-14 09:01:39" itemprop="dateCreated datePublished" datetime="2022-02-14T09:01:39+08:00">2022-02-14</time>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine: </span>
+    
+    <a title="valine" href="/2022/02/14/Rust-course-rs-generic-trait/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/02/14/Rust-course-rs-generic-trait/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <span id="more"></span>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
     <link itemprop="mainEntityOfPage" href="https://jerryji.site/2022/02/10/the-book-Rust-Chapt7/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -222,10 +294,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
-              
 
-              <time title="Created: 2022-02-10 01:43:55 / Modified: 01:50:26" itemprop="dateCreated datePublished" datetime="2022-02-10T01:43:55+08:00">2022-02-10</time>
+              <time title="Created: 2022-02-10 01:43:55" itemprop="dateCreated datePublished" datetime="2022-02-10T01:43:55+08:00">2022-02-10</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2022-02-14 09:00:47" itemprop="dateModified" datetime="2022-02-14T09:00:47+08:00">2022-02-14</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -413,7 +491,7 @@ img{
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2022-02-10 01:43:27" itemprop="dateModified" datetime="2022-02-10T01:43:27+08:00">2022-02-10</time>
+                <time title="Modified: 2022-02-14 08:40:33" itemprop="dateModified" datetime="2022-02-14T08:40:33+08:00">2022-02-14</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -452,6 +530,7 @@ img{
       
           <span id="more"></span>
 <h1>枚举与模式匹配</h1>
+<p>[toc]</p>
 <h2 id="定义"><a class="header-anchor" href="#定义">¶</a>定义</h2>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">enum</span> <span class="title">IPAddrKind</span></span> &#123;</span><br><span class="line">  V4, V6</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h3 id="How-to-use-it"><a class="header-anchor" href="#How-to-use-it">¶</a>How to use it</h3>
@@ -480,6 +559,7 @@ img{
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">enum</span> <span class="title">Option</span></span>&lt;T&gt; &#123;</span><br><span class="line">  <span class="literal">None</span>,</span><br><span class="line">  <span class="literal">Some</span>&lt;T&gt;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h3 id="Option-枚举的使用"><a class="header-anchor" href="#Option-枚举的使用">¶</a>Option 枚举的使用</h3>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> some_number = <span class="literal">Some</span>(<span class="number">5</span>); <span class="comment">// Option&lt;i32&gt;</span></span><br><span class="line">    <span class="keyword">let</span> some_string = <span class="literal">Some</span>(<span class="string">&quot;a string&quot;</span>); <span class="comment">// Option&lt;String&gt;</span></span><br><span class="line">  </span><br><span class="line">	  <span class="comment">// Rust does not know the **type** of None</span></span><br><span class="line">    <span class="keyword">let</span> absent_number: <span class="built_in">Option</span>&lt;<span class="built_in">i32</span>&gt; = <span class="literal">None</span>; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>请注意，在使用<code>None</code>的时候，我们<strong>需要给定类型</strong>，因为编译器需要知道<code>Option&lt;T&gt;</code>的类型是什么</p>
 <p>Option的存在让我们知道，<strong>只要一个值不是<code>Option&lt;T&gt;</code>类型，那么他一定不是空值</strong></p>
 <p>但是当我们对<code>Option&lt;T&gt;</code>进行计算的时候，我们也需要将他的<strong>值取出来</strong>，而不能直接对他进行使用。</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">Option</span>&lt;T&gt;::is_some()</span><br><span class="line"><span class="built_in">Option</span>&lt;T&gt;::is_none()</span><br><span class="line"><span class="built_in">Option</span>&lt;T&gt;::unwrap()</span><br></pre></td></tr></table></figure>
@@ -488,6 +568,7 @@ img{
 </ul>
 <hr>
 <h2 id="match-控制流"><a class="header-anchor" href="#match-控制流">¶</a>match 控制流</h2>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">match</span> VALUE &#123;</span><br><span class="line">    PATTERN =&gt; EXPRESSION,</span><br><span class="line">    PATTERN =&gt; EXPRESSION,</span><br><span class="line">    _ =&gt; EXPRESSION,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <ul>
 <li>一个简单的例子</li>
 </ul>
@@ -500,6 +581,11 @@ img{
 <p>我们调用</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">value_in_cents(Coin::Quarter(UsState::Alaska))</span><br></pre></td></tr></table></figure>
 <p><code>coin</code>将匹配<code>Coin::Quarter(state)</code>，然后变量<code>state</code>就会绑定为<code>UsState::Alaska</code></p>
+<hr>
+<h3 id="match-guard"><a class="header-anchor" href="#match-guard">¶</a>match guard</h3>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> num = <span class="literal">Some</span>(<span class="number">4</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">match</span> num &#123;</span><br><span class="line">    <span class="literal">Some</span>(x) <span class="keyword">if</span> x &lt; <span class="number">5</span> =&gt; <span class="built_in">println!</span>(<span class="string">&quot;less than five: &#123;&#125;&quot;</span>, x),</span><br><span class="line">    <span class="literal">Some</span>(x) =&gt; <span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;&quot;</span>, x),</span><br><span class="line">    <span class="literal">None</span> =&gt; (),</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>会匹配第一个分支，打印<code>less than five: 4</code></p>
+<hr>
 <h3 id="匹配Option-T"><a class="header-anchor" href="#匹配Option-T">¶</a>匹配Option&lt;T&gt;</h3>
 <p>下面这段代码对于<code>Option&lt;i32&gt;</code>中有值的变量，将对他们的值加一。而None则不变。</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">plus_one</span></span>(x: <span class="built_in">Option</span>&lt;<span class="built_in">i32</span>&gt;) -&gt; <span class="built_in">Option</span>&lt;<span class="built_in">i32</span>&gt; &#123;</span><br><span class="line">        <span class="keyword">match</span> x &#123;</span><br><span class="line">            <span class="literal">None</span> =&gt; <span class="literal">None</span>,</span><br><span class="line">            <span class="literal">Some</span>(i) =&gt; <span class="literal">Some</span>(i + <span class="number">1</span>),</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> five = <span class="literal">Some</span>(<span class="number">5</span>);</span><br><span class="line">    <span class="keyword">let</span> six = plus_one(five);</span><br><span class="line">    <span class="keyword">let</span> none = plus_one(<span class="literal">None</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -516,6 +602,7 @@ img{
 <p><strong>_占位符</strong>告诉编译器，我们不会使用这个值，<strong>因此RUST不会警告我们有unused variable</strong></p>
 <hr>
 <h2 id="if-let-简单控制流"><a class="header-anchor" href="#if-let-简单控制流">¶</a>if let 简单控制流</h2>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> <span class="keyword">let</span> PATTERN = VALUE &#123;</span><br><span class="line">  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p><code>if let</code>语句是一种<strong>更短的</strong>代替<code>match</code>关键字的方法</p>
 <p>但是我们牺牲了穷尽性检查，先看看下面两段代码吧！</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> config_max = <span class="literal">Some</span>(<span class="number">3u8</span>);</span><br><span class="line">    <span class="keyword">match</span> config_max &#123;</span><br><span class="line">        <span class="literal">Some</span>(max) =&gt; <span class="built_in">println!</span>(<span class="string">&quot;The maximum is configured to be &#123;&#125;&quot;</span>, max),</span><br><span class="line">        _ =&gt; (),</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -527,6 +614,59 @@ img{
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> config_max = <span class="literal">Some</span>(<span class="number">3u8</span>);</span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">let</span> <span class="literal">Some</span>(max) = config_max &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;The maximum is configured to be &#123;&#125;&quot;</span>, max);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>或者我们可以用<code>if let</code>+ <code>else</code></p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[derive(Debug)]</span></span><br><span class="line"><span class="class"><span class="keyword">enum</span> <span class="title">UsState</span></span> &#123;</span><br><span class="line">    Alabama,</span><br><span class="line">    Alaska,</span><br><span class="line">    <span class="comment">// --snip--</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">enum</span> <span class="title">Coin</span></span> &#123;</span><br><span class="line">    Penny,</span><br><span class="line">    Nickel,</span><br><span class="line">    Dime,</span><br><span class="line">    Quarter(UsState),</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> coin = Coin::Penny;</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> count = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">let</span> Coin::Quarter(state) = coin &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;State quarter from &#123;:?&#125;!&quot;</span>, state);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        count += <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<h2 id="matches-Macro"><a class="header-anchor" href="#matches-Macro">¶</a>matches! Macro</h2>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">enum</span> <span class="title">MyEnum</span></span> &#123;</span><br><span class="line">  Foo,</span><br><span class="line">  Bar,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">  <span class="keyword">let</span> v = <span class="built_in">vec!</span>[MyEnum::Foo, MyEnum::Bar, MyEnum::Foo];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>过滤，只留下<code>MyEnum::Foo</code>类型的entry</p>
+<ul>
+<li>不可以这么写<code>v.iter().filter(|x| x == MyEnum::Foo);</code>
+<ul>
+<li>因为不可以将x与枚举成员比较</li>
+</ul>
+</li>
+</ul>
+<p><code>matches!()</code>: 将<strong>表达式</strong>与<strong>模式</strong>匹配，返回true or false</p>
+<p>可以用</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">v.iter().filter(|x| matches!(x, MyEnum::Foo));</span><br></pre></td></tr></table></figure>
+<hr>
+<h2 id="while-let"><a class="header-anchor" href="#while-let">¶</a>while let</h2>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Vec是动态数组</span></span><br><span class="line"><span class="keyword">let</span> <span class="keyword">mut</span> stack = <span class="built_in">Vec</span>::new();</span><br><span class="line"></span><br><span class="line"><span class="comment">// 向数组尾部插入元素</span></span><br><span class="line">stack.push(<span class="number">1</span>);</span><br><span class="line">stack.push(<span class="number">2</span>);</span><br><span class="line">stack.push(<span class="number">3</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// stack.pop从数组尾部弹出元素</span></span><br><span class="line"><span class="keyword">while</span> <span class="keyword">let</span> <span class="literal">Some</span>(top) = stack.pop() &#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;&quot;</span>, top);</span><br></pre></td></tr></table></figure>
+<ul>
+<li>Or <code>loop + if let</code></li>
+</ul>
+<hr>
+<h2 id="变量覆盖"><a class="header-anchor" href="#变量覆盖">¶</a>变量覆盖</h2>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> x = <span class="literal">Some</span>(<span class="number">5</span>);</span><br><span class="line">    <span class="keyword">let</span> y = <span class="number">10</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">match</span> x &#123;</span><br><span class="line">        <span class="literal">Some</span>(<span class="number">50</span>) =&gt; <span class="built_in">println!</span>(<span class="string">&quot;Got 50&quot;</span>),</span><br><span class="line">        <span class="literal">Some</span>(y) =&gt; <span class="built_in">println!</span>(<span class="string">&quot;Matched, y = &#123;:?&#125;&quot;</span>, y),</span><br><span class="line">        _ =&gt; <span class="built_in">println!</span>(<span class="string">&quot;Default case, x = &#123;:?&#125;&quot;</span>, x),</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;at the end: x = &#123;:?&#125;, y = &#123;:?&#125;&quot;</span>, x, y);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>需要注意的是，在match块中，<code>y=5</code>，但是离开match块后，这个y的作用域就结束了，因此最后的输出会是</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Matched, y = 5</span><br><span class="line">at the end: x = Some(5), y = 10</span><br></pre></td></tr></table></figure>
+<h3 id="用match-guard解决变量覆盖"><a class="header-anchor" href="#用match-guard解决变量覆盖">¶</a>用match guard解决变量覆盖</h3>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> x = <span class="literal">Some</span>(<span class="number">5</span>);</span><br><span class="line">    <span class="keyword">let</span> y = <span class="number">10</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">match</span> x &#123;</span><br><span class="line">        <span class="literal">Some</span>(<span class="number">50</span>) =&gt; <span class="built_in">println!</span>(<span class="string">&quot;Got 50&quot;</span>),</span><br><span class="line">        <span class="literal">Some</span>(n) <span class="keyword">if</span> n == y =&gt; <span class="built_in">println!</span>(<span class="string">&quot;Matched, n = &#123;&#125;&quot;</span>, n),</span><br><span class="line">        _ =&gt; <span class="built_in">println!</span>(<span class="string">&quot;Default case, x = &#123;:?&#125;&quot;</span>, x),</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;at the end: x = &#123;:?&#125;, y = &#123;&#125;&quot;</span>, x, y);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<h2 id="Single-branch-multiple-pattern"><a class="header-anchor" href="#Single-branch-multiple-pattern">¶</a>Single branch, multiple pattern</h2>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> x = <span class="number">1</span>;</span><br><span class="line"><span class="keyword">let</span> y = <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">match</span> x &#123;</span><br><span class="line">    <span class="number">1</span> | <span class="number">2</span> <span class="keyword">if</span> y =&gt; <span class="built_in">println!</span>(<span class="string">&quot;one or two&quot;</span>),</span><br><span class="line">    <span class="number">3</span> =&gt; <span class="built_in">println!</span>(<span class="string">&quot;three&quot;</span>),</span><br><span class="line">    _ =&gt; <span class="built_in">println!</span>(<span class="string">&quot;anything&quot;</span>),</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="通过序列…"><a class="header-anchor" href="#通过序列…">¶</a>通过序列…</h3>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> x = <span class="number">5</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">match</span> x &#123;</span><br><span class="line">    <span class="number">1</span>..=<span class="number">5</span> =&gt; <span class="built_in">println!</span>(<span class="string">&quot;one through five&quot;</span>),</span><br><span class="line">    _ =&gt; <span class="built_in">println!</span>(<span class="string">&quot;something else&quot;</span>),</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<h2 id="match-struct"><a class="header-anchor" href="#match-struct">¶</a>match struct</h2>
+<p>可以注意一下match的第三个分支</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Point</span></span> &#123;</span><br><span class="line">    x: <span class="built_in">i32</span>,</span><br><span class="line">    y: <span class="built_in">i32</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> p = Point &#123; x: <span class="number">0</span>, y: <span class="number">7</span> &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">match</span> p &#123;</span><br><span class="line">        Point &#123; x, y: <span class="number">0</span> &#125; =&gt; <span class="built_in">println!</span>(<span class="string">&quot;On the x axis at &#123;&#125;&quot;</span>, x),</span><br><span class="line">        Point &#123; x: <span class="number">0</span>, y &#125; =&gt; <span class="built_in">println!</span>(<span class="string">&quot;On the y axis at &#123;&#125;&quot;</span>, y),</span><br><span class="line">        Point &#123; x, y &#125; =&gt; <span class="built_in">println!</span>(<span class="string">&quot;On neither axis: (&#123;&#125;, &#123;&#125;)&quot;</span>, x, y),</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>也可以结构<strong>枚举类型的不同成员</strong></p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">match</span> msg &#123;</span><br><span class="line">        Message::ChangeColor(Color::Rgb(r, g, b)) =&gt; &#123;</span><br><span class="line">            <span class="built_in">println!</span>(</span><br><span class="line">                <span class="string">&quot;Change the color to red &#123;&#125;, green &#123;&#125;, and blue &#123;&#125;&quot;</span>,</span><br><span class="line">                r,</span><br><span class="line">                g,</span><br><span class="line">                b</span><br><span class="line">            )</span><br><span class="line">        &#125;</span><br><span class="line">        Message::ChangeColor(Color::Hsv(h, s, v)) =&gt; &#123;</span><br><span class="line">            <span class="built_in">println!</span>(</span><br><span class="line">                <span class="string">&quot;Change the color to hue &#123;&#125;, saturation &#123;&#125;, and value &#123;&#125;&quot;</span>,</span><br><span class="line">                h,</span><br><span class="line">                s,</span><br><span class="line">                v</span><br><span class="line">            )</span><br><span class="line">        &#125;</span><br><span class="line">        _ =&gt; ()</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<h2 id="用…忽略剩余值"><a class="header-anchor" href="#用…忽略剩余值">¶</a>用…忽略剩余值</h2>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> numbers = (<span class="number">2</span>, <span class="number">4</span>, <span class="number">8</span>, <span class="number">16</span>, <span class="number">32</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">match</span> numbers &#123;</span><br><span class="line">        (first, .., last) =&gt; &#123;</span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;Some numbers: &#123;&#125;, &#123;&#125;&quot;</span>, first, last);</span><br><span class="line">        &#125;,</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<h2 id="绑定"><a class="header-anchor" href="#绑定">¶</a>@ 绑定</h2>
+<p>如果需要绑定另外一个变量，可以用@绑定</p>
+<p><code>id: id_var @ 3..7</code></p>
+<p><strong>既想要限定分值范围，又想要使用分支变量</strong></p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">enum</span> <span class="title">Message</span></span> &#123;</span><br><span class="line">    Hello &#123; id: <span class="built_in">i32</span> &#125;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> msg = Message::Hello &#123; id: <span class="number">5</span> &#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">match</span> msg &#123;</span><br><span class="line">    Message::Hello &#123; id: id_variable @ <span class="number">3</span>..=<span class="number">7</span> &#125; =&gt; &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;Found an id in range: &#123;&#125;&quot;</span>, id_variable)</span><br><span class="line">    &#125;,</span><br><span class="line">    Message::Hello &#123; id: <span class="number">10</span>..=<span class="number">12</span> &#125; =&gt; &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;Found an id in another range&quot;</span>)</span><br><span class="line">    &#125;,</span><br><span class="line">    Message::Hello &#123; id &#125; =&gt; &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;Found some other id: &#123;&#125;&quot;</span>, id)</span><br><span class="line">    &#125;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="前绑定后解构"><a class="header-anchor" href="#前绑定后解构">¶</a>@前绑定后解构</h3>
+<p>可以绑定新变量的同时解构</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="comment">// 绑定新变量 `p`，同时对 `Point` 进行解构</span></span><br><span class="line">    <span class="keyword">let</span> p @ Point &#123;x: px, y: py &#125; = Point &#123;x: <span class="number">10</span>, y: <span class="number">23</span>&#125;;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;x: &#123;&#125;, y: &#123;&#125;&quot;</span>, px, py);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, p);</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">let</span> point = Point &#123;x: <span class="number">10</span>, y: <span class="number">5</span>&#125;;</span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">let</span> p @ Point &#123;x: <span class="number">10</span>, y&#125; = point &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;x is 10 and y is &#123;&#125; in &#123;:?&#125;&quot;</span>, y, p);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;x was not 10 :(&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="新特性"><a class="header-anchor" href="#新特性">¶</a>@新特性</h3>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">match</span> <span class="number">1</span> &#123;</span><br><span class="line">        num @ (<span class="number">1</span> | <span class="number">2</span>) =&gt; &#123;</span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;&quot;</span>, num);</span><br><span class="line">        &#125;</span><br><span class="line">        _ =&gt; &#123;&#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
 
       
     </div>
@@ -569,10 +709,16 @@ img{
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
-              
 
-              <time title="Created: 2022-02-07 22:26:03 / Modified: 23:53:23" itemprop="dateCreated datePublished" datetime="2022-02-07T22:26:03+08:00">2022-02-07</time>
+              <time title="Created: 2022-02-07 22:26:03" itemprop="dateCreated datePublished" datetime="2022-02-07T22:26:03+08:00">2022-02-07</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2022-02-14 08:50:16" itemprop="dateModified" datetime="2022-02-14T08:50:16+08:00">2022-02-14</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -769,7 +915,7 @@ img{
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2022-02-13 23:57:51" itemprop="dateModified" datetime="2022-02-13T23:57:51+08:00">2022-02-13</time>
+                <time title="Modified: 2022-02-14 07:41:55" itemprop="dateModified" datetime="2022-02-14T07:41:55+08:00">2022-02-14</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1124,105 +1270,6 @@ img{
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="https://jerryji.site/2022/02/01/6-S081-lec8-Page-Faults/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avtdisney.JPG">
-      <meta itemprop="name" content="Ji-Xinyou(Jerry)">
-      <meta itemprop="description" content="Lives should be diverse.">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Ji-Xinyou's page">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/02/01/6-S081-lec8-Page-Faults/" class="post-title-link" itemprop="url">6.S081 lec8: Page Faults</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2022-02-01 22:36:37" itemprop="dateCreated datePublished" datetime="2022-02-01T22:36:37+08:00">2022-02-01</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2022-02-09 20:18:24" itemprop="dateModified" datetime="2022-02-09T20:18:24+08:00">2022-02-09</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/O-S/" itemprop="url" rel="index"><span itemprop="name">O/S</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine: </span>
-    
-    <a title="valine" href="/2022/02/01/6-S081-lec8-Page-Faults/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/02/01/6-S081-lec8-Page-Faults/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <style>
-img{
-    width: 80%;
-}
-</style>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/02/01/6-S081-lec8-Page-Faults/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1294,7 +1341,7 @@ img{
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">17</span>
+          <span class="site-state-item-count">18</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>

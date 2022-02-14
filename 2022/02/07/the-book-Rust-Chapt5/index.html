@@ -28,7 +28,7 @@
 <meta property="og:description" content="img{     width: 80%; }">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2022-02-07T14:26:03.000Z">
-<meta property="article:modified_time" content="2022-02-07T15:53:23.627Z">
+<meta property="article:modified_time" content="2022-02-14T00:50:16.746Z">
 <meta property="article:author" content="Ji-Xinyou(Jerry)">
 <meta property="article:tag" content="Rust">
 <meta name="twitter:card" content="summary">
@@ -225,10 +225,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
-              
 
-              <time title="Created: 2022-02-07 22:26:03 / Modified: 23:53:23" itemprop="dateCreated datePublished" datetime="2022-02-07T22:26:03+08:00">2022-02-07</time>
+              <time title="Created: 2022-02-07 22:26:03" itemprop="dateCreated datePublished" datetime="2022-02-07T22:26:03+08:00">2022-02-07</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2022-02-14 08:50:16" itemprop="dateModified" datetime="2022-02-14T08:50:16+08:00">2022-02-14</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -292,6 +298,10 @@ img{
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Color</span></span>(<span class="built_in">i32</span>, <span class="built_in">i32</span>, <span class="built_in">i32</span>);</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Point</span></span>(<span class="built_in">i32</span>, <span class="built_in">i32</span>, <span class="built_in">i32</span>);</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> black = Color(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">    <span class="keyword">let</span> origin = Point(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>可以用<code>black.0, black.1, black.2</code>来访问</p>
 <p><strong>如果要在结构体内使用别的变量的引用</strong>，需要用<strong>生命周期</strong>，保证结构体引用的数据有效性与结构体本身一致。</p>
+<p><code>需要注意</code></p>
+<ul>
+<li><strong>把结构体中具有所有权的字段转移出去后，将无法再访问该字段，但是可以正常访问其它的字段</strong>。</li>
+</ul>
 <hr>
 <h2 id="println-宏打印"><a class="header-anchor" href="#println-宏打印">¶</a>println! 宏打印</h2>
 <p><code>println!(&quot;rect1 is &#123;&#125;&quot;, rect1);</code>需要我们实现<code>std::fmt::Display</code></p>
@@ -314,6 +324,14 @@ img{
 <p>让我们给Rectangle定义一个area方法，作为成员函数<br>
 重点是下面的<code>impl块</code></p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[derive(Debug)]</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Rectangle</span></span> &#123;</span><br><span class="line">    width: <span class="built_in">u32</span>,</span><br><span class="line">    height: <span class="built_in">u32</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span> Rectangle &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">area</span></span>(&amp;<span class="keyword">self</span>) -&gt; <span class="built_in">u32</span> &#123;</span><br><span class="line">        <span class="keyword">self</span>.width * <span class="keyword">self</span>.height</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> rect1 = Rectangle &#123;</span><br><span class="line">        width: <span class="number">30</span>,</span><br><span class="line">        height: <span class="number">50</span>,</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(</span><br><span class="line">        <span class="string">&quot;The area of the rectangle is &#123;&#125; square pixels.&quot;</span>,</span><br><span class="line">        rect1.area()</span><br><span class="line">    );</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<h2 id="关联函数"><a class="header-anchor" href="#关联函数">¶</a>关联函数</h2>
+<p>关联函数就是参数里面<strong>没有self</strong>的函数，可以用于定义<strong>constructor</strong></p>
+<ul>
+<li>没有self作为参数，不能用<code>struct.method()</code>的方法来调用</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">impl</span> Rect &#123;</span><br><span class="line">	<span class="function"><span class="keyword">fn</span> <span class="title">new</span></span>(w: <span class="built_in">u32</span>, h: <span class="built_in">u32</span>) -&gt; Rect &#123;</span><br><span class="line">    Rect &#123; width: w, height: h &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
 
     </div>
 
@@ -398,7 +416,7 @@ img{
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">结构体</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AD%97%E6%AE%B5%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-number">1.1.</span> <span class="nav-text">字段初始化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#println-%E5%AE%8F%E6%89%93%E5%8D%B0"><span class="nav-number">1.2.</span> <span class="nav-text">println! 宏打印</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#dbg-%E5%AE%8F"><span class="nav-number">1.3.</span> <span class="nav-text">dbg!宏</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#method-syntax-impl-block"><span class="nav-number">1.4.</span> <span class="nav-text">method syntax (impl block)</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">结构体</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AD%97%E6%AE%B5%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-number">1.1.</span> <span class="nav-text">字段初始化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#println-%E5%AE%8F%E6%89%93%E5%8D%B0"><span class="nav-number">1.2.</span> <span class="nav-text">println! 宏打印</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#dbg-%E5%AE%8F"><span class="nav-number">1.3.</span> <span class="nav-text">dbg!宏</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#method-syntax-impl-block"><span class="nav-number">1.4.</span> <span class="nav-text">method syntax (impl block)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E8%81%94%E5%87%BD%E6%95%B0"><span class="nav-number">1.5.</span> <span class="nav-text">关联函数</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -414,7 +432,7 @@ img{
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">17</span>
+          <span class="site-state-item-count">18</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
