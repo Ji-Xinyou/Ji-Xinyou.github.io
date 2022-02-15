@@ -1219,6 +1219,81 @@ call <em>swtch()</em> to switch the kernel context to <strong>scheduler’s cont
 <img src="6-S081-lec11-threads/Screen Shot 2022-02-14 at 10.23.31 AM.png" alt="Screen Shot 2022-02-14 at 10.23.31 AM" style="zoom:50%;" />
 <h3 id="lost-wakeups"><a class="header-anchor" href="#lost-wakeups">¶</a>lost wakeups</h3>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span></span></span><br><span class="line"><span class="function"><span class="title">broken_sleep</span><span class="params">(<span class="keyword">void</span>* chan)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  p-&gt;state = SLEEPING;</span><br><span class="line">  p-&gt;chan = chan;</span><br><span class="line">  swtch()</span><br><span class="line">  <span class="comment">// that it, and why it is broken :(</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span></span></span><br><span class="line"><span class="function"><span class="title">wakeup</span><span class="params">(<span class="keyword">void</span>* chan)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">for</span> each p in procs[]:</span><br><span class="line">    <span class="keyword">if</span> p-&gt;state == SLEEPING &amp;&amp; p-&gt;chan == chan:</span><br><span class="line">  		p-&gt;state = RUNNABLE</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Lets see the wrong code, <strong>pay attention to the position of locks</strong>.</p>
+<img src="6-S081-lec11-threads/Screen Shot 2022-02-14 at 2.12.43 PM.png" alt="Screen Shot 2022-02-14 at 2.12.43 PM" style="zoom:50%;" />
+<p>When writing thread <strong>release</strong> the lock, another core’s intr thread <strong>immediately stop spinning and hold the lock</strong></p>
+<p>Then the intr thread will call <em>wakeup()</em></p>
+<p><strong>However</strong>, nothing is waked up actually – because the writing thread <strong>is running between <em>release()</em> and <em>broken_sleep()</em></strong> (This is accidental)</p>
+<p><strong>SO BEFORE THE WRITING THREAD SLEEPS</strong>, <strong>wakeup() is called</strong></p>
+<p>This is the <strong>lost wakeup problem</strong>.</p>
+<p>The key problem is the interval between <strong>process releases its lock</strong> and <strong>process marks itself as sleeping</strong></p>
+<ul>
+<li>The <strong>while loop</strong> is for multicore
+<ul>
+<li>When you wakeup, the resource you are waiting for may be taken</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="Solution-for-lost-wakeup"><a class="header-anchor" href="#Solution-for-lost-wakeup">¶</a>Solution for lost wakeup</h3>
+<p>Gives sleep a lock, <strong>atomically release the lock then sleep on chan</strong></p>
+<p>Functions called <em>sleep()</em> actively acquire the lock, only release it <strong>in sleep()</strong></p>
+<p>NO WAKEUP() WILL BE LOST, because any call for wakeup acquires the lock too!</p>
+<p>But the lock is held until sleep() is called</p>
+<p>WITHIN sleep, the lost wakeup <strong>will not</strong> happen</p>
+<ul>
+<li>because of the p-&gt;lock
+<ul>
+<li>Wakeup have to <strong>acquire p-&gt;lock before actually waking it up</strong></li>
+</ul>
+</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">// Atomically release lock and sleep on chan.</span></span><br><span class="line"><span class="comment">// Reacquires lock when awakened.</span></span><br><span class="line"><span class="function"><span class="keyword">void</span></span></span><br><span class="line"><span class="function"><span class="title">sleep</span><span class="params">(<span class="keyword">void</span> *chan, struct spinlock *lk)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">proc</span> *<span class="title">p</span> =</span> myproc();</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// Must acquire p-&gt;lock in order to</span></span><br><span class="line">  <span class="comment">// change p-&gt;state and then call sched.</span></span><br><span class="line">  <span class="comment">// Once we hold p-&gt;lock, we can be</span></span><br><span class="line">  <span class="comment">// guaranteed that we won&#x27;t miss any wakeup</span></span><br><span class="line">  <span class="comment">// (wakeup locks p-&gt;lock),</span></span><br><span class="line">  <span class="comment">// so it&#x27;s okay to release lk.</span></span><br><span class="line"></span><br><span class="line">  acquire(&amp;p-&gt;lock);  <span class="comment">//DOC: sleeplock1</span></span><br><span class="line">  release(lk); <span class="comment">// also release in method which called sleep</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">// Go to sleep.</span></span><br><span class="line">  p-&gt;chan = chan;</span><br><span class="line">  p-&gt;state = SLEEPING;</span><br><span class="line"></span><br><span class="line">  sched();</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Tidy up.</span></span><br><span class="line">  p-&gt;chan = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Reacquire original lock.</span></span><br><span class="line">  release(&amp;p-&gt;lock);</span><br><span class="line">  acquire(lk);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<h3 id="check-p-killed-in-the-loop-of-sleep"><a class="header-anchor" href="#check-p-killed-in-the-loop-of-sleep">¶</a>check p-&gt;killed in the loop of sleep?</h3>
+<p>syscall <code>sleep()</code> sets the process state to <code>RUNNABLE</code></p>
+<ul>
+<li>i.e. will be sched by the scheduler
+<ul>
+<li>goes back to the condition check
+<ul>
+<li>If the loop check <code>p-&gt;killed</code> -&gt; will be killed while executing some operations
+<ul>
+<li>e.g. piperead</li>
+</ul>
+</li>
+<li>If not, the operations will continue and the process <strong>exits when the operation finishes</strong>
+<ul>
+<li>e.g. file system operation</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="RECAP-for-caller-saved-and-callee-saved"><a class="header-anchor" href="#RECAP-for-caller-saved-and-callee-saved">¶</a>RECAP for caller-saved and callee-saved</h2>
+<p><strong>Caller-saved:</strong></p>
+<ul>
+<li>The registers saved in the prologue of caller, and restored in the epilogue of the caller
+<ul>
+<li>therefore, free to modify within the caller
+<ul>
+<li>Because we have already saved them</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><strong>Callee-saved:</strong></p>
+<ul>
+<li>The registers saved in the prologue of callee, and restored in the epilogue of the callee
+<ul>
+<li>Save before entering function call, restore when returning</li>
+</ul>
+</li>
+</ul>
 ]]></content>
       <categories>
         <category>O/S</category>
@@ -2075,6 +2150,56 @@ so both can use trapframe.</li>
 <h3 id="stvec-and-interrupts"><a class="header-anchor" href="#stvec-and-interrupts">¶</a>stvec and interrupts</h3>
 <p>When trap comes from userspace, <em>usertrap()</em> sets stvec to <em>kernelvec()</em>. But there is a window of time when the kernel has started executed, but stvec is still set to uservec.</p>
 <p>At this time, no dev interrupt should happen, so RISC-V always disable interrupts when trap happens, and xv6 does not enable them again <strong>until after it sets <em>stvec</em></strong></p>
+<hr>
+]]></content>
+      <categories>
+        <category>O/S</category>
+      </categories>
+      <tags>
+        <tag>6.S081</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>6.S081-lec13,14,15 file system</title>
+    <url>/2022/02/15/6-S081-lec13-14-15-file-system/</url>
+    <content><![CDATA[<div></div>
+<span id="more"></span>
+]]></content>
+  </entry>
+  <entry>
+    <title>xv6book-chap5-intr&amp;devdriver</title>
+    <url>/2022/02/15/xv6book-chap5-intr-devdriver/</url>
+    <content><![CDATA[<div></div>
+<span id="more"></span>
+<h1>XV6 book - chap6: interrupt and device drivers</h1>
+<hr>
+<h2 id="Driver"><a class="header-anchor" href="#Driver">¶</a>Driver</h2>
+<p><strong>Definition:</strong></p>
+<ul>
+<li><strong>code</strong> in an <strong>operating system</strong> that manages a particular device: it <strong>configures</strong> the device hardware, tells the device to <strong>perform</strong> operations, handles the resulting <strong>interrupts</strong>, and <strong>interacts</strong> with processes that may be waiting for I/O from the device</li>
+</ul>
+<hr>
+<h3 id="Top-half-and-bottom-half"><a class="header-anchor" href="#Top-half-and-bottom-half">¶</a>Top half and bottom half</h3>
+<ul>
+<li>Top half
+<ul>
+<li>Runs in process’s kernel thread
+<ul>
+<li>called via <strong>syscalls</strong>, e.g. write/read that want device to perform I/O</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Bottom half
+<ul>
+<li>executes at intr
+<ul>
+<li>called via intr, acts as <strong>handler</strong></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
 <hr>
 ]]></content>
       <categories>

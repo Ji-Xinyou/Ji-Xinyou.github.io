@@ -29,8 +29,9 @@
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://jerryji.site/2022/02/08/6-S081-lec11-threads/ctx.png">
 <meta property="og:image" content="https://jerryji.site/2022/02/08/6-S081-lec11-threads/6-S081-lec11-threads/Screen%20Shot%202022-02-14%20at%2010.23.31%20AM.png">
+<meta property="og:image" content="https://jerryji.site/2022/02/08/6-S081-lec11-threads/6-S081-lec11-threads/Screen%20Shot%202022-02-14%20at%202.12.43%20PM.png">
 <meta property="article:published_time" content="2022-02-08T12:14:37.000Z">
-<meta property="article:modified_time" content="2022-02-14T05:50:58.637Z">
+<meta property="article:modified_time" content="2022-02-15T07:25:54.776Z">
 <meta property="article:author" content="Ji-Xinyou(Jerry)">
 <meta property="article:tag" content="6.S081">
 <meta name="twitter:card" content="summary">
@@ -236,7 +237,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2022-02-14 13:50:58" itemprop="dateModified" datetime="2022-02-14T13:50:58+08:00">2022-02-14</time>
+                <time title="Modified: 2022-02-15 15:25:54" itemprop="dateModified" datetime="2022-02-15T15:25:54+08:00">2022-02-15</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -372,6 +373,81 @@ call <em>swtch()</em> to switch the kernel context to <strong>scheduler’s cont
 <img src="6-S081-lec11-threads/Screen Shot 2022-02-14 at 10.23.31 AM.png" alt="Screen Shot 2022-02-14 at 10.23.31 AM" style="zoom:50%;" />
 <h3 id="lost-wakeups"><a class="header-anchor" href="#lost-wakeups">¶</a>lost wakeups</h3>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span></span></span><br><span class="line"><span class="function"><span class="title">broken_sleep</span><span class="params">(<span class="keyword">void</span>* chan)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  p-&gt;state = SLEEPING;</span><br><span class="line">  p-&gt;chan = chan;</span><br><span class="line">  swtch()</span><br><span class="line">  <span class="comment">// that it, and why it is broken :(</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span></span></span><br><span class="line"><span class="function"><span class="title">wakeup</span><span class="params">(<span class="keyword">void</span>* chan)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">for</span> each p in procs[]:</span><br><span class="line">    <span class="keyword">if</span> p-&gt;state == SLEEPING &amp;&amp; p-&gt;chan == chan:</span><br><span class="line">  		p-&gt;state = RUNNABLE</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Lets see the wrong code, <strong>pay attention to the position of locks</strong>.</p>
+<img src="6-S081-lec11-threads/Screen Shot 2022-02-14 at 2.12.43 PM.png" alt="Screen Shot 2022-02-14 at 2.12.43 PM" style="zoom:50%;" />
+<p>When writing thread <strong>release</strong> the lock, another core’s intr thread <strong>immediately stop spinning and hold the lock</strong></p>
+<p>Then the intr thread will call <em>wakeup()</em></p>
+<p><strong>However</strong>, nothing is waked up actually – because the writing thread <strong>is running between <em>release()</em> and <em>broken_sleep()</em></strong> (This is accidental)</p>
+<p><strong>SO BEFORE THE WRITING THREAD SLEEPS</strong>, <strong>wakeup() is called</strong></p>
+<p>This is the <strong>lost wakeup problem</strong>.</p>
+<p>The key problem is the interval between <strong>process releases its lock</strong> and <strong>process marks itself as sleeping</strong></p>
+<ul>
+<li>The <strong>while loop</strong> is for multicore
+<ul>
+<li>When you wakeup, the resource you are waiting for may be taken</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="Solution-for-lost-wakeup"><a class="header-anchor" href="#Solution-for-lost-wakeup">¶</a>Solution for lost wakeup</h3>
+<p>Gives sleep a lock, <strong>atomically release the lock then sleep on chan</strong></p>
+<p>Functions called <em>sleep()</em> actively acquire the lock, only release it <strong>in sleep()</strong></p>
+<p>NO WAKEUP() WILL BE LOST, because any call for wakeup acquires the lock too!</p>
+<p>But the lock is held until sleep() is called</p>
+<p>WITHIN sleep, the lost wakeup <strong>will not</strong> happen</p>
+<ul>
+<li>because of the p-&gt;lock
+<ul>
+<li>Wakeup have to <strong>acquire p-&gt;lock before actually waking it up</strong></li>
+</ul>
+</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Atomically release lock and sleep on chan.</span></span><br><span class="line"><span class="comment">// Reacquires lock when awakened.</span></span><br><span class="line"><span class="function"><span class="keyword">void</span></span></span><br><span class="line"><span class="function"><span class="title">sleep</span><span class="params">(<span class="keyword">void</span> *chan, struct spinlock *lk)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">proc</span> *<span class="title">p</span> =</span> myproc();</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// Must acquire p-&gt;lock in order to</span></span><br><span class="line">  <span class="comment">// change p-&gt;state and then call sched.</span></span><br><span class="line">  <span class="comment">// Once we hold p-&gt;lock, we can be</span></span><br><span class="line">  <span class="comment">// guaranteed that we won&#x27;t miss any wakeup</span></span><br><span class="line">  <span class="comment">// (wakeup locks p-&gt;lock),</span></span><br><span class="line">  <span class="comment">// so it&#x27;s okay to release lk.</span></span><br><span class="line"></span><br><span class="line">  acquire(&amp;p-&gt;lock);  <span class="comment">//DOC: sleeplock1</span></span><br><span class="line">  release(lk); <span class="comment">// also release in method which called sleep</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">// Go to sleep.</span></span><br><span class="line">  p-&gt;chan = chan;</span><br><span class="line">  p-&gt;state = SLEEPING;</span><br><span class="line"></span><br><span class="line">  sched();</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Tidy up.</span></span><br><span class="line">  p-&gt;chan = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Reacquire original lock.</span></span><br><span class="line">  release(&amp;p-&gt;lock);</span><br><span class="line">  acquire(lk);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<h3 id="check-p-killed-in-the-loop-of-sleep"><a class="header-anchor" href="#check-p-killed-in-the-loop-of-sleep">¶</a>check p-&gt;killed in the loop of sleep?</h3>
+<p>syscall <code>sleep()</code> sets the process state to <code>RUNNABLE</code></p>
+<ul>
+<li>i.e. will be sched by the scheduler
+<ul>
+<li>goes back to the condition check
+<ul>
+<li>If the loop check <code>p-&gt;killed</code> -&gt; will be killed while executing some operations
+<ul>
+<li>e.g. piperead</li>
+</ul>
+</li>
+<li>If not, the operations will continue and the process <strong>exits when the operation finishes</strong>
+<ul>
+<li>e.g. file system operation</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="RECAP-for-caller-saved-and-callee-saved"><a class="header-anchor" href="#RECAP-for-caller-saved-and-callee-saved">¶</a>RECAP for caller-saved and callee-saved</h2>
+<p><strong>Caller-saved:</strong></p>
+<ul>
+<li>The registers saved in the prologue of caller, and restored in the epilogue of the caller
+<ul>
+<li>therefore, free to modify within the caller
+<ul>
+<li>Because we have already saved them</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><strong>Callee-saved:</strong></p>
+<ul>
+<li>The registers saved in the prologue of callee, and restored in the epilogue of the callee
+<ul>
+<li>Save before entering function call, restore when returning</li>
+</ul>
+</li>
+</ul>
 
     </div>
 
@@ -456,7 +532,7 @@ call <em>swtch()</em> to switch the kernel context to <strong>scheduler’s cont
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">6.S081 lec11, 12: Thread Switching</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Challenges"><span class="nav-number">1.1.</span> <span class="nav-text">Challenges</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Dealing-w-compute-bound-threads"><span class="nav-number">1.1.1.</span> <span class="nav-text">Dealing w&#x2F; compute bound threads</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#How-scheduler-works-in-xv6"><span class="nav-number">1.2.</span> <span class="nav-text">How scheduler works in xv6</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#coordination-between-processes-sleep-wakeup"><span class="nav-number">1.3.</span> <span class="nav-text">coordination (between processes) - sleep&#x2F;wakeup</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#lost-wakeups"><span class="nav-number">1.3.1.</span> <span class="nav-text">lost wakeups</span></a></li></ol></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">6.S081 lec11, 12: Thread Switching</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Challenges"><span class="nav-number">1.1.</span> <span class="nav-text">Challenges</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Dealing-w-compute-bound-threads"><span class="nav-number">1.1.1.</span> <span class="nav-text">Dealing w&#x2F; compute bound threads</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#How-scheduler-works-in-xv6"><span class="nav-number">1.2.</span> <span class="nav-text">How scheduler works in xv6</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#coordination-between-processes-sleep-wakeup"><span class="nav-number">1.3.</span> <span class="nav-text">coordination (between processes) - sleep&#x2F;wakeup</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#lost-wakeups"><span class="nav-number">1.3.1.</span> <span class="nav-text">lost wakeups</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Solution-for-lost-wakeup"><span class="nav-number">1.3.2.</span> <span class="nav-text">Solution for lost wakeup</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#check-p-killed-in-the-loop-of-sleep"><span class="nav-number">1.3.3.</span> <span class="nav-text">check p-&gt;killed in the loop of sleep?</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RECAP-for-caller-saved-and-callee-saved"><span class="nav-number">1.4.</span> <span class="nav-text">RECAP for caller-saved and callee-saved</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -472,7 +548,7 @@ call <em>swtch()</em> to switch the kernel context to <strong>scheduler’s cont
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">18</span>
+          <span class="site-state-item-count">20</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
