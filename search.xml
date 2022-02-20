@@ -63,69 +63,6 @@ The reason why copyout() needs to be modified is that…</p>
       </tags>
   </entry>
   <entry>
-    <title>6.S081-lec10 Multiprocesses and Locks</title>
-    <url>/2022/02/07/6-S081-lec10-Multiprocesses-and-Locks/</url>
-    <content><![CDATA[<style>
-img{
-    width: 80%;
-}
-</style>
-<span id="more"></span>
-<h1>6.S081-lec10 Multiprocesses and Locks</h1>
-<hr>
-<p>In Chinese. This post is short.</p>
-<h2 id="order-the-locks"><a class="header-anchor" href="#order-the-locks">¶</a>order the locks</h2>
-<p>CPU1: <code>rename (&quot;d1/x, d2/y&quot;)</code><br>
-CPU2: <code>rename (&quot;d2/a, d1/b&quot;)</code></p>
-<p>CPU1先 <code>acquire(d1)</code>再<code>acquire(d2)</code><br>
-CPU2则 <code>acquire(d2)</code>再<code>acquire(d1)</code><br>
-会导致死锁</p>
-<p>解决方法就是我们将所有的锁给定一个<strong>global order</strong>，获取这类型的多个锁的时候必须按顺序获取。 <strong>order</strong>是对于<strong>某个类型的锁</strong>而言的，不同类型的锁之间没有order可言。</p>
-<h3 id="function-calls"><a class="header-anchor" href="#function-calls">¶</a>function calls</h3>
-<p>func1() calls func2()<br>
-if <em>func2()</em> 使用了一些lock，<em>func1()</em> 应该知道*func2()*使用了哪些锁以保证global order</p>
-<h2 id="Implementation-v2"><a class="header-anchor" href="#Implementation-v2">¶</a>Implementation</h2>
-<h3 id="BROKEN-acquire"><a class="header-anchor" href="#BROKEN-acquire">¶</a>BROKEN acquire()</h3>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span></span></span><br><span class="line"><span class="function"><span class="title">broken_acquire</span><span class="params">(struct lock *l)</span></span></span><br><span class="line"><span class="function"></span>&#123;   </span><br><span class="line">    <span class="keyword">while</span>(<span class="number">1</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (l-&gt;locked == <span class="number">0</span>) &#123;</span><br><span class="line">            l-&gt;locked = <span class="number">1</span>;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>这里有race condition，可能有两个process都看到lock is not held，并且同时获得lock</p>
-<h3 id="GOOD-acquire"><a class="header-anchor" href="#GOOD-acquire">¶</a>GOOD acquire()</h3>
-<p><strong>remember to close the interrupt</strong></p>
-<p><strong>Using hw inst</strong>, test_and_set() atomically</p>
-<p><code>amoswap(addr, r1, r2)</code> in RISC-V</p>
-<ul>
-<li>hw locks the addr</li>
-<li>puts <code>tmp &lt;- *addr</code></li>
-<li><code>*addr &lt;- r1</code></li>
-<li><code>r2 &lt;- tmp</code></li>
-<li>unlocks and return</li>
-</ul>
-<p>In C stdlib, <code>__sync_lock_test_and_set(void* addr, uint64 val)</code>，do the job</p>
-<p>Following code does the work<br>
-<code>while(__sync_lock_test_and_set(&amp;lk-&gt;locked, 1) != 0) &#123;&#125;</code></p>
-<h2 id="Memory-Ordering"><a class="header-anchor" href="#Memory-Ordering">¶</a>Memory Ordering</h2>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">locked = <span class="number">1</span></span><br><span class="line">    x = x + <span class="number">1</span></span><br><span class="line">locked = <span class="number">0</span></span><br></pre></td></tr></table></figure>
-<p>CPU会乱序执行，我们可以把<code>x = x + 1</code>放到<code>locked = 0</code>后面吗？</p>
-<p>在并行执行中，这是不OK的，因此有<code>fence</code>，去告诉编译器与cpu不要这么做<br>
-<code>__sync_synchronize()</code>就是这个作用</p>
-<p><code>__sync_synchronize()</code> tells the C compiler and the CPU to not move loads or stores past this point.</p>
-<ol>
-<li>
-<p>to ensure all stores in the critical section are <strong>visible</strong> to other CPUs before the lock is released, and loads in the critical section occur strictly before the lock is released</p>
-</li>
-<li>
-<p>to ensure the critical section’s memory references happen strictly after the lock is acquired</p>
-</li>
-</ol>
-<p>换句话说，在<code>fence</code>前的指令不会被重排到<code>fence</code>后面，因此<code>acquire()</code>前的指令仍然在前面，critical section的指令仍然在锁之间。</p>
-]]></content>
-      <categories>
-        <category>O/S</category>
-      </categories>
-      <tags>
-        <tag>6.S081</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>6.S081-lec11, 12 threads</title>
     <url>/2022/02/08/6-S081-lec11-threads/</url>
     <content><![CDATA[<style>
@@ -309,131 +246,6 @@ call <em>swtch()</em> to switch the kernel context to <strong>scheduler’s cont
     <content><![CDATA[<div></div>
 <span id="more"></span>
 ]]></content>
-  </entry>
-  <entry>
-    <title>6.S081 lec5: RISCV-calling conventions</title>
-    <url>/2022/01/27/6-S081-lec5-RISCV-calling-conventions/</url>
-    <content><![CDATA[<style>
-img{
-    width: 70%;
-}
-</style>
-<span id="more"></span>
-<h1>6.S081 lec5: RISCV calling conventions</h1>
-<hr>
-<h2 id="Caller-Saved-and-Callee-Saved"><a class="header-anchor" href="#Caller-Saved-and-Callee-Saved">¶</a>Caller Saved and Callee Saved</h2>
-<p>Registers are categorized as <strong>caller saved</strong> and <strong>callee saved</strong>. The difference between them is very important.</p>
-<img src="/2022/01/27/6-S081-lec5-RISCV-calling-conventions/regs.png" class="" title="regs">
-<ul>
-<li><strong>Caller Saved</strong> registers are <strong>not</strong> reserved across function calls.</li>
-<li><strong>Callee Saved</strong> registers are reserved across function calls. The caller has to find someway to save those registers.</li>
-</ul>
-<p>The convention also states, the <strong>return value</strong> is in a0 and a1, and <strong>arguments</strong> of the function is in a0-a7.</p>
-<ul>
-<li>If more arguments are given, they should reside on stack.</li>
-</ul>
-<hr>
-<h2 id="the-Stack"><a class="header-anchor" href="#the-Stack">¶</a>the Stack</h2>
-<ul>
-<li>The stack is created by function call! <strong>Each function call creates a stack frame for itself to use.</strong></li>
-<li>The stack starts from high address, growes down to low address. To make a new stack frame, decrement sp register.</li>
-<li>The stack size is <strong>not fixed</strong>, pay attention to the layout.
-<ul>
-<li>The return address is always at the first word
-<ul>
-<li>
-<pre><code class="language-asm">  addi sp, sp, 16 # alloc stack frame
-  sd ra, 0(sp)    # store the return address
-  ...
-  ld ra, 0(sp)    # recover the return address
-  addi sp, sp, 16 # delete the stack frame
-</code></pre>
-<ul>
-<li>This also shows that why $ra is a <strong>callee saved</strong> register.</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>The Prev. Frame address is always next to return address, to control frame callback.</li>
-</ul>
-</li>
-</ul>
-<p><img src="6-S081-lec5-RISCV-calling-conventions.assets/stack.png" alt="stack"></p>
-<hr>
-<h2 id="GDB-commands"><a class="header-anchor" href="#GDB-commands">¶</a>GDB commands</h2>
-<ul>
-<li>
-<p><strong>To open the gdb mode of xv6</strong></p>
-<ul>
-<li>In one window type <strong>make qemu-gdb</strong> to start the gdb server</li>
-<li>In another window type <strong>riscv-unknown-elf-gdb</strong> to connect to the previous gdb server and start debugging!<br>
-<br/></li>
-</ul>
-</li>
-<li>
-<p><strong>layout split/asm/reg/src</strong></p>
-<ul>
-<li>-&gt; show the layout of (asm &amp; src)/asm/reg/ src</li>
-<li><strong>focus reg/asm</strong>…
-<ul>
-<li>-&gt; change the focus among windows<br>
-<br/></li>
-</ul>
-</li>
-</ul>
-</li>
-<li>
-<p><strong>info</strong></p>
-<ul>
-<li><strong>info breakpoints</strong>
-<ul>
-<li>-&gt; check the number of bp</li>
-</ul>
-</li>
-<li><strong>info frame</strong>
-<ul>
-<li>-&gt; check the info of current stack frame (frame 0)</li>
-<li><strong>backtrace (bt)</strong>
-<ul>
-<li>frame x -&gt; info frame
-<ul>
-<li>-&gt; change current frame to <strong>x</strong> and print the info<br>
-<br/></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>
-<p><strong>tui enable</strong></p>
-<ul>
-<li>show the tui<br>
-<br/></li>
-</ul>
-</li>
-<li>
-<p><strong>breakpoint/watchpoint &lt;tag&gt;</strong></p>
-<ul>
-<li><strong>delete &lt;bp_nr&gt;</strong></li>
-<li>info breakpoints/watchpoints<br>
-<br/></li>
-</ul>
-</li>
-<li>
-<p><strong>s &amp; si</strong> (step instruction)</p>
-</li>
-</ul>
-<hr>
-]]></content>
-      <categories>
-        <category>O/S</category>
-      </categories>
-      <tags>
-        <tag>6.S081</tag>
-      </tags>
   </entry>
   <entry>
     <title>6.S081 lec6: Traps</title>
@@ -695,200 +507,185 @@ Why the next instuction is correctly executed instead of some garbage being run.
       </tags>
   </entry>
   <entry>
-    <title>6.S081-lec9 Interrupts</title>
-    <url>/2022/02/05/6-S081-lec9-Interrupts/</url>
+    <title>6.S081 lec5: RISCV-calling conventions</title>
+    <url>/2022/01/27/6-S081-lec5-RISCV-calling-conventions/</url>
+    <content><![CDATA[<style>
+img{
+    width: 70%;
+}
+</style>
+<span id="more"></span>
+<h1>6.S081 lec5: RISCV calling conventions</h1>
+<hr>
+<h2 id="Caller-Saved-and-Callee-Saved"><a class="header-anchor" href="#Caller-Saved-and-Callee-Saved">¶</a>Caller Saved and Callee Saved</h2>
+<p>Registers are categorized as <strong>caller saved</strong> and <strong>callee saved</strong>. The difference between them is very important.</p>
+<img src="/2022/01/27/6-S081-lec5-RISCV-calling-conventions/regs.png" class="" title="regs">
+<ul>
+<li><strong>Caller Saved</strong> registers are <strong>not</strong> reserved across function calls.</li>
+<li><strong>Callee Saved</strong> registers are reserved across function calls. The caller has to find someway to save those registers.</li>
+</ul>
+<p>The convention also states, the <strong>return value</strong> is in a0 and a1, and <strong>arguments</strong> of the function is in a0-a7.</p>
+<ul>
+<li>If more arguments are given, they should reside on stack.</li>
+</ul>
+<hr>
+<h2 id="the-Stack"><a class="header-anchor" href="#the-Stack">¶</a>the Stack</h2>
+<ul>
+<li>The stack is created by function call! <strong>Each function call creates a stack frame for itself to use.</strong></li>
+<li>The stack starts from high address, growes down to low address. To make a new stack frame, decrement sp register.</li>
+<li>The stack size is <strong>not fixed</strong>, pay attention to the layout.
+<ul>
+<li>The return address is always at the first word
+<ul>
+<li>
+<pre><code class="language-asm">  addi sp, sp, 16 # alloc stack frame
+  sd ra, 0(sp)    # store the return address
+  ...
+  ld ra, 0(sp)    # recover the return address
+  addi sp, sp, 16 # delete the stack frame
+</code></pre>
+<ul>
+<li>This also shows that why $ra is a <strong>callee saved</strong> register.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>The Prev. Frame address is always next to return address, to control frame callback.</li>
+</ul>
+</li>
+</ul>
+<p><img src="6-S081-lec5-RISCV-calling-conventions.assets/stack.png" alt="stack"></p>
+<hr>
+<h2 id="GDB-commands"><a class="header-anchor" href="#GDB-commands">¶</a>GDB commands</h2>
+<ul>
+<li>
+<p><strong>To open the gdb mode of xv6</strong></p>
+<ul>
+<li>In one window type <strong>make qemu-gdb</strong> to start the gdb server</li>
+<li>In another window type <strong>riscv-unknown-elf-gdb</strong> to connect to the previous gdb server and start debugging!<br>
+<br/></li>
+</ul>
+</li>
+<li>
+<p><strong>layout split/asm/reg/src</strong></p>
+<ul>
+<li>-&gt; show the layout of (asm &amp; src)/asm/reg/ src</li>
+<li><strong>focus reg/asm</strong>…
+<ul>
+<li>-&gt; change the focus among windows<br>
+<br/></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>info</strong></p>
+<ul>
+<li><strong>info breakpoints</strong>
+<ul>
+<li>-&gt; check the number of bp</li>
+</ul>
+</li>
+<li><strong>info frame</strong>
+<ul>
+<li>-&gt; check the info of current stack frame (frame 0)</li>
+<li><strong>backtrace (bt)</strong>
+<ul>
+<li>frame x -&gt; info frame
+<ul>
+<li>-&gt; change current frame to <strong>x</strong> and print the info<br>
+<br/></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>tui enable</strong></p>
+<ul>
+<li>show the tui<br>
+<br/></li>
+</ul>
+</li>
+<li>
+<p><strong>breakpoint/watchpoint &lt;tag&gt;</strong></p>
+<ul>
+<li><strong>delete &lt;bp_nr&gt;</strong></li>
+<li>info breakpoints/watchpoints<br>
+<br/></li>
+</ul>
+</li>
+<li>
+<p><strong>s &amp; si</strong> (step instruction)</p>
+</li>
+</ul>
+<hr>
+]]></content>
+      <categories>
+        <category>O/S</category>
+      </categories>
+      <tags>
+        <tag>6.S081</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>6.S081-lec10 Multiprocesses and Locks</title>
+    <url>/2022/02/07/6-S081-lec10-Multiprocesses-and-Locks/</url>
     <content><![CDATA[<style>
 img{
     width: 80%;
 }
 </style>
 <span id="more"></span>
-<h1>6.S081 lecture9: Interrupts</h1>
-<h2 id="Interrupts"><a class="header-anchor" href="#Interrupts">¶</a>Interrupts</h2>
-<p>Hardware wants attention now.</p>
-<p>SW saves its work</p>
-<ul>
-<li>set it aside</li>
-<li>process interupt</li>
-<li>resume</li>
-</ul>
-<p><strong>same mechanism</strong> w/ syscall and traps</p>
+<h1>6.S081-lec10 Multiprocesses and Locks</h1>
 <hr>
-<h2 id="Properties-of-Interrupt"><a class="header-anchor" href="#Properties-of-Interrupt">¶</a>Properties of Interrupt</h2>
-<p>Three things <strong>differs</strong> Interrupt from others<br>
-<strong>Interrupt</strong></p>
+<p>In Chinese. This post is short.</p>
+<h2 id="order-the-locks"><a class="header-anchor" href="#order-the-locks">¶</a>order the locks</h2>
+<p>CPU1: <code>rename (&quot;d1/x, d2/y&quot;)</code><br>
+CPU2: <code>rename (&quot;d2/a, d1/b&quot;)</code></p>
+<p>CPU1先 <code>acquire(d1)</code>再<code>acquire(d2)</code><br>
+CPU2则 <code>acquire(d2)</code>再<code>acquire(d1)</code><br>
+会导致死锁</p>
+<p>解决方法就是我们将所有的锁给定一个<strong>global order</strong>，获取这类型的多个锁的时候必须按顺序获取。 <strong>order</strong>是对于<strong>某个类型的锁</strong>而言的，不同类型的锁之间没有order可言。</p>
+<h3 id="function-calls"><a class="header-anchor" href="#function-calls">¶</a>function calls</h3>
+<p>func1() calls func2()<br>
+if <em>func2()</em> 使用了一些lock，<em>func1()</em> 应该知道*func2()*使用了哪些锁以保证global order</p>
+<h2 id="Implementation-v2"><a class="header-anchor" href="#Implementation-v2">¶</a>Implementation</h2>
+<h3 id="BROKEN-acquire"><a class="header-anchor" href="#BROKEN-acquire">¶</a>BROKEN acquire()</h3>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span></span></span><br><span class="line"><span class="function"><span class="title">broken_acquire</span><span class="params">(struct lock *l)</span></span></span><br><span class="line"><span class="function"></span>&#123;   </span><br><span class="line">    <span class="keyword">while</span>(<span class="number">1</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (l-&gt;locked == <span class="number">0</span>) &#123;</span><br><span class="line">            l-&gt;locked = <span class="number">1</span>;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里有race condition，可能有两个process都看到lock is not held，并且同时获得lock</p>
+<h3 id="GOOD-acquire"><a class="header-anchor" href="#GOOD-acquire">¶</a>GOOD acquire()</h3>
+<p><strong>remember to close the interrupt</strong></p>
+<p><strong>Using hw inst</strong>, test_and_set() atomically</p>
+<p><code>amoswap(addr, r1, r2)</code> in RISC-V</p>
 <ul>
-<li>asynchronous
-<ul>
-<li>may have nothing to do with CPU’s context</li>
+<li>hw locks the addr</li>
+<li>puts <code>tmp &lt;- *addr</code></li>
+<li><code>*addr &lt;- r1</code></li>
+<li><code>r2 &lt;- tmp</code></li>
+<li>unlocks and return</li>
 </ul>
-</li>
-<li>concurrency</li>
-<li>programmed devices</li>
-</ul>
-<hr>
-<h2 id="Hardware-side"><a class="header-anchor" href="#Hardware-side">¶</a>Hardware side</h2>
-<p><strong>PLIC</strong> controls interrupts by <strong>routing</strong> them to cores<br>
-When no cores are available, PLIC <strong>holds</strong> them.</p>
-<img src="/2022/02/05/6-S081-lec9-Interrupts/plic.png" class="" title="plic">
-<hr>
-<h2 id="Software-side"><a class="header-anchor" href="#Software-side">¶</a>Software side</h2>
-<p>code manages the device is called <strong>driver</strong></p>
-<p><strong>Driver structure</strong></p>
-<ul>
-<li>Top part (interact with user level processes)
-<ul>
-<li><strong>queue</strong> running in the driver, decouples top and bottom</li>
-</ul>
-</li>
-<li>Bottom part
-<ul>
-<li>Interrupt handler</li>
-</ul>
-</li>
-</ul>
-<img src="/2022/02/05/6-S081-lec9-Interrupts/driver.png" class="" title="driver">
-<hr>
-<h2 id="Programming-device"><a class="header-anchor" href="#Programming-device">¶</a>Programming device</h2>
-<p>Typically done by <strong>memory mapped io</strong>.</p>
-<ul>
-<li>devices show on specfic physical addresses</li>
-<li>ld/st inst to those addresses
-<ul>
-<li>read, write <strong>control regs</strong> of the device</li>
-</ul>
-</li>
-</ul>
-<hr>
-<h2 id="Case-study-ls"><a class="header-anchor" href="#Case-study-ls">¶</a>Case study: $ ls</h2>
-<ul>
+<p>In C stdlib, <code>__sync_lock_test_and_set(void* addr, uint64 val)</code>，do the job</p>
+<p>Following code does the work<br>
+<code>while(__sync_lock_test_and_set(&amp;lk-&gt;locked, 1) != 0) &#123;&#125;</code></p>
+<h2 id="Memory-Ordering"><a class="header-anchor" href="#Memory-Ordering">¶</a>Memory Ordering</h2>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">locked = <span class="number">1</span></span><br><span class="line">    x = x + <span class="number">1</span></span><br><span class="line">locked = <span class="number">0</span></span><br></pre></td></tr></table></figure>
+<p>CPU会乱序执行，我们可以把<code>x = x + 1</code>放到<code>locked = 0</code>后面吗？</p>
+<p>在并行执行中，这是不OK的，因此有<code>fence</code>，去告诉编译器与cpu不要这么做<br>
+<code>__sync_synchronize()</code>就是这个作用</p>
+<p><code>__sync_synchronize()</code> tells the C compiler and the CPU to not move loads or stores past this point.</p>
+<ol>
 <li>
-<p>$: device puts $ into <strong>UART</strong></p>
-<ul>
-<li>UART generates interrupt when the character has been sent</li>
-<li>UART是用于串口通信的芯片</li>
-</ul>
+<p>to ensure all stores in the critical section are <strong>visible</strong> to other CPUs before the lock is released, and loads in the critical section occur strictly before the lock is released</p>
 </li>
 <li>
-<p>ls: keyboard to the recv line</p>
-<ul>
-<li>generate interrupts to tell there a char available</li>
-<li>handler reads it</li>
-</ul>
-</li>
-</ul>
-<h3 id="RISC-V-support-for-interrupts"><a class="header-anchor" href="#RISC-V-support-for-interrupts">¶</a>RISC-V support for interrupts</h3>
-<p><strong>SIE</strong>: supervisor interrupt enable reg</p>
-<ul>
-<li>1 <strong>bit</strong> each for external intr, sw intr, timer intr</li>
-</ul>
-<p><strong>SSTATUS</strong></p>
-<ul>
-<li>1 <strong>bit</strong> to disable and enable intr</li>
-</ul>
-<p><strong>SIP</strong>: supervisor pending register</p>
-<ul>
-<li>what intr comes in</li>
-</ul>
-<p><strong>scause</strong></p>
-<ul>
-<li>indicate it is an interrupt</li>
-</ul>
-<p><strong>stvec</strong></p>
-<ul>
-<li>jump to handler</li>
-</ul>
-<hr>
-<h2 id="Interrupt-HW"><a class="header-anchor" href="#Interrupt-HW">¶</a>Interrupt (HW)</h2>
-<p>Let’s say the <strong>keyboard raises the intr line</strong><br>
--&gt; The intr signal goes to <strong>PLIC</strong><br>
--&gt; The PLIC routes the signal to <strong>core</strong></p>
-<ul>
-<li>If the core’s SIE bit is set
-<ul>
-<li>close the INTR by <strong>clearing SIE bit</strong></li>
-<li>epc &lt;- pc</li>
-<li>save the current mode</li>
-<li>mode &lt;- supervisor</li>
-<li>pc &lt;- stvec
-<ul>
-<li><em>usertrap()</em></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<hr>
-<h2 id="Interrupt-and-concurrency"><a class="header-anchor" href="#Interrupt-and-concurrency">¶</a>Interrupt and concurrency</h2>
-<ol>
-<li>device and CPU run in <strong>parallel</strong>
-<ol>
-<li><strong>producer/consumer parallelism</strong></li>
-</ol>
-</li>
-<li>interrupt stops current runnning program
-<ol>
-<li>tricky when <strong>kernel</strong> gets interrupt</li>
-<li>intr enable/disable</li>
-</ol>
-</li>
-<li><strong>top of driver and bottom</strong> of the driver may run in parallel <strong>(on different CPUS)</strong>
-<ol>
-<li>use <strong>locks</strong>, because different CPU may look at the <strong>same</strong> queue.</li>
-</ol>
+<p>to ensure the critical section’s memory references happen strictly after the lock is acquired</p>
 </li>
 </ol>
-<hr>
-<h3 id="producer-consumer-parallelism"><a class="header-anchor" href="#producer-consumer-parallelism">¶</a>producer-consumer parallelism</h3>
-<p>A <strong>buffer</strong> in the driver.<br>
-Two <strong>ptrs</strong>, read ptr and write ptr.</p>
-<p>Producers: <em>putc()</em><br>
-Consumers: <em>getc()</em></p>
-<p>buffer full? buffer empty?</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">char</span> uart_tx_buf[UART_TX_BUF_SIZE];</span><br><span class="line"><span class="keyword">int</span> uart_tx_w;</span><br><span class="line"><span class="keyword">int</span> uart_tx_r;</span><br></pre></td></tr></table></figure>
-<h3 id="procedure-of-inputting-‘l’"><a class="header-anchor" href="#procedure-of-inputting-‘l’">¶</a>procedure of inputting ‘l’</h3>
-<p>User inputs char <strong>l</strong><br>
--&gt; <strong>l</strong> sent from <strong>keyboard to UART</strong><br>
--&gt; routed through <strong>PLIC</strong> to some <strong>core</strong><br>
--&gt; interrupt, <em>devintr()</em> is called<br>
--&gt; <em>uartintr()</em> is called<br>
--&gt; <em>uartgetc()</em> gets the char input (i.e. ‘l’), then called <em>consoleintr()</em><br>
--&gt; <em>consputc()</em> is called to show the char<br>
--&gt; put the char into the buffer, and when a <strong>newline</strong> is called, <em>wakeup()</em> the shell to read the buffer</p>
-<h3 id="Interrupt-Evolution"><a class="header-anchor" href="#Interrupt-Evolution">¶</a>Interrupt Evolution</h3>
-<ul>
-<li>Used to be fast
-<ul>
-<li>hw simple</li>
-</ul>
-</li>
-<li>Now intr slow compared to <strong>CPU</strong>
-<ul>
-<li>device is more complex
-<ul>
-<li>to avoid intr too much</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<p>e.g. gbit eth card -&gt; 1.5mill pkts/s</p>
-<ul>
-<li>If intr per packet, too many interrupts</li>
-<li>Used <strong>polling</strong> to solve for <strong>fast devs</strong></li>
-</ul>
-<h4 id="Polling"><a class="header-anchor" href="#Polling">¶</a>Polling</h4>
-<p>If the dev is very fast, the cost of intr is high</p>
-<p>CPU <strong>spins</strong>(loop) on dev, until dev has data</p>
-<ul>
-<li>waste CPU cycles if the dev is slow</li>
-<li>but if dev is fast, it’s ok
-<ul>
-<li>saves entry/exit cost</li>
-</ul>
-</li>
-</ul>
-<hr>
+<p>换句话说，在<code>fence</code>前的指令不会被重排到<code>fence</code>后面，因此<code>acquire()</code>前的指令仍然在前面，critical section的指令仍然在锁之间。</p>
 ]]></content>
       <categories>
         <category>O/S</category>
@@ -969,6 +766,31 @@ Consumers: <em>getc()</em></p>
 <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> kalloctest</span></span><br><span class="line">start test1</span><br><span class="line">test1 results:</span><br><span class="line">--- lock kmem/bcache stats</span><br><span class="line">lock: kmem_0: #test-and-set 0 #acquire() 40022</span><br><span class="line">lock: kmem_1: #test-and-set 0 #acquire() 196217</span><br><span class="line">lock: kmem_2: #test-and-set 0 #acquire() 196779</span><br><span class="line">lock: bcache: #test-and-set 0 #acquire() 334</span><br><span class="line">--- top 5 contended locks:</span><br><span class="line">lock: proc: #test-and-set 124961 #acquire() 224765</span><br><span class="line">lock: proc: #test-and-set 93420 #acquire() 224884</span><br><span class="line">lock: proc: #test-and-set 66190 #acquire() 224749</span><br><span class="line">lock: pr: #test-and-set 51880 #acquire() 5</span><br><span class="line">lock: virtio_disk: #test-and-set 31856 #acquire() 57</span><br><span class="line">tot= 0</span><br><span class="line">test1 OK</span><br><span class="line">start test2</span><br><span class="line">total free number of pages: 32499 (out of 32768)</span><br><span class="line">.....</span><br><span class="line">test2 OK</span><br></pre></td></tr></table></figure>
 <hr>
 <h2 id="Buffer-Cache-hard"><a class="header-anchor" href="#Buffer-Cache-hard">¶</a>Buffer Cache(hard)</h2>
+<p>Modify <code>bget</code> and <code>brelse</code> so that concurrent lookups and releases for different blocks that are in the bcache are unlikely to conflict on locks (e.g., don’t all have to wait for <code>bcache.lock</code>). You must maintain the invariant that at most one copy of each block is cached.</p>
+<p>This lab is very harsh on lock order, look <strong>CAREFULLY AT THE COMMENTS</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> HASH(x) (x % NBUCKET)</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">spinlock</span> <span class="title">lock</span>;</span></span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">buf</span> <span class="title">buf</span>[<span class="title">NBUF</span>];</span></span><br><span class="line"></span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">buf</span> <span class="title">bkt</span>[<span class="title">NBUCKET</span>];</span> <span class="comment">// each bucket has a doubly-linked list</span></span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">spinlock</span> <span class="title">bktlk</span>[<span class="title">NBUCKET</span>];</span></span><br><span class="line"></span><br><span class="line">&#125; bcache;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span></span></span><br><span class="line"><span class="function"><span class="title">binit</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">buf</span> *<span class="title">b</span>;</span></span><br><span class="line">  <span class="keyword">int</span> i;</span><br><span class="line"></span><br><span class="line">  initlock(&amp;bcache.lock, <span class="string">&quot;bcache&quot;</span>);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Create linked list of buffers</span></span><br><span class="line">  <span class="keyword">for</span>(i = <span class="number">0</span>; i &lt; NBUCKET; i++)&#123;</span><br><span class="line">    initlock(&amp;bcache.bktlk[i], <span class="string">&quot;bcache_bkt&quot;</span>);</span><br><span class="line">    bcache.bkt[i].next = &amp;bcache.bkt[i];</span><br><span class="line">    bcache.bkt[i].prev = &amp;bcache.bkt[i];</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">for</span>(b = bcache.buf; b &lt; bcache.buf+NBUF; b++)&#123;</span><br><span class="line">    initsleeplock(&amp;b-&gt;lock, <span class="string">&quot;buffer&quot;</span>);</span><br><span class="line">    <span class="comment">// hang all to the first bucket</span></span><br><span class="line">    b-&gt;next = bcache.bkt[<span class="number">0</span>].next;</span><br><span class="line">    b-&gt;prev = &amp;bcache.bkt[<span class="number">0</span>];</span><br><span class="line">    bcache.bkt[<span class="number">0</span>].next-&gt;prev = b;</span><br><span class="line">    bcache.bkt[<span class="number">0</span>].next = b;</span><br><span class="line">    b-&gt;ts = ticks;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Look through buffer cache for block on device dev.</span></span><br><span class="line"><span class="comment">// If not found, allocate a buffer.</span></span><br><span class="line"><span class="comment">// In either case, return locked buffer.</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> struct buf*</span></span><br><span class="line"><span class="function"><span class="title">bget</span><span class="params">(uint dev, uint blockno)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">buf</span> *<span class="title">b</span>;</span></span><br><span class="line">  <span class="keyword">int</span> bktno = HASH(blockno), i;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// ---------- FIRST TIME CHECK ---------- //</span></span><br><span class="line">  <span class="comment">// Is the block already cached?</span></span><br><span class="line">  acquire(&amp;bcache.bktlk[bktno]);</span><br><span class="line">  <span class="keyword">for</span>(b = bcache.bkt[bktno].next; b != &amp;bcache.bkt[bktno]; b = b-&gt;next)&#123;</span><br><span class="line">    <span class="keyword">if</span>(b-&gt;dev == dev &amp;&amp; b-&gt;blockno == blockno)&#123;</span><br><span class="line">      b-&gt;refcnt++;</span><br><span class="line">      release(&amp;bcache.bktlk[bktno]);</span><br><span class="line">      acquiresleep(&amp;b-&gt;lock);</span><br><span class="line">      <span class="keyword">return</span> b;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  release(&amp;bcache.bktlk[bktno]);</span><br><span class="line">  <span class="comment">// ---------- FIRST TIME CHECK ---------- //</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">// ---------- EVICTION ---------- //</span></span><br><span class="line">  <span class="comment">// evict a block, global lock used to serialize the eviction</span></span><br><span class="line">  acquire(&amp;bcache.lock);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// WHY DOUBLE CHECK?</span></span><br><span class="line">  <span class="comment">// If two threads come here simutaneously, one add the block to cache already</span></span><br><span class="line">  <span class="comment">// but here, another thread will add the same block to cache again</span></span><br><span class="line">  <span class="comment">// RESULT: one block, cached by two buffer cache blocks </span></span><br><span class="line">  acquire(&amp;bcache.bktlk[bktno]);</span><br><span class="line">  <span class="keyword">for</span>(b = bcache.bkt[bktno].next; b != &amp;bcache.bkt[bktno]; b = b-&gt;next)&#123;</span><br><span class="line">    <span class="keyword">if</span>(b-&gt;dev == dev &amp;&amp; b-&gt;blockno == blockno)&#123;</span><br><span class="line">      b-&gt;refcnt++;</span><br><span class="line">      release(&amp;bcache.bktlk[bktno]);</span><br><span class="line">      release(&amp;bcache.lock);</span><br><span class="line">      acquiresleep(&amp;b-&gt;lock);</span><br><span class="line">      <span class="keyword">return</span> b;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  release(&amp;bcache.bktlk[bktno]);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// ---------- acutal Eviction ---------- // </span></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * lo: lowest buffer slot</span></span><br><span class="line"><span class="comment">   * lo_ts: lowest timestamp</span></span><br><span class="line"><span class="comment">   * lo_bkt: lowest slot&#x27;s bucket </span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">buf</span> *<span class="title">lo</span> =</span> <span class="number">0</span>;</span><br><span class="line">  uint lo_ts = ~<span class="number">0</span>;</span><br><span class="line">  <span class="keyword">int</span> lo_bkt = <span class="number">-1</span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// traverse all buckets, globally find the lowest timestamp block</span></span><br><span class="line">  <span class="keyword">for</span>(i = <span class="number">0</span>; i &lt; NBUCKET; i++)&#123;</span><br><span class="line">    acquire(&amp;bcache.bktlk[i]);</span><br><span class="line">    <span class="keyword">int</span> found = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span>(b = bcache.bkt[i].next; b != &amp;bcache.bkt[i]; b = b-&gt;next)&#123;</span><br><span class="line">      <span class="keyword">if</span>((b-&gt;refcnt == <span class="number">0</span>) &amp;&amp; (b-&gt;ts &lt; lo_ts)) &#123;</span><br><span class="line">        <span class="keyword">if</span>(lo)&#123;</span><br><span class="line">          <span class="comment">// this round, we found a new one, release the old lock</span></span><br><span class="line">          lo_bkt = HASH(lo-&gt;blockno);</span><br><span class="line">          <span class="keyword">if</span>(lo_bkt != i)</span><br><span class="line">            release(&amp;bcache.bktlk[lo_bkt]);</span><br><span class="line">        &#125;</span><br><span class="line">        lo_ts = b-&gt;ts;</span><br><span class="line">        lo = b;</span><br><span class="line">        found = <span class="number">1</span>;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// At this line, we still hold one lock --&gt; current lo_bkt&#x27;s lock</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(!found)</span><br><span class="line">      release(&amp;bcache.bktlk[i]);</span><br><span class="line">    <span class="comment">// if found, meaning that lo_bkt = i</span></span><br><span class="line">    <span class="comment">// which will be release when the next lo is found or the loop is over</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span>(!lo)</span><br><span class="line">    panic(<span class="string">&quot;bget: no buffers&quot;</span>);</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// detach it from the old bucket list</span></span><br><span class="line">  <span class="keyword">if</span> (HASH(lo-&gt;blockno) != bktno)&#123;</span><br><span class="line">    lo-&gt;next-&gt;prev = lo-&gt;prev;</span><br><span class="line">    lo-&gt;prev-&gt;next = lo-&gt;next;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// we have done the modification of the old bucket list</span></span><br><span class="line">  release(&amp;bcache.bktlk[HASH(lo-&gt;blockno)]);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// attach it to the new bucket list</span></span><br><span class="line">  <span class="keyword">if</span>(HASH(lo-&gt;blockno) != bktno)&#123;</span><br><span class="line">    acquire(&amp;bcache.bktlk[bktno]);</span><br><span class="line">    lo-&gt;next = bcache.bkt[bktno].next;</span><br><span class="line">    lo-&gt;prev = &amp;bcache.bkt[bktno];</span><br><span class="line">    bcache.bkt[bktno].next-&gt;prev = lo;</span><br><span class="line">    bcache.bkt[bktno].next = lo;</span><br><span class="line">    release(&amp;bcache.bktlk[bktno]);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// update at last, since older blockno was still in use</span></span><br><span class="line">  lo-&gt;dev = dev;</span><br><span class="line">  lo-&gt;blockno = blockno;</span><br><span class="line">  lo-&gt;valid = <span class="number">0</span>;</span><br><span class="line">  lo-&gt;refcnt = <span class="number">1</span>;</span><br><span class="line">  lo-&gt;ts = ticks;</span><br><span class="line"></span><br><span class="line">  release(&amp;bcache.lock);</span><br><span class="line">  acquiresleep(&amp;lo-&gt;lock);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> lo;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Several-things-important-in-buffer-cache"><a class="header-anchor" href="#Several-things-important-in-buffer-cache">¶</a>Several things important in buffer cache</h3>
+<ol>
+<li><strong>DOUBLE CHECK</strong> when you evict! - <strong>THIS TO IMPORTANT TO BE OVER-EXAGGERATED!!!</strong>
+<ul>
+<li>the reason why is stated in the comment
+<ul>
+<li>if one thread add the block to cache, another onemight also do so, resulting in one block in two cache blocks</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>HOLD THE LOWEST BLOCK UTIL YOU DETACH IT OUT</strong>
+<ul>
+<li>When looping all blocks, only release the older lowest bucket lock when you find <strong>a new lowest block</strong>, and hold that lock.
+<ul>
+<li>When you find the globally lowest block, detach it before you release the lock</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Update the blockno at <strong>LAST</strong>, at least after you are done with it</li>
+</ol>
 ]]></content>
       <categories>
         <category>O/S</category>
@@ -978,91 +800,55 @@ Consumers: <em>getc()</em></p>
       </tags>
   </entry>
   <entry>
-    <title>Some detailed things in C (1)</title>
-    <url>/2022/01/28/Some-tricky-things-about-char-and-error-prone-string-ops-in-C/</url>
-    <content><![CDATA[<hr>
+    <title>Rust(course.rs)-generic&amp;trait</title>
+    <url>/2022/02/14/Rust-course-rs-generic-trait/</url>
+    <content><![CDATA[<div></div>
 <span id="more"></span>
-<h1>detailed error-prone things in C (1st)</h1>
+<h1>Generic and Trait</h1>
 <hr>
-<p>As we all know, in C programming language, functions in <em>string.h</em> is very error-prone! In this post, I show something that might be in your way when you are using C.</p>
-<h2 id="static-keyword"><a class="header-anchor" href="#static-keyword">¶</a>static keyword</h2>
-<p>prologue about initialized value:</p>
+<h2 id="Generic"><a class="header-anchor" href="#Generic">¶</a>Generic</h2>
+<p>下面这段代码<strong>无法编译</strong></p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">largest</span></span>&lt;T&gt;(list: &amp;[T]) -&gt; T &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> largest = list[<span class="number">0</span>];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> &amp;item <span class="keyword">in</span> list.iter() &#123;</span><br><span class="line">        <span class="keyword">if</span> item &gt; largest &#123;</span><br><span class="line">            largest = item;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    largest</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> number_list = <span class="built_in">vec!</span>[<span class="number">34</span>, <span class="number">50</span>, <span class="number">25</span>, <span class="number">100</span>, <span class="number">65</span>];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> result = largest(&amp;number_list);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;The largest number is &#123;&#125;&quot;</span>, result);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> char_list = <span class="built_in">vec!</span>[<span class="string">&#x27;y&#x27;</span>, <span class="string">&#x27;m&#x27;</span>, <span class="string">&#x27;a&#x27;</span>, <span class="string">&#x27;q&#x27;</span>];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> result = largest(&amp;char_list);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;The largest char is &#123;&#125;&quot;</span>, result);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>报错的原因是</p>
 <ul>
-<li>global or static
+<li>不是所有类型都可以进行<code>&gt;</code>的比较
 <ul>
-<li>allocated in static field
-<ul>
-<li>live with process and is 0</li>
+<li>因此我们需要给<code>T</code>天界一个类型限制 -&gt; trait</li>
+<li>我们使用<code>std::cmp::PartialOrd</code>Trait进行限制</li>
 </ul>
 </li>
 </ul>
-</li>
-<li>local and not static
-<ul>
-<li>on stackframe -&gt; random</li>
-</ul>
-</li>
-</ul>
-<h4 id="static-on-local-variable"><a class="header-anchor" href="#static-on-local-variable">¶</a>static on local variable</h4>
-<p>the static local variable declared in a function is <strong>initialized when the process started, and always initialized to 0</strong>, not <strong>when function is called</strong>.</p>
-<p>the static local variable resides at the beginning of process’s address space (static field), and <strong>only destructed when process exists</strong></p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">function</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">int</span> foo; <span class="comment">// static variable are initialized to zero</span></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;call %d\n&quot;</span>, foo++);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span></span></span><br><span class="line"><span class="function"><span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; <span class="number">3</span>; ++i)</span><br><span class="line">        function();</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">outputs: </span><br><span class="line">call <span class="number">0</span></span><br><span class="line">call <span class="number">1</span></span><br><span class="line">call <span class="number">2</span></span><br></pre></td></tr></table></figure>
-<h4 id="static-on-global-variable"><a class="header-anchor" href="#static-on-global-variable">¶</a>static on global variable</h4>
-<p>global variable itself is saved in static field, so <em>static</em> keyword does not change its position in memory.</p>
-<p>However, it restricts its link-attribute. The global variable declared with <em>static</em> <strong>can only be accessed by the files which included the file where the variable is declared</strong></p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">// a.h</span></span><br><span class="line"><span class="meta"># <span class="meta-keyword">pragma</span> once</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">int</span> a = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// b.h</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;a.h&quot;</span></span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">func</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;%d\n&quot;</span>, a);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// a.c</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;a.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;b.h&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span></span></span><br><span class="line"><span class="function"><span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    func();</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;%d\n&quot;</span>, a);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">outputs:</span><br><span class="line"><span class="number">2</span></span><br><span class="line"><span class="number">2</span></span><br></pre></td></tr></table></figure>
-<h4 id="static-on-function"><a class="header-anchor" href="#static-on-function">¶</a>static on function</h4>
-<p>function declared with <em>static</em>, <strong>can only be accessed by the file which defines it</strong></p>
-<p>That is, you have to declare and implement the static function within one file.</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">add</span></span>&lt;T: std::ops::Add&lt;Output = T&gt;&gt;(a:T, b:T) -&gt; T &#123;</span><br><span class="line">    a + b</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <hr>
-<h2 id="string-literals-very-error-prone"><a class="header-anchor" href="#string-literals-very-error-prone">¶</a>string literals (very error-prone!!!)</h2>
-<p><a href="https://stackoverflow.com/questions/5717176/bus-error-while-running-a-simple-string-c-program">StackoverFlow-String literal problems</a></p>
-<p>Check out the code here (error code)</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span></span></span><br><span class="line"><span class="function"><span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">char</span> *s = <span class="string">&quot;this is &quot;</span>;</span><br><span class="line">    <span class="keyword">char</span> *s1 = <span class="string">&quot;me&quot;</span>;  </span><br><span class="line">    <span class="built_in">strcat</span>(s,s1); </span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;%s&quot;</span>,s);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line">output: bus error in MACOS</span><br></pre></td></tr></table></figure>
-<p>Why there is an error, the code seems to be fine!</p>
-<p>This is because string in this form <code>&quot;this is &quot;</code>, is a <strong>string literal</strong>.</p>
-<p>The string literal is allocated at the program startup and held until the program exits. The <strong>key problem</strong> is, the places where string literal resides <strong>may or may not be writable</strong>, so modify a string literal is a <strong>undefined behavior</strong>.</p>
-<p>This part of code has two problems.</p>
-<ul>
-<li>
-<p>Buffer overflow</p>
-<ul>
-<li>s has length 9, s1 has length 3. And the code is trying to write 11 character in a 9 character buffer.</li>
-</ul>
-</li>
-<li>
-<p>The string literal is not writable</p>
-</li>
-</ul>
-<p>The right way to do this is to <strong>copy the literal onto the stackframe</strong></p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">char</span> *s = <span class="string">&quot;this is &quot;</span>;</span><br><span class="line"><span class="keyword">char</span> *s1 = <span class="string">&quot;me&quot;</span>;</span><br><span class="line"><span class="keyword">char</span> target[<span class="built_in">strlen</span>(s) + <span class="built_in">strlen</span>(s1) + <span class="number">1</span>];</span><br><span class="line"></span><br><span class="line"><span class="built_in">strcpy</span>(target, s);</span><br><span class="line"><span class="built_in">strcat</span>(target, s1);</span><br><span class="line"><span class="comment">// or sprintf(target, &quot;%s%s&quot;, s, s1);</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// The recommended way (on heap)</span></span><br><span class="line"><span class="keyword">char</span> *target = <span class="built_in">malloc</span>(<span class="built_in">strlen</span>(s) + <span class="built_in">strlen</span>(s1) + <span class="number">1</span>);</span><br><span class="line">...</span><br><span class="line"><span class="built_in">free</span>(target);</span><br></pre></td></tr></table></figure>
+<h3 id="Generic-in-methods"><a class="header-anchor" href="#Generic-in-methods">¶</a>Generic in methods</h3>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Point</span></span>&lt;T, U&gt; &#123;</span><br><span class="line">    x: T,</span><br><span class="line">    y: U,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T, U&gt; Point&lt;T, U&gt; &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">mixup</span></span>&lt;V, W&gt;(<span class="keyword">self</span>, other: Point&lt;V, W&gt;) -&gt; Point&lt;T, W&gt; &#123;</span><br><span class="line">        Point &#123;</span><br><span class="line">            x: <span class="keyword">self</span>.x,</span><br><span class="line">            y: other.y,</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> p1 = Point &#123; x: <span class="number">5</span>, y: <span class="number">10.4</span> &#125;;</span><br><span class="line">    <span class="keyword">let</span> p2 = Point &#123; x: <span class="string">&quot;Hello&quot;</span>, y: <span class="string">&#x27;c&#x27;</span>&#125;;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> p3 = p1.mixup(p2);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;p3.x = &#123;&#125;, p3.y = &#123;&#125;&quot;</span>, p3.x, p3.y);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <hr>
-<h2 id="sizeof"><a class="header-anchor" href="#sizeof">¶</a>sizeof()</h2>
-<p>sizeof is a very error-prone function! The value of sizeof is determined when <strong>compiling, or runtime</strong>.</p>
-<p>One of the most problematic things about <em>sizeof()</em> is <code>sizeof(&lt;some_ptr&gt;)</code>, here are some examples.</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">char</span>* p = <span class="string">&quot;Hello world&quot;</span></span><br><span class="line"><span class="built_in">printf</span>(<span class="string">&quot;%lu&quot;</span>, <span class="keyword">sizeof</span>(p))</span><br></pre></td></tr></table></figure>
-<p>The output will be 8 in 64-bit word machines and 4 in 32-bit word machines.<br>
-You probably already notice why, because the <strong>pointer is actually a address!</strong>. And in a 64-bit word machines, addresses are 8-byte long.</p>
-<h3 id="sizeof-ptr-and-sizeof-array"><a class="header-anchor" href="#sizeof-ptr-and-sizeof-array">¶</a>sizeof(ptr) and sizeof(array)</h3>
-<p>Please notice the difference between <code>sizeof(&lt;some_array&gt;)</code> and <code>sizeof(&lt;some_ptr&gt;)</code></p>
-<p>The code below will show clearly the difference</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">bar</span><span class="params">(<span class="keyword">char</span> f[<span class="number">3</span>])</span> </span>&#123;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;%lu\n&quot;</span>, <span class="keyword">sizeof</span>(f));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span></span></span><br><span class="line"><span class="function"><span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">char</span> foo[<span class="number">3</span>];</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;%lu\n&quot;</span>, <span class="keyword">sizeof</span>(foo)); <span class="comment">// 3</span></span><br><span class="line">	bar(foo);                     <span class="comment">// 8</span></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>In the first <code>sizeof(foo)</code>, the compiler knows the array is three-elem long, so the value is 3.</p>
-<p>In the second sizeof(f), the compiler treats the <code>f</code> as a pointer. This is because when we pass an array to a function, we are actually passing the first-elem’s address of the array (i.e. a pointer).</p>
-<h3 id="sizeof-struct"><a class="header-anchor" href="#sizeof-struct">¶</a>sizeof(struct)</h3>
-<p>when using sizeof() on a struct, it returns the actual space occupied by the structure.</p>
-<p>In C, the struct are <strong>aligned</strong>.</p>
-<p>For example, assume this is on a <strong>32bit word machine</strong></p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">mystruct</span> &#123;</span></span><br><span class="line">    <span class="keyword">char</span> c1;</span><br><span class="line">    <span class="keyword">int</span>  i1;</span><br><span class="line">    <span class="keyword">char</span> c2;</span><br><span class="line">&#125; s1;</span><br><span class="line"></span><br><span class="line"><span class="built_in">printf</span>(<span class="string">&quot;%lu&quot;</span>, <span class="keyword">sizeof</span>(s1));</span><br></pre></td></tr></table></figure>
-<p>This will print <code>12</code>, because <code>c1</code> itself occupies a word, i1 occupies the next and c2 occupies the next. So in total three words (12 bytes) are occupies by s1.</p>
+<h3 id="Generic-in-const"><a class="header-anchor" href="#Generic-in-const">¶</a>Generic in const</h3>
+<p><code>[i32; 2], [i32; 3]</code>是两种类型，我们可以用泛型打印所有的数组元素</p>
+<p>通过<strong>引用</strong>，我们可以实现</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">display_array</span></span>&lt;T: std::fmt::<span class="built_in">Debug</span>&gt;(arr: &amp;[T]) &#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, arr);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> arr: [<span class="built_in">i32</span>; <span class="number">3</span>] = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];</span><br><span class="line">    display_array(&amp;arr);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> arr: [<span class="built_in">i32</span>;<span class="number">2</span>] = [<span class="number">1</span>,<span class="number">2</span>];</span><br><span class="line">    display_array(&amp;arr);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>需要注意的是，我们需要对类型<code>T</code>添加限制，因为我们需要他支持Debug输出<code>&#123;:?&#125;</code></li>
+</ul>
+<p><strong>有时候，引用是不合适的</strong>，对于任意的长度，我们可以使用const泛型</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">display_array</span></span>&lt;T: std::fmt::<span class="built_in">Debug</span>, <span class="keyword">const</span> N: <span class="built_in">usize</span>&gt;(arr: [T; N]) &#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, arr);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> arr: [<span class="built_in">i32</span>; <span class="number">3</span>] = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];</span><br><span class="line">    display_array(arr);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> arr: [<span class="built_in">i32</span>; <span class="number">2</span>] = [<span class="number">1</span>, <span class="number">2</span>];</span><br><span class="line">    display_array(arr);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <hr>
+<h2 id="Trait"><a class="header-anchor" href="#Trait">¶</a>Trait</h2>
+]]></content>
+  </entry>
+  <entry>
+    <title>Vim-shortcuts (keep updating)</title>
+    <url>/2022/01/30/Vim-shortcuts-keep-updating/</url>
+    <content><![CDATA[<span id="more"></span>
+<h1>Vim shortcuts</h1>
+<hr>
+<h2 id="Intro"><a class="header-anchor" href="#Intro">¶</a>Intro</h2>
+<p>The topic is in ##, the commands are in ###, the decription is below them.</p>
+<h2 id="screensplit"><a class="header-anchor" href="#screensplit">¶</a>screensplit</h2>
 ]]></content>
       <categories>
-        <category>ProgLang</category>
+        <category>Vim</category>
       </categories>
-      <tags>
-        <tag>C</tag>
-      </tags>
   </entry>
   <entry>
     <title>Set up gdb in macOS</title>
@@ -1119,57 +905,203 @@ You probably already notice why, because the <strong>pointer is actually a addre
       </tags>
   </entry>
   <entry>
-    <title>Welcome!</title>
-    <url>/2022/01/23/homepage/</url>
+    <title>the book(Rust) - Chapt3</title>
+    <url>/2022/02/05/the-book-Rust-Chapt3/</url>
     <content><![CDATA[<style>
 img{
-    width: 60%;
+    width: 80%;
 }
 </style>
-<h2 id="Welcome-to-my-homepage-💤"><a class="header-anchor" href="#Welcome-to-my-homepage-💤">¶</a>Welcome to my homepage! 💤</h2>
-<p>This is my first post to this blog website! 😋<br>
-It is really exciting for me to have the chance to really say something on the Internet.<br>
-There are mainly <strong>3️⃣</strong> reasons for me to start the blog.</p>
+<span id="more"></span>
+<h1>Rust - 常见编程概念</h1>
+<p>这一系列的博客我决定使用中文来进行完成。</p>
+<h2 id="变量与可变性-mutability"><a class="header-anchor" href="#变量与可变性-mutability">¶</a>变量与可变性(mutability)</h2>
+<h3 id="可变性"><a class="header-anchor" href="#可变性">¶</a>可变性</h3>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> **<span class="keyword">mut</span>** x = <span class="number">5</span>;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;x: &#123;&#125;&quot;</span>, x);</span><br><span class="line">    x = <span class="number">6</span>; <span class="comment">// 如果没有mut关键字，编译器会报错</span></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;x: &#123;&#125;&quot;</span>, x);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可变变量有<code>mut</code>关键字，可变变量才可以二次赋值。</p>
+<h3 id="常量"><a class="header-anchor" href="#常量">¶</a>常量</h3>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> SEC_IN_ONE_HOUR: <span class="built_in">u32</span> = <span class="number">60</span> * <span class="number">1</span>;</span><br></pre></td></tr></table></figure>
 <ul>
-<li>
-<p>⭐ <strong>Reading others’ blog really inspires me</strong></p>
+<li><strong>常量必须要有注解</strong></li>
+<li><strong>常量永远不可变</strong></li>
+<li>常量在作用域内一直有效</li>
+</ul>
+<h3 id="Shadowing"><a class="header-anchor" href="#Shadowing">¶</a>Shadowing</h3>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> x = <span class="number">5</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> x = x + <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">let</span> x = x * <span class="number">2</span>;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;The value of x in the inner scope is: &#123;&#125;&quot;</span>, x);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;The value of x is: &#123;&#125;&quot;</span>, x);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">输出为</span><br><span class="line">The value of x <span class="keyword">in</span> the inner scope is: <span class="number">12</span></span><br><span class="line">The value of x is: <span class="number">6</span></span><br></pre></td></tr></table></figure>
+<p>因为Shadowing只在作用域内有效</p>
+<p>如果要让shadowing有不同的数据类型</p>
 <ul>
-<li>Others’ sharing experiences on blogs really helps me through many mind-windling 😱 situations, and I really want to be one of them. Hopefully my experience will help the readers as well 😄<br>
-<br/></li>
+<li>必须声明类型</li>
+<li>必须为可变变量</li>
 </ul>
-</li>
-<li>
-<p>☝️ <strong>Learning without recording is not as effective</strong></p>
-<ul>
-<li>This came across to my mind when I am taking 6.S081: Operating System Engineering (great course btw). There are so many important details and great minds inside an O/S, which I think should be well-learned and recorded.<br>
-<br/></li>
-</ul>
-</li>
-<li>
-<p>💥 <strong>SHARING IS ALWAYS FUN!</strong></p>
-<ul>
-<li>The thrill of sharing takes up the most part of why I am starting this blog! Not only sharing the experience is rewarding 😋, but sharing my daily life is also exciting.<br>
-<br/></li>
-</ul>
-</li>
-</ul>
-<p><strong>To everyone read this page:</strong></p>
-<p><em>May the force be with you</em></p>
-<img src="/2022/01/23/homepage/grogu.jpeg" class="" title="grogu">]]></content>
-  </entry>
-  <entry>
-    <title>Vim-shortcuts (keep updating)</title>
-    <url>/2022/01/30/Vim-shortcuts-keep-updating/</url>
-    <content><![CDATA[<span id="more"></span>
-<h1>Vim shortcuts</h1>
 <hr>
-<h2 id="Intro"><a class="header-anchor" href="#Intro">¶</a>Intro</h2>
-<p>The topic is in ##, the commands are in ###, the decription is below them.</p>
-<h2 id="screensplit"><a class="header-anchor" href="#screensplit">¶</a>screensplit</h2>
+<h2 id="标量类型"><a class="header-anchor" href="#标量类型">¶</a>标量类型</h2>
+<h3 id="整形"><a class="header-anchor" href="#整形">¶</a>整形</h3>
+<table>
+<thead>
+<tr>
+<th>length</th>
+<th>signed</th>
+<th>unsigned</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>8b</td>
+<td>i8</td>
+<td>u8</td>
+</tr>
+<tr>
+<td>16b</td>
+<td>i16</td>
+<td>u16</td>
+</tr>
+<tr>
+<td>32b</td>
+<td>i32</td>
+<td>u32</td>
+</tr>
+<tr>
+<td>64b</td>
+<td>i64</td>
+<td>u64</td>
+</tr>
+<tr>
+<td>128b</td>
+<td>i128</td>
+<td>u128</td>
+</tr>
+<tr>
+<td>arch</td>
+<td>isize</td>
+<td>usize</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>数字字面值</th>
+<th>例子</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Decimal (十进制)</td>
+<td>98_222</td>
+</tr>
+<tr>
+<td>Hex (十六进制)</td>
+<td>0xff</td>
+</tr>
+<tr>
+<td>Octal (八进制)</td>
+<td>0o77</td>
+</tr>
+<tr>
+<td>Binary (二进制)</td>
+<td>0b1111_0000</td>
+</tr>
+<tr>
+<td>Byte (单字节字符)(仅限于u8)</td>
+<td>b’A’</td>
+</tr>
+</tbody>
+</table>
+<p>也可以用<code>let x = 57u8</code>作为类型后缀</p>
+<h4 id="整形溢出"><a class="header-anchor" href="#整形溢出">¶</a>整形溢出</h4>
+<p>在<code>release</code>中，不检查，使用wrapping。 在<code>debug</code>中，不允许溢出，出现panic。</p>
+<ul>
+<li>所有模式下都可以使用 <code>wrapping_*</code> 方法进行包装，如 wrapping_add</li>
+<li>如果 <code>check_*</code> 方法出现溢出，则返回 None值</li>
+<li>用 <code>overflowing_*</code> 方法返回值和一个布尔值，表示是否出现溢出</li>
+<li>用 <code>saturating_*</code> 方法在值的最小值或最大值处进行饱和处理</li>
+</ul>
+<h3 id="浮点"><a class="header-anchor" href="#浮点">¶</a>浮点</h3>
+<p><code>f64</code>, <code>f32</code>，默认为f32</p>
+<h3 id="字符类型"><a class="header-anchor" href="#字符类型">¶</a>字符类型</h3>
+<p>单引号是<code>char</code>，双引号是字符串。</p>
+<ul>
+<li><strong>char是4个字节</strong>，代表的是Unicode标量值</li>
+</ul>
+<hr>
+<h2 id="复合类型"><a class="header-anchor" href="#复合类型">¶</a>复合类型</h2>
+<p>将多个值组合成一个类型，Rust原生有<code>tuple</code>和<code>array</code></p>
+<h3 id="tuple"><a class="header-anchor" href="#tuple">¶</a>tuple</h3>
+<p>tuple 中不同的值可以有不同的类型。</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> tup = (<span class="number">500</span>, <span class="number">6.4</span>, <span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> (x, y, z) = tup;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;The value of y is &#123;&#125;&quot;</span>, y);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;The value of y is &#123;&#125;&quot;</span>, tup.<span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在Rust中, <code>()</code>为特殊的tuple，只有一个值，也写成<code>()</code>，被称为unit type，值被称为unit value。<br>
+如果表达式不返回任何值，则隐式返回unit value.</p>
+<h3 id="array"><a class="header-anchor" href="#array">¶</a>array</h3>
+<p>array 中，所有的值必须是同一类型，分配在stack上<br>
+在确定元素数量不会改变时使用</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> months = [<span class="string">&quot;January&quot;</span>, <span class="string">&quot;February&quot;</span>, <span class="string">&quot;March&quot;</span>, <span class="string">&quot;April&quot;</span>, <span class="string">&quot;May&quot;</span>, <span class="string">&quot;June&quot;</span>, <span class="string">&quot;July&quot;</span>,</span><br><span class="line">              <span class="string">&quot;August&quot;</span>, <span class="string">&quot;September&quot;</span>, <span class="string">&quot;October&quot;</span>, <span class="string">&quot;November&quot;</span>, <span class="string">&quot;December&quot;</span>];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> a: [<span class="built_in">i32</span>; <span class="number">5</span>] = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> b = [<span class="number">3</span>; <span class="number">5</span>];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">use</span> std::io;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> a = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>];</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;Please enter an array index.&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> index = <span class="built_in">String</span>::new();</span><br><span class="line"></span><br><span class="line">    io::stdin()</span><br><span class="line">        .read_line(&amp;<span class="keyword">mut</span> index)</span><br><span class="line">        .expect(<span class="string">&quot;Failed to read line&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> index: <span class="built_in">usize</span> = index</span><br><span class="line">        .trim()</span><br><span class="line">        .parse()</span><br><span class="line">        .expect(<span class="string">&quot;Index entered was not a number&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> element = a[index];</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(</span><br><span class="line">        <span class="string">&quot;The value of the element at index &#123;&#125; is: &#123;&#125;&quot;</span>,</span><br><span class="line">        index, element</span><br><span class="line">    );</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果输入了一个超过末尾的数字，比如10，编译器会panic，即遇到exception而退出。</p>
+<hr>
+<h2 id="函数"><a class="header-anchor" href="#函数">¶</a>函数</h2>
+<h3 id="命名风格"><a class="header-anchor" href="#命名风格">¶</a>命名风格</h3>
+<p>使用snake case，即<strong>所有字母小写</strong>，<strong>使用下滑线分隔单词</strong>。</p>
+<p>用关键字<code>fn</code>声明函数</p>
+<h3 id="参数"><a class="header-anchor" href="#参数">¶</a>参数</h3>
+<p>在Rust函数中，所有的参数都必须要有<strong>类型注解</strong>，Rust是静态类型语言！</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    print_labeled_measurement(<span class="number">5</span>, <span class="string">&#x27;h&#x27;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">print_labeled_measurement</span></span>(value: <span class="built_in">i32</span>, unit_label: <span class="built_in">char</span>) &#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;The measurement is: &#123;&#125;&#123;&#125;&quot;</span>, value, unit_label);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h3 id="语句与表达式"><a class="header-anchor" href="#语句与表达式">¶</a>语句与表达式</h3>
+<p>**语句（Statements）**是执行一些操作但不返回值的指令。<br>
+**表达式（Expressions）**计算并产生一个值。让我们看一些例子。</p>
+<p><code>let y = 6;</code>是一个语句。<br>
+语句不返回任何值，因此<code>let x = (let y = 6);</code>是错误的</p>
+<p>那么什么是表达式呢？</p>
+<p>函数调用是表达式, macro调用是一个表达式，大括号的作用于也是表达式。</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> x = <span class="number">5</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> y = &#123;</span><br><span class="line">        <span class="keyword">let</span> x = <span class="number">3</span>;</span><br><span class="line">        x + <span class="number">1</span></span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;The value of y is: &#123;&#125;&quot;</span>, y);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在这里面，y的值是4。因为这个表达式的计算结果是<code>x + 1</code>。</p>
+<h3 id="返回值"><a class="header-anchor" href="#返回值">¶</a>返回值</h3>
+<p>在Rust中，我们不命名返回值，但是<strong>必须声明类型</strong><br>
+在Rust中，函数的表达式为函数体<strong>最后一个表达式的值</strong></p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">five</span></span>() -&gt; <span class="built_in">i32</span> &#123;</span><br><span class="line">    <span class="number">5</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> x = five();</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;The value of x is: &#123;&#125;&quot;</span>, x);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>请注意，语句并不会返回值</strong></p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> x = plus_one(<span class="number">5</span>);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;The value of x is: &#123;&#125;&quot;</span>, x);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">plus_one</span></span>(x: <span class="built_in">i32</span>) -&gt; <span class="built_in">i32</span> &#123;</span><br><span class="line">    x + <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这段代码中，会报错，因为<code>x + 1;</code>有分号，他是一个语句，因此没有返回值。<br>
+与函数签名相冲突了。</p>
+<p>编译器会告诉你，这个函数实际返回<code>()</code>，即unit value。</p>
+<hr>
+<h2 id="Control-Flow"><a class="header-anchor" href="#Control-Flow">¶</a>Control Flow</h2>
+<h3 id="if"><a class="header-anchor" href="#if">¶</a>if</h3>
+<p>if语句的条件<strong>必须是bool</strong>类型。<br>
+不一定需要小括号把条件括起来<br>
+<code>if number != 0 &#123; ... &#125;</code>也是可以的</p>
+<p>如果有多个<code>else if</code>建议使用<code>match</code>分支结构</p>
+<h4 id="let-if"><a class="header-anchor" href="#let-if">¶</a>let if</h4>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> condition = <span class="literal">true</span>;</span><br><span class="line">    <span class="keyword">let</span> number = <span class="keyword">if</span> condition &#123;</span><br><span class="line">        <span class="number">5</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="number">6</span></span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;The value of number is: &#123;&#125;&quot;</span>, number);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>需要注意的是，在<code>let if</code>中，<code>if</code>与<code>else</code>中表达式返回的<strong>类型必须一致</strong>，比如上面返回的都是<code>i32</code>整形，但是如果else中返回了&quot;six&quot;，就会报错。</p>
+<h3 id="循环"><a class="header-anchor" href="#循环">¶</a>循环</h3>
+<h4 id="loop"><a class="header-anchor" href="#loop">¶</a>loop</h4>
+<p>相当于while(1)，用break退出</p>
+<h5 id="循环标签"><a class="header-anchor" href="#循环标签">¶</a>循环标签</h5>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> count = <span class="number">0</span>;</span><br><span class="line">    <span class="symbol">&#x27;counting_up</span>: <span class="keyword">loop</span> &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;count = &#123;&#125;&quot;</span>, count);</span><br><span class="line">        <span class="keyword">let</span> <span class="keyword">mut</span> remaining = <span class="number">10</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">loop</span> &#123;</span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;remaining = &#123;&#125;&quot;</span>, remaining);</span><br><span class="line">            <span class="keyword">if</span> remaining == <span class="number">9</span> &#123;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> count == <span class="number">2</span> &#123;</span><br><span class="line">                <span class="keyword">break</span> <span class="symbol">&#x27;counting_up</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            remaining -= <span class="number">1</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        count += <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;End count = &#123;&#125;&quot;</span>, count);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>输出如下</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line">$ cargo run</span><br><span class="line">   Compiling loops v0.<span class="number">1.0</span> (file:<span class="comment">///projects/loops)</span></span><br><span class="line">    Finished dev [unoptimized + debuginfo] target(s) <span class="keyword">in</span> <span class="number">0.58</span>s</span><br><span class="line">     Running `target/debug/loops`</span><br><span class="line">count = <span class="number">0</span></span><br><span class="line">remaining = <span class="number">10</span></span><br><span class="line">remaining = <span class="number">9</span></span><br><span class="line">count = <span class="number">1</span></span><br><span class="line">remaining = <span class="number">10</span></span><br><span class="line">remaining = <span class="number">9</span></span><br><span class="line">count = <span class="number">2</span></span><br><span class="line">remaining = <span class="number">10</span></span><br><span class="line">End count = <span class="number">2</span></span><br></pre></td></tr></table></figure>
+<p>可以看到，<code>break 'counting_up</code>语句，将程序从外层循环中跳出</p>
+<h5 id="从循环返回"><a class="header-anchor" href="#从循环返回">¶</a>从循环返回</h5>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> counter = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> result = <span class="keyword">loop</span> &#123;</span><br><span class="line">        counter += <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> counter == <span class="number">10</span> &#123;</span><br><span class="line">            <span class="keyword">break</span> counter * <span class="number">2</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;The result is &#123;&#125;&quot;</span>, result);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这个写法会让result的值变为20。</p>
+<h4 id="for-while-loop"><a class="header-anchor" href="#for-while-loop">¶</a>for, while loop</h4>
+<p>和大部分程序语言尤其是C++是一样的</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> a = [<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>, <span class="number">40</span>, <span class="number">50</span>];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> element <span class="keyword">in</span> a.iter() &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;the value is: &#123;&#125;&quot;</span>, element);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>重点是，需要用<code>a.iter()</code>方法</p>
+<p>如果想要<strong>遍历一个范围</strong>我们可以。。。</p>
+<p>在python中我们使用<code>for i in range(1, 10)</code><br>
+在Rust中我们可以使用<code>for i in (1..10)</code></p>
+<hr>
+<p>我们已经掌握了第三章的内容，我们现在去看第四章吧！<br>
+第四章也是Rust很核心的一个内容，即<code>ownership</code>机制，他让Rust无需GC就可以保障内存的安全！</p>
 ]]></content>
       <categories>
-        <category>Vim</category>
+        <category>ProgLang</category>
       </categories>
+      <tags>
+        <tag>Rust</tag>
+      </tags>
   </entry>
   <entry>
     <title>the book(Rust) - Chapt4</title>
@@ -1338,6 +1270,72 @@ Rust 不允许自身或其任何部分实现了 <code>Drop trait</code> 的类�
       </tags>
   </entry>
   <entry>
+    <title>the book(Rust) - Chapt5</title>
+    <url>/2022/02/07/the-book-Rust-Chapt5/</url>
+    <content><![CDATA[<style>
+img{
+    width: 80%;
+}
+</style>
+<span id="more"></span>
+<h1>结构体</h1>
+<p>结构体不可以指定某一个<strong>字段</strong>是否可变，但是可以让整一个实例可变</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">User</span></span> &#123;</span><br><span class="line">    active: <span class="built_in">bool</span>,</span><br><span class="line">    username: <span class="built_in">String</span>,</span><br><span class="line">    email: <span class="built_in">String</span>,</span><br><span class="line">    sign_in_count: <span class="built_in">u64</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> <span class="keyword">mut</span> user1 = User &#123;</span><br><span class="line">    email: <span class="built_in">String</span>::from(<span class="string">&quot;someone@example.com&quot;</span>),</span><br><span class="line">    username: <span class="built_in">String</span>::from(<span class="string">&quot;someusername123&quot;</span>),</span><br><span class="line">    active: <span class="literal">true</span>,</span><br><span class="line">    sign_in_count: <span class="number">1</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="字段初始化"><a class="header-anchor" href="#字段初始化">¶</a>字段初始化</h2>
+<p>使用和参数一样的名字的变量名，可以不写<code>email: email</code></p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">build_user</span></span>(email: <span class="built_in">String</span>, username: <span class="built_in">String</span>) -&gt; User &#123;</span><br><span class="line">    User &#123;</span><br><span class="line">        email,</span><br><span class="line">        username,</span><br><span class="line">        active: <span class="literal">true</span>,</span><br><span class="line">        sign_in_count: <span class="number">1</span>,</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> user1 = build_user(</span><br><span class="line">        <span class="built_in">String</span>::from(<span class="string">&quot;someone@example.com&quot;</span>),</span><br><span class="line">        <span class="built_in">String</span>::from(<span class="string">&quot;someusername123&quot;</span>),</span><br><span class="line">    );</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上下两段代码的效果是一样的，<br>
+<code>..user1</code>证明别的变量都是一样的，但是**必须放在最后。</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">User</span></span> &#123;</span><br><span class="line">    active: <span class="built_in">bool</span>,</span><br><span class="line">    username: <span class="built_in">String</span>,</span><br><span class="line">    email: <span class="built_in">String</span>,</span><br><span class="line">    sign_in_count: <span class="built_in">u64</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="comment">// --snip--</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> user1 = User &#123;</span><br><span class="line">        email: <span class="built_in">String</span>::from(<span class="string">&quot;someone@example.com&quot;</span>),</span><br><span class="line">        username: <span class="built_in">String</span>::from(<span class="string">&quot;someusername123&quot;</span>),</span><br><span class="line">        active: <span class="literal">true</span>,</span><br><span class="line">        sign_in_count: <span class="number">1</span>,</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> user2 = User &#123;</span><br><span class="line">        email: <span class="built_in">String</span>::from(<span class="string">&quot;another@example.com&quot;</span>),</span><br><span class="line">        ..user1</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>由于我们的user2使用了user1的username，user1<strong>不再有效</strong>，因为在堆上。</p>
+<p>但是如果仅仅使用了user1的<code>active</code>与<code>sign_in_count</code>是没关系的，他们有<code>copy trait</code>，在栈上。</p>
+<p>我们也可以使用<strong>没有命名字段</strong>的结构体</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Color</span></span>(<span class="built_in">i32</span>, <span class="built_in">i32</span>, <span class="built_in">i32</span>);</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Point</span></span>(<span class="built_in">i32</span>, <span class="built_in">i32</span>, <span class="built_in">i32</span>);</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> black = Color(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">    <span class="keyword">let</span> origin = Point(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以用<code>black.0, black.1, black.2</code>来访问</p>
+<p><strong>如果要在结构体内使用别的变量的引用</strong>，需要用<strong>生命周期</strong>，保证结构体引用的数据有效性与结构体本身一致。</p>
+<p><code>需要注意</code></p>
+<ul>
+<li><strong>把结构体中具有所有权的字段转移出去后，将无法再访问该字段，但是可以正常访问其它的字段</strong>。</li>
+</ul>
+<hr>
+<h2 id="println-宏打印"><a class="header-anchor" href="#println-宏打印">¶</a>println! 宏打印</h2>
+<p><code>println!(&quot;rect1 is &#123;&#125;&quot;, rect1);</code>需要我们实现<code>std::fmt::Display</code></p>
+<p><code>println!(&quot;rect1 is &#123;:?&#125;&quot;, rect1);</code>需要我们实现<code>Debug trait</code></p>
+<ul>
+<li>我们可以在结构体上面加上<code>#[derive(Debug)]</code>让编译器自动生成</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="meta">#[derive(Debug)]</span> </span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Rectangle</span></span> &#123;</span><br><span class="line">    width: <span class="built_in">u32</span>,</span><br><span class="line">    height: <span class="built_in">u32</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="dbg-宏"><a class="header-anchor" href="#dbg-宏">¶</a>dbg!宏</h2>
+<p>这是另外一种<code>Debug</code>格式打印数值的方法就是<code>dbg!</code></p>
+<ul>
+<li>他会接受一个表达式的所有权，打印出代码中调用它的文件与行号</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="meta">#[derive(Debug)]</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Rectangle</span></span> &#123;</span><br><span class="line">    width: <span class="built_in">u32</span>,</span><br><span class="line">    height: <span class="built_in">u32</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> scale = <span class="number">2</span>;</span><br><span class="line">    <span class="keyword">let</span> rect1 = Rectangle &#123;</span><br><span class="line">        width: dbg!(<span class="number">30</span> * scale),</span><br><span class="line">        height: <span class="number">50</span>,</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    dbg!(&amp;rect1);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们可以把 <code>dbg!</code> 放在表达式 <code>30 * scale</code> 周围，因为 <code>dbg!</code> <strong>返回表达式的值的所有权</strong>，所以 <code>width</code> 字段将获得相同的值，就像我们在那里没有 <code>dbg!</code> 调用一样。我们不希望 <code>dbg!</code> 拥有 <code>rect1</code> 的所有权，所以我们在下一次调用 <code>dbg!</code> 时传递一个引用。下面是这个例子的输出结果：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">$ cargo run</span><br><span class="line">   Compiling rectangles v0.1.0 (file:///projects/rectangles)</span><br><span class="line">    Finished dev [unoptimized + debuginfo] target(s) in 0.61s</span><br><span class="line">     Running `target/debug/rectangles`</span><br><span class="line">[src/main.rs:10] 30 * scale = 60</span><br><span class="line">[src/main.rs:14] &amp;rect1 = Rectangle &#123;</span><br><span class="line">    width: 60,</span><br><span class="line">    height: 50,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>除了<code>Debug</code>, derive关键字还有很多可以使用的trait</p>
+<hr>
+<h2 id="method-syntax-impl-block"><a class="header-anchor" href="#method-syntax-impl-block">¶</a>method syntax (impl block)</h2>
+<p>让我们给Rectangle定义一个area方法，作为成员函数<br>
+重点是下面的<code>impl块</code></p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="meta">#[derive(Debug)]</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Rectangle</span></span> &#123;</span><br><span class="line">    width: <span class="built_in">u32</span>,</span><br><span class="line">    height: <span class="built_in">u32</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span> Rectangle &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">area</span></span>(&amp;<span class="keyword">self</span>) -&gt; <span class="built_in">u32</span> &#123;</span><br><span class="line">        <span class="keyword">self</span>.width * <span class="keyword">self</span>.height</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> rect1 = Rectangle &#123;</span><br><span class="line">        width: <span class="number">30</span>,</span><br><span class="line">        height: <span class="number">50</span>,</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(</span><br><span class="line">        <span class="string">&quot;The area of the rectangle is &#123;&#125; square pixels.&quot;</span>,</span><br><span class="line">        rect1.area()</span><br><span class="line">    );</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<h2 id="关联函数"><a class="header-anchor" href="#关联函数">¶</a>关联函数</h2>
+<p>关联函数就是参数里面<strong>没有self</strong>的函数，可以用于定义<strong>constructor</strong></p>
+<ul>
+<li>没有self作为参数，不能用<code>struct.method()</code>的方法来调用</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">impl</span> Rect &#123;</span><br><span class="line">	<span class="function"><span class="keyword">fn</span> <span class="title">new</span></span>(w: <span class="built_in">u32</span>, h: <span class="built_in">u32</span>) -&gt; Rect &#123;</span><br><span class="line">    Rect &#123; width: w, height: h &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+]]></content>
+      <categories>
+        <category>ProgLang</category>
+      </categories>
+      <tags>
+        <tag>Rust</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>the book(Rust) - Chapt6</title>
     <url>/2022/02/07/the-book-Rust-Chapt6/</url>
     <content><![CDATA[<div></div>
@@ -1489,41 +1487,19 @@ Rust 不允许自身或其任何部分实现了 <code>Drop trait</code> 的类�
       </tags>
   </entry>
   <entry>
-    <title>Rust(course.rs)-generic&amp;trait</title>
-    <url>/2022/02/14/Rust-course-rs-generic-trait/</url>
+    <title>the book(Rust) - Chapt7</title>
+    <url>/2022/02/10/the-book-Rust-Chapt7/</url>
     <content><![CDATA[<div></div>
 <span id="more"></span>
-<h1>Generic and Trait</h1>
+<h1>the book (Rust) - chapt7: module system</h1>
 <hr>
-<h2 id="Generic"><a class="header-anchor" href="#Generic">¶</a>Generic</h2>
-<p>下面这段代码<strong>无法编译</strong></p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">largest</span></span>&lt;T&gt;(list: &amp;[T]) -&gt; T &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> largest = list[<span class="number">0</span>];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> &amp;item <span class="keyword">in</span> list.iter() &#123;</span><br><span class="line">        <span class="keyword">if</span> item &gt; largest &#123;</span><br><span class="line">            largest = item;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    largest</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> number_list = <span class="built_in">vec!</span>[<span class="number">34</span>, <span class="number">50</span>, <span class="number">25</span>, <span class="number">100</span>, <span class="number">65</span>];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> result = largest(&amp;number_list);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;The largest number is &#123;&#125;&quot;</span>, result);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> char_list = <span class="built_in">vec!</span>[<span class="string">&#x27;y&#x27;</span>, <span class="string">&#x27;m&#x27;</span>, <span class="string">&#x27;a&#x27;</span>, <span class="string">&#x27;q&#x27;</span>];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> result = largest(&amp;char_list);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;The largest char is &#123;&#125;&quot;</span>, result);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>报错的原因是</p>
-<ul>
-<li>不是所有类型都可以进行<code>&gt;</code>的比较
-<ul>
-<li>因此我们需要给<code>T</code>天界一个类型限制 -&gt; trait</li>
-<li>我们使用<code>std::cmp::PartialOrd</code>Trait进行限制</li>
-</ul>
-</li>
-</ul>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">add</span></span>&lt;T: std::ops::Add&lt;Output = T&gt;&gt;(a:T, b:T) -&gt; T &#123;</span><br><span class="line">    a + b</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<hr>
-<h3 id="Generic-in-methods"><a class="header-anchor" href="#Generic-in-methods">¶</a>Generic in methods</h3>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Point</span></span>&lt;T, U&gt; &#123;</span><br><span class="line">    x: T,</span><br><span class="line">    y: U,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T, U&gt; Point&lt;T, U&gt; &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">mixup</span></span>&lt;V, W&gt;(<span class="keyword">self</span>, other: Point&lt;V, W&gt;) -&gt; Point&lt;T, W&gt; &#123;</span><br><span class="line">        Point &#123;</span><br><span class="line">            x: <span class="keyword">self</span>.x,</span><br><span class="line">            y: other.y,</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> p1 = Point &#123; x: <span class="number">5</span>, y: <span class="number">10.4</span> &#125;;</span><br><span class="line">    <span class="keyword">let</span> p2 = Point &#123; x: <span class="string">&quot;Hello&quot;</span>, y: <span class="string">&#x27;c&#x27;</span>&#125;;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> p3 = p1.mixup(p2);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;p3.x = &#123;&#125;, p3.y = &#123;&#125;&quot;</span>, p3.x, p3.y);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<hr>
-<h3 id="Generic-in-const"><a class="header-anchor" href="#Generic-in-const">¶</a>Generic in const</h3>
-<p><code>[i32; 2], [i32; 3]</code>是两种类型，我们可以用泛型打印所有的数组元素</p>
-<p>通过<strong>引用</strong>，我们可以实现</p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">display_array</span></span>&lt;T: std::fmt::<span class="built_in">Debug</span>&gt;(arr: &amp;[T]) &#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, arr);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> arr: [<span class="built_in">i32</span>; <span class="number">3</span>] = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];</span><br><span class="line">    display_array(&amp;arr);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> arr: [<span class="built_in">i32</span>;<span class="number">2</span>] = [<span class="number">1</span>,<span class="number">2</span>];</span><br><span class="line">    display_array(&amp;arr);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<ul>
-<li>需要注意的是，我们需要对类型<code>T</code>添加限制，因为我们需要他支持Debug输出<code>&#123;:?&#125;</code></li>
-</ul>
-<p><strong>有时候，引用是不合适的</strong>，对于任意的长度，我们可以使用const泛型</p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">display_array</span></span>&lt;T: std::fmt::<span class="built_in">Debug</span>, <span class="keyword">const</span> N: <span class="built_in">usize</span>&gt;(arr: [T; N]) &#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, arr);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> arr: [<span class="built_in">i32</span>; <span class="number">3</span>] = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];</span><br><span class="line">    display_array(arr);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> arr: [<span class="built_in">i32</span>; <span class="number">2</span>] = [<span class="number">1</span>, <span class="number">2</span>];</span><br><span class="line">    display_array(arr);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<hr>
-<h2 id="Trait"><a class="header-anchor" href="#Trait">¶</a>Trait</h2>
 ]]></content>
+      <categories>
+        <category>ProgLang</category>
+      </categories>
+      <tags>
+        <tag>Rust</tag>
+      </tags>
   </entry>
   <entry>
     <title>6.S081 lec8: Page Faults</title>
@@ -1967,18 +1943,332 @@ so both can use trapframe.</li>
       </tags>
   </entry>
   <entry>
-    <title>the book(Rust) - Chapt7</title>
-    <url>/2022/02/10/the-book-Rust-Chapt7/</url>
-    <content><![CDATA[<div></div>
+    <title>Welcome!</title>
+    <url>/2022/01/23/homepage/</url>
+    <content><![CDATA[<style>
+img{
+    width: 60%;
+}
+</style>
+<h2 id="Welcome-to-my-homepage-💤"><a class="header-anchor" href="#Welcome-to-my-homepage-💤">¶</a>Welcome to my homepage! 💤</h2>
+<p>This is my first post to this blog website! 😋<br>
+It is really exciting for me to have the chance to really say something on the Internet.<br>
+There are mainly <strong>3️⃣</strong> reasons for me to start the blog.</p>
+<ul>
+<li>
+<p>⭐ <strong>Reading others’ blog really inspires me</strong></p>
+<ul>
+<li>Others’ sharing experiences on blogs really helps me through many mind-windling 😱 situations, and I really want to be one of them. Hopefully my experience will help the readers as well 😄<br>
+<br/></li>
+</ul>
+</li>
+<li>
+<p>☝️ <strong>Learning without recording is not as effective</strong></p>
+<ul>
+<li>This came across to my mind when I am taking 6.S081: Operating System Engineering (great course btw). There are so many important details and great minds inside an O/S, which I think should be well-learned and recorded.<br>
+<br/></li>
+</ul>
+</li>
+<li>
+<p>💥 <strong>SHARING IS ALWAYS FUN!</strong></p>
+<ul>
+<li>The thrill of sharing takes up the most part of why I am starting this blog! Not only sharing the experience is rewarding 😋, but sharing my daily life is also exciting.<br>
+<br/></li>
+</ul>
+</li>
+</ul>
+<p><strong>To everyone read this page:</strong></p>
+<p><em>May the force be with you</em></p>
+<img src="/2022/01/23/homepage/grogu.jpeg" class="" title="grogu">]]></content>
+  </entry>
+  <entry>
+    <title>Some detailed things in C (1)</title>
+    <url>/2022/01/28/Some-tricky-things-about-char-and-error-prone-string-ops-in-C/</url>
+    <content><![CDATA[<hr>
 <span id="more"></span>
-<h1>the book (Rust) - chapt7: module system</h1>
+<h1>detailed error-prone things in C (1st)</h1>
+<hr>
+<p>As we all know, in C programming language, functions in <em>string.h</em> is very error-prone! In this post, I show something that might be in your way when you are using C.</p>
+<h2 id="static-keyword"><a class="header-anchor" href="#static-keyword">¶</a>static keyword</h2>
+<p>prologue about initialized value:</p>
+<ul>
+<li>global or static
+<ul>
+<li>allocated in static field
+<ul>
+<li>live with process and is 0</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>local and not static
+<ul>
+<li>on stackframe -&gt; random</li>
+</ul>
+</li>
+</ul>
+<h4 id="static-on-local-variable"><a class="header-anchor" href="#static-on-local-variable">¶</a>static on local variable</h4>
+<p>the static local variable declared in a function is <strong>initialized when the process started, and always initialized to 0</strong>, not <strong>when function is called</strong>.</p>
+<p>the static local variable resides at the beginning of process’s address space (static field), and <strong>only destructed when process exists</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">function</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">int</span> foo; <span class="comment">// static variable are initialized to zero</span></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;call %d\n&quot;</span>, foo++);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span></span></span><br><span class="line"><span class="function"><span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; <span class="number">3</span>; ++i)</span><br><span class="line">        function();</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">outputs: </span><br><span class="line">call <span class="number">0</span></span><br><span class="line">call <span class="number">1</span></span><br><span class="line">call <span class="number">2</span></span><br></pre></td></tr></table></figure>
+<h4 id="static-on-global-variable"><a class="header-anchor" href="#static-on-global-variable">¶</a>static on global variable</h4>
+<p>global variable itself is saved in static field, so <em>static</em> keyword does not change its position in memory.</p>
+<p>However, it restricts its link-attribute. The global variable declared with <em>static</em> <strong>can only be accessed by the files which included the file where the variable is declared</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">// a.h</span></span><br><span class="line"><span class="meta"># <span class="meta-keyword">pragma</span> once</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">int</span> a = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// b.h</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;a.h&quot;</span></span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">func</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;%d\n&quot;</span>, a);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// a.c</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;a.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;b.h&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span></span></span><br><span class="line"><span class="function"><span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    func();</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;%d\n&quot;</span>, a);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">outputs:</span><br><span class="line"><span class="number">2</span></span><br><span class="line"><span class="number">2</span></span><br></pre></td></tr></table></figure>
+<h4 id="static-on-function"><a class="header-anchor" href="#static-on-function">¶</a>static on function</h4>
+<p>function declared with <em>static</em>, <strong>can only be accessed by the file which defines it</strong></p>
+<p>That is, you have to declare and implement the static function within one file.</p>
+<hr>
+<h2 id="string-literals-very-error-prone"><a class="header-anchor" href="#string-literals-very-error-prone">¶</a>string literals (very error-prone!!!)</h2>
+<p><a href="https://stackoverflow.com/questions/5717176/bus-error-while-running-a-simple-string-c-program">StackoverFlow-String literal problems</a></p>
+<p>Check out the code here (error code)</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span></span></span><br><span class="line"><span class="function"><span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">char</span> *s = <span class="string">&quot;this is &quot;</span>;</span><br><span class="line">    <span class="keyword">char</span> *s1 = <span class="string">&quot;me&quot;</span>;  </span><br><span class="line">    <span class="built_in">strcat</span>(s,s1); </span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;%s&quot;</span>,s);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line">output: bus error in MACOS</span><br></pre></td></tr></table></figure>
+<p>Why there is an error, the code seems to be fine!</p>
+<p>This is because string in this form <code>&quot;this is &quot;</code>, is a <strong>string literal</strong>.</p>
+<p>The string literal is allocated at the program startup and held until the program exits. The <strong>key problem</strong> is, the places where string literal resides <strong>may or may not be writable</strong>, so modify a string literal is a <strong>undefined behavior</strong>.</p>
+<p>This part of code has two problems.</p>
+<ul>
+<li>
+<p>Buffer overflow</p>
+<ul>
+<li>s has length 9, s1 has length 3. And the code is trying to write 11 character in a 9 character buffer.</li>
+</ul>
+</li>
+<li>
+<p>The string literal is not writable</p>
+</li>
+</ul>
+<p>The right way to do this is to <strong>copy the literal onto the stackframe</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">char</span> *s = <span class="string">&quot;this is &quot;</span>;</span><br><span class="line"><span class="keyword">char</span> *s1 = <span class="string">&quot;me&quot;</span>;</span><br><span class="line"><span class="keyword">char</span> target[<span class="built_in">strlen</span>(s) + <span class="built_in">strlen</span>(s1) + <span class="number">1</span>];</span><br><span class="line"></span><br><span class="line"><span class="built_in">strcpy</span>(target, s);</span><br><span class="line"><span class="built_in">strcat</span>(target, s1);</span><br><span class="line"><span class="comment">// or sprintf(target, &quot;%s%s&quot;, s, s1);</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// The recommended way (on heap)</span></span><br><span class="line"><span class="keyword">char</span> *target = <span class="built_in">malloc</span>(<span class="built_in">strlen</span>(s) + <span class="built_in">strlen</span>(s1) + <span class="number">1</span>);</span><br><span class="line">...</span><br><span class="line"><span class="built_in">free</span>(target);</span><br></pre></td></tr></table></figure>
+<hr>
+<h2 id="sizeof"><a class="header-anchor" href="#sizeof">¶</a>sizeof()</h2>
+<p>sizeof is a very error-prone function! The value of sizeof is determined when <strong>compiling, or runtime</strong>.</p>
+<p>One of the most problematic things about <em>sizeof()</em> is <code>sizeof(&lt;some_ptr&gt;)</code>, here are some examples.</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">char</span>* p = <span class="string">&quot;Hello world&quot;</span></span><br><span class="line"><span class="built_in">printf</span>(<span class="string">&quot;%lu&quot;</span>, <span class="keyword">sizeof</span>(p))</span><br></pre></td></tr></table></figure>
+<p>The output will be 8 in 64-bit word machines and 4 in 32-bit word machines.<br>
+You probably already notice why, because the <strong>pointer is actually a address!</strong>. And in a 64-bit word machines, addresses are 8-byte long.</p>
+<h3 id="sizeof-ptr-and-sizeof-array"><a class="header-anchor" href="#sizeof-ptr-and-sizeof-array">¶</a>sizeof(ptr) and sizeof(array)</h3>
+<p>Please notice the difference between <code>sizeof(&lt;some_array&gt;)</code> and <code>sizeof(&lt;some_ptr&gt;)</code></p>
+<p>The code below will show clearly the difference</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">bar</span><span class="params">(<span class="keyword">char</span> f[<span class="number">3</span>])</span> </span>&#123;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;%lu\n&quot;</span>, <span class="keyword">sizeof</span>(f));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span></span></span><br><span class="line"><span class="function"><span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">char</span> foo[<span class="number">3</span>];</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;%lu\n&quot;</span>, <span class="keyword">sizeof</span>(foo)); <span class="comment">// 3</span></span><br><span class="line">	bar(foo);                     <span class="comment">// 8</span></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>In the first <code>sizeof(foo)</code>, the compiler knows the array is three-elem long, so the value is 3.</p>
+<p>In the second sizeof(f), the compiler treats the <code>f</code> as a pointer. This is because when we pass an array to a function, we are actually passing the first-elem’s address of the array (i.e. a pointer).</p>
+<h3 id="sizeof-struct"><a class="header-anchor" href="#sizeof-struct">¶</a>sizeof(struct)</h3>
+<p>when using sizeof() on a struct, it returns the actual space occupied by the structure.</p>
+<p>In C, the struct are <strong>aligned</strong>.</p>
+<p>For example, assume this is on a <strong>32bit word machine</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">mystruct</span> &#123;</span></span><br><span class="line">    <span class="keyword">char</span> c1;</span><br><span class="line">    <span class="keyword">int</span>  i1;</span><br><span class="line">    <span class="keyword">char</span> c2;</span><br><span class="line">&#125; s1;</span><br><span class="line"></span><br><span class="line"><span class="built_in">printf</span>(<span class="string">&quot;%lu&quot;</span>, <span class="keyword">sizeof</span>(s1));</span><br></pre></td></tr></table></figure>
+<p>This will print <code>12</code>, because <code>c1</code> itself occupies a word, i1 occupies the next and c2 occupies the next. So in total three words (12 bytes) are occupies by s1.</p>
 <hr>
 ]]></content>
       <categories>
         <category>ProgLang</category>
       </categories>
       <tags>
-        <tag>Rust</tag>
+        <tag>C</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>6.S081-lec9 Interrupts</title>
+    <url>/2022/02/05/6-S081-lec9-Interrupts/</url>
+    <content><![CDATA[<style>
+img{
+    width: 80%;
+}
+</style>
+<span id="more"></span>
+<h1>6.S081 lecture9: Interrupts</h1>
+<h2 id="Interrupts"><a class="header-anchor" href="#Interrupts">¶</a>Interrupts</h2>
+<p>Hardware wants attention now.</p>
+<p>SW saves its work</p>
+<ul>
+<li>set it aside</li>
+<li>process interupt</li>
+<li>resume</li>
+</ul>
+<p><strong>same mechanism</strong> w/ syscall and traps</p>
+<hr>
+<h2 id="Properties-of-Interrupt"><a class="header-anchor" href="#Properties-of-Interrupt">¶</a>Properties of Interrupt</h2>
+<p>Three things <strong>differs</strong> Interrupt from others<br>
+<strong>Interrupt</strong></p>
+<ul>
+<li>asynchronous
+<ul>
+<li>may have nothing to do with CPU’s context</li>
+</ul>
+</li>
+<li>concurrency</li>
+<li>programmed devices</li>
+</ul>
+<hr>
+<h2 id="Hardware-side"><a class="header-anchor" href="#Hardware-side">¶</a>Hardware side</h2>
+<p><strong>PLIC</strong> controls interrupts by <strong>routing</strong> them to cores<br>
+When no cores are available, PLIC <strong>holds</strong> them.</p>
+<img src="/2022/02/05/6-S081-lec9-Interrupts/plic.png" class="" title="plic">
+<hr>
+<h2 id="Software-side"><a class="header-anchor" href="#Software-side">¶</a>Software side</h2>
+<p>code manages the device is called <strong>driver</strong></p>
+<p><strong>Driver structure</strong></p>
+<ul>
+<li>Top part (interact with user level processes)
+<ul>
+<li><strong>queue</strong> running in the driver, decouples top and bottom</li>
+</ul>
+</li>
+<li>Bottom part
+<ul>
+<li>Interrupt handler</li>
+</ul>
+</li>
+</ul>
+<img src="/2022/02/05/6-S081-lec9-Interrupts/driver.png" class="" title="driver">
+<hr>
+<h2 id="Programming-device"><a class="header-anchor" href="#Programming-device">¶</a>Programming device</h2>
+<p>Typically done by <strong>memory mapped io</strong>.</p>
+<ul>
+<li>devices show on specfic physical addresses</li>
+<li>ld/st inst to those addresses
+<ul>
+<li>read, write <strong>control regs</strong> of the device</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="Case-study-ls"><a class="header-anchor" href="#Case-study-ls">¶</a>Case study: $ ls</h2>
+<ul>
+<li>
+<p>$: device puts $ into <strong>UART</strong></p>
+<ul>
+<li>UART generates interrupt when the character has been sent</li>
+<li>UART是用于串口通信的芯片</li>
+</ul>
+</li>
+<li>
+<p>ls: keyboard to the recv line</p>
+<ul>
+<li>generate interrupts to tell there a char available</li>
+<li>handler reads it</li>
+</ul>
+</li>
+</ul>
+<h3 id="RISC-V-support-for-interrupts"><a class="header-anchor" href="#RISC-V-support-for-interrupts">¶</a>RISC-V support for interrupts</h3>
+<p><strong>SIE</strong>: supervisor interrupt enable reg</p>
+<ul>
+<li>1 <strong>bit</strong> each for external intr, sw intr, timer intr</li>
+</ul>
+<p><strong>SSTATUS</strong></p>
+<ul>
+<li>1 <strong>bit</strong> to disable and enable intr</li>
+</ul>
+<p><strong>SIP</strong>: supervisor pending register</p>
+<ul>
+<li>what intr comes in</li>
+</ul>
+<p><strong>scause</strong></p>
+<ul>
+<li>indicate it is an interrupt</li>
+</ul>
+<p><strong>stvec</strong></p>
+<ul>
+<li>jump to handler</li>
+</ul>
+<hr>
+<h2 id="Interrupt-HW"><a class="header-anchor" href="#Interrupt-HW">¶</a>Interrupt (HW)</h2>
+<p>Let’s say the <strong>keyboard raises the intr line</strong><br>
+-&gt; The intr signal goes to <strong>PLIC</strong><br>
+-&gt; The PLIC routes the signal to <strong>core</strong></p>
+<ul>
+<li>If the core’s SIE bit is set
+<ul>
+<li>close the INTR by <strong>clearing SIE bit</strong></li>
+<li>epc &lt;- pc</li>
+<li>save the current mode</li>
+<li>mode &lt;- supervisor</li>
+<li>pc &lt;- stvec
+<ul>
+<li><em>usertrap()</em></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="Interrupt-and-concurrency"><a class="header-anchor" href="#Interrupt-and-concurrency">¶</a>Interrupt and concurrency</h2>
+<ol>
+<li>device and CPU run in <strong>parallel</strong>
+<ol>
+<li><strong>producer/consumer parallelism</strong></li>
+</ol>
+</li>
+<li>interrupt stops current runnning program
+<ol>
+<li>tricky when <strong>kernel</strong> gets interrupt</li>
+<li>intr enable/disable</li>
+</ol>
+</li>
+<li><strong>top of driver and bottom</strong> of the driver may run in parallel <strong>(on different CPUS)</strong>
+<ol>
+<li>use <strong>locks</strong>, because different CPU may look at the <strong>same</strong> queue.</li>
+</ol>
+</li>
+</ol>
+<hr>
+<h3 id="producer-consumer-parallelism"><a class="header-anchor" href="#producer-consumer-parallelism">¶</a>producer-consumer parallelism</h3>
+<p>A <strong>buffer</strong> in the driver.<br>
+Two <strong>ptrs</strong>, read ptr and write ptr.</p>
+<p>Producers: <em>putc()</em><br>
+Consumers: <em>getc()</em></p>
+<p>buffer full? buffer empty?</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">char</span> uart_tx_buf[UART_TX_BUF_SIZE];</span><br><span class="line"><span class="keyword">int</span> uart_tx_w;</span><br><span class="line"><span class="keyword">int</span> uart_tx_r;</span><br></pre></td></tr></table></figure>
+<h3 id="procedure-of-inputting-‘l’"><a class="header-anchor" href="#procedure-of-inputting-‘l’">¶</a>procedure of inputting ‘l’</h3>
+<p>User inputs char <strong>l</strong><br>
+-&gt; <strong>l</strong> sent from <strong>keyboard to UART</strong><br>
+-&gt; routed through <strong>PLIC</strong> to some <strong>core</strong><br>
+-&gt; interrupt, <em>devintr()</em> is called<br>
+-&gt; <em>uartintr()</em> is called<br>
+-&gt; <em>uartgetc()</em> gets the char input (i.e. ‘l’), then called <em>consoleintr()</em><br>
+-&gt; <em>consputc()</em> is called to show the char<br>
+-&gt; put the char into the buffer, and when a <strong>newline</strong> is called, <em>wakeup()</em> the shell to read the buffer</p>
+<h3 id="Interrupt-Evolution"><a class="header-anchor" href="#Interrupt-Evolution">¶</a>Interrupt Evolution</h3>
+<ul>
+<li>Used to be fast
+<ul>
+<li>hw simple</li>
+</ul>
+</li>
+<li>Now intr slow compared to <strong>CPU</strong>
+<ul>
+<li>device is more complex
+<ul>
+<li>to avoid intr too much</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>e.g. gbit eth card -&gt; 1.5mill pkts/s</p>
+<ul>
+<li>If intr per packet, too many interrupts</li>
+<li>Used <strong>polling</strong> to solve for <strong>fast devs</strong></li>
+</ul>
+<h4 id="Polling"><a class="header-anchor" href="#Polling">¶</a>Polling</h4>
+<p>If the dev is very fast, the cost of intr is high</p>
+<p>CPU <strong>spins</strong>(loop) on dev, until dev has data</p>
+<ul>
+<li>waste CPU cycles if the dev is slow</li>
+<li>but if dev is fast, it’s ok
+<ul>
+<li>saves entry/exit cost</li>
+</ul>
+</li>
+</ul>
+<hr>
+]]></content>
+      <categories>
+        <category>O/S</category>
+      </categories>
+      <tags>
+        <tag>6.S081</tag>
       </tags>
   </entry>
   <entry>
@@ -2022,271 +2312,6 @@ so both can use trapframe.</li>
       </categories>
       <tags>
         <tag>6.S081</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>the book(Rust) - Chapt5</title>
-    <url>/2022/02/07/the-book-Rust-Chapt5/</url>
-    <content><![CDATA[<style>
-img{
-    width: 80%;
-}
-</style>
-<span id="more"></span>
-<h1>结构体</h1>
-<p>结构体不可以指定某一个<strong>字段</strong>是否可变，但是可以让整一个实例可变</p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">User</span></span> &#123;</span><br><span class="line">    active: <span class="built_in">bool</span>,</span><br><span class="line">    username: <span class="built_in">String</span>,</span><br><span class="line">    email: <span class="built_in">String</span>,</span><br><span class="line">    sign_in_count: <span class="built_in">u64</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> <span class="keyword">mut</span> user1 = User &#123;</span><br><span class="line">    email: <span class="built_in">String</span>::from(<span class="string">&quot;someone@example.com&quot;</span>),</span><br><span class="line">    username: <span class="built_in">String</span>::from(<span class="string">&quot;someusername123&quot;</span>),</span><br><span class="line">    active: <span class="literal">true</span>,</span><br><span class="line">    sign_in_count: <span class="number">1</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="字段初始化"><a class="header-anchor" href="#字段初始化">¶</a>字段初始化</h2>
-<p>使用和参数一样的名字的变量名，可以不写<code>email: email</code></p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">build_user</span></span>(email: <span class="built_in">String</span>, username: <span class="built_in">String</span>) -&gt; User &#123;</span><br><span class="line">    User &#123;</span><br><span class="line">        email,</span><br><span class="line">        username,</span><br><span class="line">        active: <span class="literal">true</span>,</span><br><span class="line">        sign_in_count: <span class="number">1</span>,</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> user1 = build_user(</span><br><span class="line">        <span class="built_in">String</span>::from(<span class="string">&quot;someone@example.com&quot;</span>),</span><br><span class="line">        <span class="built_in">String</span>::from(<span class="string">&quot;someusername123&quot;</span>),</span><br><span class="line">    );</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>上下两段代码的效果是一样的，<br>
-<code>..user1</code>证明别的变量都是一样的，但是**必须放在最后。</p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">User</span></span> &#123;</span><br><span class="line">    active: <span class="built_in">bool</span>,</span><br><span class="line">    username: <span class="built_in">String</span>,</span><br><span class="line">    email: <span class="built_in">String</span>,</span><br><span class="line">    sign_in_count: <span class="built_in">u64</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="comment">// --snip--</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> user1 = User &#123;</span><br><span class="line">        email: <span class="built_in">String</span>::from(<span class="string">&quot;someone@example.com&quot;</span>),</span><br><span class="line">        username: <span class="built_in">String</span>::from(<span class="string">&quot;someusername123&quot;</span>),</span><br><span class="line">        active: <span class="literal">true</span>,</span><br><span class="line">        sign_in_count: <span class="number">1</span>,</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> user2 = User &#123;</span><br><span class="line">        email: <span class="built_in">String</span>::from(<span class="string">&quot;another@example.com&quot;</span>),</span><br><span class="line">        ..user1</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>由于我们的user2使用了user1的username，user1<strong>不再有效</strong>，因为在堆上。</p>
-<p>但是如果仅仅使用了user1的<code>active</code>与<code>sign_in_count</code>是没关系的，他们有<code>copy trait</code>，在栈上。</p>
-<p>我们也可以使用<strong>没有命名字段</strong>的结构体</p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Color</span></span>(<span class="built_in">i32</span>, <span class="built_in">i32</span>, <span class="built_in">i32</span>);</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Point</span></span>(<span class="built_in">i32</span>, <span class="built_in">i32</span>, <span class="built_in">i32</span>);</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> black = Color(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">    <span class="keyword">let</span> origin = Point(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>可以用<code>black.0, black.1, black.2</code>来访问</p>
-<p><strong>如果要在结构体内使用别的变量的引用</strong>，需要用<strong>生命周期</strong>，保证结构体引用的数据有效性与结构体本身一致。</p>
-<p><code>需要注意</code></p>
-<ul>
-<li><strong>把结构体中具有所有权的字段转移出去后，将无法再访问该字段，但是可以正常访问其它的字段</strong>。</li>
-</ul>
-<hr>
-<h2 id="println-宏打印"><a class="header-anchor" href="#println-宏打印">¶</a>println! 宏打印</h2>
-<p><code>println!(&quot;rect1 is &#123;&#125;&quot;, rect1);</code>需要我们实现<code>std::fmt::Display</code></p>
-<p><code>println!(&quot;rect1 is &#123;:?&#125;&quot;, rect1);</code>需要我们实现<code>Debug trait</code></p>
-<ul>
-<li>我们可以在结构体上面加上<code>#[derive(Debug)]</code>让编译器自动生成</li>
-</ul>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="meta">#[derive(Debug)]</span> </span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Rectangle</span></span> &#123;</span><br><span class="line">    width: <span class="built_in">u32</span>,</span><br><span class="line">    height: <span class="built_in">u32</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="dbg-宏"><a class="header-anchor" href="#dbg-宏">¶</a>dbg!宏</h2>
-<p>这是另外一种<code>Debug</code>格式打印数值的方法就是<code>dbg!</code></p>
-<ul>
-<li>他会接受一个表达式的所有权，打印出代码中调用它的文件与行号</li>
-</ul>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="meta">#[derive(Debug)]</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Rectangle</span></span> &#123;</span><br><span class="line">    width: <span class="built_in">u32</span>,</span><br><span class="line">    height: <span class="built_in">u32</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> scale = <span class="number">2</span>;</span><br><span class="line">    <span class="keyword">let</span> rect1 = Rectangle &#123;</span><br><span class="line">        width: dbg!(<span class="number">30</span> * scale),</span><br><span class="line">        height: <span class="number">50</span>,</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    dbg!(&amp;rect1);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>我们可以把 <code>dbg!</code> 放在表达式 <code>30 * scale</code> 周围，因为 <code>dbg!</code> <strong>返回表达式的值的所有权</strong>，所以 <code>width</code> 字段将获得相同的值，就像我们在那里没有 <code>dbg!</code> 调用一样。我们不希望 <code>dbg!</code> 拥有 <code>rect1</code> 的所有权，所以我们在下一次调用 <code>dbg!</code> 时传递一个引用。下面是这个例子的输出结果：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">$ cargo run</span><br><span class="line">   Compiling rectangles v0.1.0 (file:///projects/rectangles)</span><br><span class="line">    Finished dev [unoptimized + debuginfo] target(s) in 0.61s</span><br><span class="line">     Running `target/debug/rectangles`</span><br><span class="line">[src/main.rs:10] 30 * scale = 60</span><br><span class="line">[src/main.rs:14] &amp;rect1 = Rectangle &#123;</span><br><span class="line">    width: 60,</span><br><span class="line">    height: 50,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>除了<code>Debug</code>, derive关键字还有很多可以使用的trait</p>
-<hr>
-<h2 id="method-syntax-impl-block"><a class="header-anchor" href="#method-syntax-impl-block">¶</a>method syntax (impl block)</h2>
-<p>让我们给Rectangle定义一个area方法，作为成员函数<br>
-重点是下面的<code>impl块</code></p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="meta">#[derive(Debug)]</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Rectangle</span></span> &#123;</span><br><span class="line">    width: <span class="built_in">u32</span>,</span><br><span class="line">    height: <span class="built_in">u32</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span> Rectangle &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">area</span></span>(&amp;<span class="keyword">self</span>) -&gt; <span class="built_in">u32</span> &#123;</span><br><span class="line">        <span class="keyword">self</span>.width * <span class="keyword">self</span>.height</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> rect1 = Rectangle &#123;</span><br><span class="line">        width: <span class="number">30</span>,</span><br><span class="line">        height: <span class="number">50</span>,</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(</span><br><span class="line">        <span class="string">&quot;The area of the rectangle is &#123;&#125; square pixels.&quot;</span>,</span><br><span class="line">        rect1.area()</span><br><span class="line">    );</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<hr>
-<h2 id="关联函数"><a class="header-anchor" href="#关联函数">¶</a>关联函数</h2>
-<p>关联函数就是参数里面<strong>没有self</strong>的函数，可以用于定义<strong>constructor</strong></p>
-<ul>
-<li>没有self作为参数，不能用<code>struct.method()</code>的方法来调用</li>
-</ul>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">impl</span> Rect &#123;</span><br><span class="line">	<span class="function"><span class="keyword">fn</span> <span class="title">new</span></span>(w: <span class="built_in">u32</span>, h: <span class="built_in">u32</span>) -&gt; Rect &#123;</span><br><span class="line">    Rect &#123; width: w, height: h &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<hr>
-]]></content>
-      <categories>
-        <category>ProgLang</category>
-      </categories>
-      <tags>
-        <tag>Rust</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>the book(Rust) - Chapt3</title>
-    <url>/2022/02/05/the-book-Rust-Chapt3/</url>
-    <content><![CDATA[<style>
-img{
-    width: 80%;
-}
-</style>
-<span id="more"></span>
-<h1>Rust - 常见编程概念</h1>
-<p>这一系列的博客我决定使用中文来进行完成。</p>
-<h2 id="变量与可变性-mutability"><a class="header-anchor" href="#变量与可变性-mutability">¶</a>变量与可变性(mutability)</h2>
-<h3 id="可变性"><a class="header-anchor" href="#可变性">¶</a>可变性</h3>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> **<span class="keyword">mut</span>** x = <span class="number">5</span>;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;x: &#123;&#125;&quot;</span>, x);</span><br><span class="line">    x = <span class="number">6</span>; <span class="comment">// 如果没有mut关键字，编译器会报错</span></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;x: &#123;&#125;&quot;</span>, x);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>可变变量有<code>mut</code>关键字，可变变量才可以二次赋值。</p>
-<h3 id="常量"><a class="header-anchor" href="#常量">¶</a>常量</h3>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> SEC_IN_ONE_HOUR: <span class="built_in">u32</span> = <span class="number">60</span> * <span class="number">1</span>;</span><br></pre></td></tr></table></figure>
-<ul>
-<li><strong>常量必须要有注解</strong></li>
-<li><strong>常量永远不可变</strong></li>
-<li>常量在作用域内一直有效</li>
-</ul>
-<h3 id="Shadowing"><a class="header-anchor" href="#Shadowing">¶</a>Shadowing</h3>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> x = <span class="number">5</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> x = x + <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">let</span> x = x * <span class="number">2</span>;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;The value of x in the inner scope is: &#123;&#125;&quot;</span>, x);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;The value of x is: &#123;&#125;&quot;</span>, x);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">输出为</span><br><span class="line">The value of x <span class="keyword">in</span> the inner scope is: <span class="number">12</span></span><br><span class="line">The value of x is: <span class="number">6</span></span><br></pre></td></tr></table></figure>
-<p>因为Shadowing只在作用域内有效</p>
-<p>如果要让shadowing有不同的数据类型</p>
-<ul>
-<li>必须声明类型</li>
-<li>必须为可变变量</li>
-</ul>
-<hr>
-<h2 id="标量类型"><a class="header-anchor" href="#标量类型">¶</a>标量类型</h2>
-<h3 id="整形"><a class="header-anchor" href="#整形">¶</a>整形</h3>
-<table>
-<thead>
-<tr>
-<th>length</th>
-<th>signed</th>
-<th>unsigned</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>8b</td>
-<td>i8</td>
-<td>u8</td>
-</tr>
-<tr>
-<td>16b</td>
-<td>i16</td>
-<td>u16</td>
-</tr>
-<tr>
-<td>32b</td>
-<td>i32</td>
-<td>u32</td>
-</tr>
-<tr>
-<td>64b</td>
-<td>i64</td>
-<td>u64</td>
-</tr>
-<tr>
-<td>128b</td>
-<td>i128</td>
-<td>u128</td>
-</tr>
-<tr>
-<td>arch</td>
-<td>isize</td>
-<td>usize</td>
-</tr>
-</tbody>
-</table>
-<table>
-<thead>
-<tr>
-<th>数字字面值</th>
-<th>例子</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Decimal (十进制)</td>
-<td>98_222</td>
-</tr>
-<tr>
-<td>Hex (十六进制)</td>
-<td>0xff</td>
-</tr>
-<tr>
-<td>Octal (八进制)</td>
-<td>0o77</td>
-</tr>
-<tr>
-<td>Binary (二进制)</td>
-<td>0b1111_0000</td>
-</tr>
-<tr>
-<td>Byte (单字节字符)(仅限于u8)</td>
-<td>b’A’</td>
-</tr>
-</tbody>
-</table>
-<p>也可以用<code>let x = 57u8</code>作为类型后缀</p>
-<h4 id="整形溢出"><a class="header-anchor" href="#整形溢出">¶</a>整形溢出</h4>
-<p>在<code>release</code>中，不检查，使用wrapping。 在<code>debug</code>中，不允许溢出，出现panic。</p>
-<ul>
-<li>所有模式下都可以使用 <code>wrapping_*</code> 方法进行包装，如 wrapping_add</li>
-<li>如果 <code>check_*</code> 方法出现溢出，则返回 None值</li>
-<li>用 <code>overflowing_*</code> 方法返回值和一个布尔值，表示是否出现溢出</li>
-<li>用 <code>saturating_*</code> 方法在值的最小值或最大值处进行饱和处理</li>
-</ul>
-<h3 id="浮点"><a class="header-anchor" href="#浮点">¶</a>浮点</h3>
-<p><code>f64</code>, <code>f32</code>，默认为f32</p>
-<h3 id="字符类型"><a class="header-anchor" href="#字符类型">¶</a>字符类型</h3>
-<p>单引号是<code>char</code>，双引号是字符串。</p>
-<ul>
-<li><strong>char是4个字节</strong>，代表的是Unicode标量值</li>
-</ul>
-<hr>
-<h2 id="复合类型"><a class="header-anchor" href="#复合类型">¶</a>复合类型</h2>
-<p>将多个值组合成一个类型，Rust原生有<code>tuple</code>和<code>array</code></p>
-<h3 id="tuple"><a class="header-anchor" href="#tuple">¶</a>tuple</h3>
-<p>tuple 中不同的值可以有不同的类型。</p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> tup = (<span class="number">500</span>, <span class="number">6.4</span>, <span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> (x, y, z) = tup;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;The value of y is &#123;&#125;&quot;</span>, y);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;The value of y is &#123;&#125;&quot;</span>, tup.<span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>在Rust中, <code>()</code>为特殊的tuple，只有一个值，也写成<code>()</code>，被称为unit type，值被称为unit value。<br>
-如果表达式不返回任何值，则隐式返回unit value.</p>
-<h3 id="array"><a class="header-anchor" href="#array">¶</a>array</h3>
-<p>array 中，所有的值必须是同一类型，分配在stack上<br>
-在确定元素数量不会改变时使用</p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> months = [<span class="string">&quot;January&quot;</span>, <span class="string">&quot;February&quot;</span>, <span class="string">&quot;March&quot;</span>, <span class="string">&quot;April&quot;</span>, <span class="string">&quot;May&quot;</span>, <span class="string">&quot;June&quot;</span>, <span class="string">&quot;July&quot;</span>,</span><br><span class="line">              <span class="string">&quot;August&quot;</span>, <span class="string">&quot;September&quot;</span>, <span class="string">&quot;October&quot;</span>, <span class="string">&quot;November&quot;</span>, <span class="string">&quot;December&quot;</span>];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> a: [<span class="built_in">i32</span>; <span class="number">5</span>] = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> b = [<span class="number">3</span>; <span class="number">5</span>];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">use</span> std::io;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> a = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>];</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;Please enter an array index.&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> index = <span class="built_in">String</span>::new();</span><br><span class="line"></span><br><span class="line">    io::stdin()</span><br><span class="line">        .read_line(&amp;<span class="keyword">mut</span> index)</span><br><span class="line">        .expect(<span class="string">&quot;Failed to read line&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> index: <span class="built_in">usize</span> = index</span><br><span class="line">        .trim()</span><br><span class="line">        .parse()</span><br><span class="line">        .expect(<span class="string">&quot;Index entered was not a number&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> element = a[index];</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(</span><br><span class="line">        <span class="string">&quot;The value of the element at index &#123;&#125; is: &#123;&#125;&quot;</span>,</span><br><span class="line">        index, element</span><br><span class="line">    );</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>如果输入了一个超过末尾的数字，比如10，编译器会panic，即遇到exception而退出。</p>
-<hr>
-<h2 id="函数"><a class="header-anchor" href="#函数">¶</a>函数</h2>
-<h3 id="命名风格"><a class="header-anchor" href="#命名风格">¶</a>命名风格</h3>
-<p>使用snake case，即<strong>所有字母小写</strong>，<strong>使用下滑线分隔单词</strong>。</p>
-<p>用关键字<code>fn</code>声明函数</p>
-<h3 id="参数"><a class="header-anchor" href="#参数">¶</a>参数</h3>
-<p>在Rust函数中，所有的参数都必须要有<strong>类型注解</strong>，Rust是静态类型语言！</p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    print_labeled_measurement(<span class="number">5</span>, <span class="string">&#x27;h&#x27;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">print_labeled_measurement</span></span>(value: <span class="built_in">i32</span>, unit_label: <span class="built_in">char</span>) &#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;The measurement is: &#123;&#125;&#123;&#125;&quot;</span>, value, unit_label);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-<h3 id="语句与表达式"><a class="header-anchor" href="#语句与表达式">¶</a>语句与表达式</h3>
-<p>**语句（Statements）**是执行一些操作但不返回值的指令。<br>
-**表达式（Expressions）**计算并产生一个值。让我们看一些例子。</p>
-<p><code>let y = 6;</code>是一个语句。<br>
-语句不返回任何值，因此<code>let x = (let y = 6);</code>是错误的</p>
-<p>那么什么是表达式呢？</p>
-<p>函数调用是表达式, macro调用是一个表达式，大括号的作用于也是表达式。</p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> x = <span class="number">5</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> y = &#123;</span><br><span class="line">        <span class="keyword">let</span> x = <span class="number">3</span>;</span><br><span class="line">        x + <span class="number">1</span></span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;The value of y is: &#123;&#125;&quot;</span>, y);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>在这里面，y的值是4。因为这个表达式的计算结果是<code>x + 1</code>。</p>
-<h3 id="返回值"><a class="header-anchor" href="#返回值">¶</a>返回值</h3>
-<p>在Rust中，我们不命名返回值，但是<strong>必须声明类型</strong><br>
-在Rust中，函数的表达式为函数体<strong>最后一个表达式的值</strong></p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">five</span></span>() -&gt; <span class="built_in">i32</span> &#123;</span><br><span class="line">    <span class="number">5</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> x = five();</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;The value of x is: &#123;&#125;&quot;</span>, x);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><strong>请注意，语句并不会返回值</strong></p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> x = plus_one(<span class="number">5</span>);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;The value of x is: &#123;&#125;&quot;</span>, x);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">plus_one</span></span>(x: <span class="built_in">i32</span>) -&gt; <span class="built_in">i32</span> &#123;</span><br><span class="line">    x + <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>这段代码中，会报错，因为<code>x + 1;</code>有分号，他是一个语句，因此没有返回值。<br>
-与函数签名相冲突了。</p>
-<p>编译器会告诉你，这个函数实际返回<code>()</code>，即unit value。</p>
-<hr>
-<h2 id="Control-Flow"><a class="header-anchor" href="#Control-Flow">¶</a>Control Flow</h2>
-<h3 id="if"><a class="header-anchor" href="#if">¶</a>if</h3>
-<p>if语句的条件<strong>必须是bool</strong>类型。<br>
-不一定需要小括号把条件括起来<br>
-<code>if number != 0 &#123; ... &#125;</code>也是可以的</p>
-<p>如果有多个<code>else if</code>建议使用<code>match</code>分支结构</p>
-<h4 id="let-if"><a class="header-anchor" href="#let-if">¶</a>let if</h4>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> condition = <span class="literal">true</span>;</span><br><span class="line">    <span class="keyword">let</span> number = <span class="keyword">if</span> condition &#123;</span><br><span class="line">        <span class="number">5</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="number">6</span></span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;The value of number is: &#123;&#125;&quot;</span>, number);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>需要注意的是，在<code>let if</code>中，<code>if</code>与<code>else</code>中表达式返回的<strong>类型必须一致</strong>，比如上面返回的都是<code>i32</code>整形，但是如果else中返回了&quot;six&quot;，就会报错。</p>
-<h3 id="循环"><a class="header-anchor" href="#循环">¶</a>循环</h3>
-<h4 id="loop"><a class="header-anchor" href="#loop">¶</a>loop</h4>
-<p>相当于while(1)，用break退出</p>
-<h5 id="循环标签"><a class="header-anchor" href="#循环标签">¶</a>循环标签</h5>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> count = <span class="number">0</span>;</span><br><span class="line">    <span class="symbol">&#x27;counting_up</span>: <span class="keyword">loop</span> &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;count = &#123;&#125;&quot;</span>, count);</span><br><span class="line">        <span class="keyword">let</span> <span class="keyword">mut</span> remaining = <span class="number">10</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">loop</span> &#123;</span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;remaining = &#123;&#125;&quot;</span>, remaining);</span><br><span class="line">            <span class="keyword">if</span> remaining == <span class="number">9</span> &#123;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> count == <span class="number">2</span> &#123;</span><br><span class="line">                <span class="keyword">break</span> <span class="symbol">&#x27;counting_up</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            remaining -= <span class="number">1</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        count += <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;End count = &#123;&#125;&quot;</span>, count);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>输出如下</p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line">$ cargo run</span><br><span class="line">   Compiling loops v0.<span class="number">1.0</span> (file:<span class="comment">///projects/loops)</span></span><br><span class="line">    Finished dev [unoptimized + debuginfo] target(s) <span class="keyword">in</span> <span class="number">0.58</span>s</span><br><span class="line">     Running `target/debug/loops`</span><br><span class="line">count = <span class="number">0</span></span><br><span class="line">remaining = <span class="number">10</span></span><br><span class="line">remaining = <span class="number">9</span></span><br><span class="line">count = <span class="number">1</span></span><br><span class="line">remaining = <span class="number">10</span></span><br><span class="line">remaining = <span class="number">9</span></span><br><span class="line">count = <span class="number">2</span></span><br><span class="line">remaining = <span class="number">10</span></span><br><span class="line">End count = <span class="number">2</span></span><br></pre></td></tr></table></figure>
-<p>可以看到，<code>break 'counting_up</code>语句，将程序从外层循环中跳出</p>
-<h5 id="从循环返回"><a class="header-anchor" href="#从循环返回">¶</a>从循环返回</h5>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> counter = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> result = <span class="keyword">loop</span> &#123;</span><br><span class="line">        counter += <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> counter == <span class="number">10</span> &#123;</span><br><span class="line">            <span class="keyword">break</span> counter * <span class="number">2</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;The result is &#123;&#125;&quot;</span>, result);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>这个写法会让result的值变为20。</p>
-<h4 id="for-while-loop"><a class="header-anchor" href="#for-while-loop">¶</a>for, while loop</h4>
-<p>和大部分程序语言尤其是C++是一样的</p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> a = [<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>, <span class="number">40</span>, <span class="number">50</span>];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> element <span class="keyword">in</span> a.iter() &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;the value is: &#123;&#125;&quot;</span>, element);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>重点是，需要用<code>a.iter()</code>方法</p>
-<p>如果想要<strong>遍历一个范围</strong>我们可以。。。</p>
-<p>在python中我们使用<code>for i in range(1, 10)</code><br>
-在Rust中我们可以使用<code>for i in (1..10)</code></p>
-<hr>
-<p>我们已经掌握了第三章的内容，我们现在去看第四章吧！<br>
-第四章也是Rust很核心的一个内容，即<code>ownership</code>机制，他让Rust无需GC就可以保障内存的安全！</p>
-]]></content>
-      <categories>
-        <category>ProgLang</category>
-      </categories>
-      <tags>
-        <tag>Rust</tag>
       </tags>
   </entry>
 </search>
