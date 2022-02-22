@@ -310,10 +310,56 @@ call <em>swtch()</em> to switch the kernel context to <strong>scheduler’s cont
 <span id="more"></span>
 <h1>6.S081 lec13,14,15 - File System</h1>
 <hr>
-<p>lock lab is quite a torture to me… Took so much time debugging and rewriting the whole scheme of locks…</p>
+<p>lock lab is quite a torture… Took so much time debugging and rewriting the whole scheme.</p>
 <p>Fortunately with the help of online resources, I figure out my problem was forgetting to double check the cache block. Let’s get started!</p>
 <p><strong>HELLO, FILESYSTEM!</strong></p>
 <hr>
+<h2 id="Basics"><a class="header-anchor" href="#Basics">¶</a>Basics</h2>
+<h3 id="File-syscalls"><a class="header-anchor" href="#File-syscalls">¶</a>File syscalls</h3>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">fd = open(<span class="string">&quot;x/y&quot;</span>, _);</span><br><span class="line">write(fd, <span class="string">&quot;abc&quot;</span>, <span class="number">3</span>);</span><br><span class="line">link(<span class="string">&quot;x/y&quot;</span>, <span class="string">&quot;x/z&quot;</span>);</span><br><span class="line">unlink(<span class="string">&quot;x/y&quot;</span>);</span><br></pre></td></tr></table></figure>
+<ul>
+<li>for write, <strong>offset is implicit</strong></li>
+<li>for link, a file might have <strong>multiple names</strong>
+<ul>
+<li>and unlink, namespace for a file can change even when it is opened</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="FS-structure"><a class="header-anchor" href="#FS-structure">¶</a>FS structure</h3>
+<h4 id="Inode"><a class="header-anchor" href="#Inode">¶</a>Inode</h4>
+<ul>
+<li>
+<p><strong>file info, independent of name</strong></p>
+<ul>
+<li>has link count, tracking names</li>
+</ul>
+</li>
+<li>
+<p>Name by <strong>inode #</strong></p>
+</li>
+<li>
+<p>open fd count</p>
+<ul>
+<li>Only <strong>link count and open count are both zero</strong> can it be closed</li>
+</ul>
+</li>
+<li>
+<p>an <strong>offset</strong> maintained</p>
+</li>
+</ul>
+<hr>
+<h3 id="FS-layers"><a class="header-anchor" href="#FS-layers">¶</a>FS layers</h3>
+<img src="6-S081-lec13-14-15-file-system/Screen Shot 2022-02-22 at 2.18.21 PM.png" alt="Screen Shot 2022-02-22 at 2.18.21 PM" style="zoom:50%;" />
+<hr>
+<h3 id="xv6-disk-layout"><a class="header-anchor" href="#xv6-disk-layout">¶</a>xv6 disk layout</h3>
+<p>given the inode#, we can calc which block the inode resides</p>
+<img src="6-S081-lec13-14-15-file-system/Screen Shot 2022-02-22 at 2.27.16 PM.png" alt="Screen Shot 2022-02-22 at 2.27.16 PM" style="zoom:50%;" />
+<hr>
+<h3 id="ondisk-inode"><a class="header-anchor" href="#ondisk-inode">¶</a>ondisk inode</h3>
+<img src="6-S081-lec13-14-15-file-system/Screen Shot 2022-02-22 at 2.34.24 PM.png" alt="Screen Shot 2022-02-22 at 2.34.24 PM" style="zoom:50%;" />
+<hr>
+<h2 id="Crash-safety"><a class="header-anchor" href="#Crash-safety">¶</a>Crash safety</h2>
 ]]></content>
   </entry>
   <entry>
@@ -1689,7 +1735,7 @@ img{
 <li>空元素 - 没有内容的HTML元素， 在开始标签中关闭
 <ul>
 <li>&lt;br /&gt;用于换行</li>
-<li>&lt;hr /&gt;用于创建水平线</li>
+<li>&lt;hr /&gt;用于创建水平线s</li>
 <li>&lt;!-- This is a comment --&gt;</li>
 </ul>
 </li>
@@ -2483,5 +2529,126 @@ so both can use trapframe.</li>
       <tags>
         <tag>6.S081</tag>
       </tags>
+  </entry>
+  <entry>
+    <title>xv6book-chap7-scheduling</title>
+    <url>/2022/02/21/xv6book-chap7-scheduling/</url>
+    <content><![CDATA[<div></div>
+<span id="more"></span>
+<h1>xv6-chap7-Scheduling</h1>
+<hr>
+<p>Processes are freed by their parents by <em>wait()</em></p>
+<ul>
+<li>they cannot free their kernel stack while still using it</li>
+</ul>
+<h2 id="How-xv6-does-it"><a class="header-anchor" href="#How-xv6-does-it">¶</a>How xv6 does it</h2>
+<img src="xv6book-chap7-scheduling/Screen Shot 2022-02-21 at 4.08.21 PM.png" alt="Screen Shot 2022-02-21 at 4.08.21 PM" style="zoom:50%;" />
+<ul>
+<li>
+<p>scheduler thread is <strong>per-CPU</strong></p>
+</li>
+<li>
+<p>CALLING FLOW</p>
+<ul>
+<li>yield() -&gt; sched() -&gt; swtch(), return to <em>scheduler()</em></li>
+<li>swtch() called by scheduler</li>
+<li>trap return to userspace</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="scheduling"><a class="header-anchor" href="#scheduling">¶</a>scheduling</h3>
+<p>Process</p>
+<ul>
+<li>holds <code>p-&gt;lock</code>, no other locks can be held</li>
+<li>update its <code>p-&gt;state</code></li>
+<li>call <code>sched()</code>
+<ul>
+<li>only here the kernel thread gives up a CPU</li>
+</ul>
+</li>
+<li>sched() double checks it, call <code>swtch()</code> to <strong>scheduler thread</strong>
+<ul>
+<li>this returns to scheduler thread, in its loop</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="coroutines"><a class="header-anchor" href="#coroutines">¶</a>coroutines</h3>
+<blockquote>
+<p>Procedures that intentionally transfer control to each other via thread switch are sometimes referred to as <em>coroutines</em>;</p>
+</blockquote>
+<p>In this example, sched and scheduler are <strong>co-routines</strong> of each other.</p>
+<hr>
+<h3 id="How-the-first-process-does-it"><a class="header-anchor" href="#How-the-first-process-does-it">¶</a>How the first process does it</h3>
+<ul>
+<li><em>allocproc()</em> set <em>ra</em> to <em>forkret()</em>
+<ul>
+<li>the first <em>swtch()</em> that process called returns to <em>forkret</em></li>
+</ul>
+</li>
+<li>forkret() calls usertrapret() to returns to userspace</li>
+</ul>
+<hr>
+<h2 id="Sleep-and-Wakeup-in-semaphore"><a class="header-anchor" href="#Sleep-and-Wakeup-in-semaphore">¶</a>Sleep and Wakeup in semaphore</h2>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span></span></span><br><span class="line"><span class="function"><span class="title">V</span><span class="params">(struct semaphore *s)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">   acquire(&amp;s-&gt;lock);</span><br><span class="line">   s-&gt;count += <span class="number">1</span>;</span><br><span class="line">   wakeup(s); <span class="comment">// wakeup the sleeping processes</span></span><br><span class="line">  						<span class="comment">// causing their sleep() to return</span></span><br><span class="line">   release(&amp;s-&gt;lock);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span></span></span><br><span class="line"><span class="function"><span class="title">P</span><span class="params">(struct semaphore *s)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">while</span>(s-&gt;count == <span class="number">0</span>)</span><br><span class="line">		sleep(s); <span class="comment">// gives up the CPU actively</span></span><br><span class="line">  acquire(&amp;s-&gt;lock);</span><br><span class="line">  s-&gt;count -= <span class="number">1</span>;</span><br><span class="line">  release(&amp;s-&gt;lock);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="lost-wakeup-problem"><a class="header-anchor" href="#lost-wakeup-problem">¶</a>lost wakeup problem</h2>
+<p>If process A **finds the s-&gt;count it zero ** and is running between <code>while and sleep</code>, another process B calls wakeup() and increment the s-&gt;count to nonzero</p>
+<p>Process A will be sleeping on a wakeup that <strong>ALREADY HAS HAPPENED</strong>, <strong>EVEN WHEN THE COUNT IS NONZERO</strong></p>
+<p>AN <strong>INCORRECT WAY</strong> would be protecting the sleep in s-&gt;lock</p>
+<ul>
+<li>P holds the lock and sleep</li>
+<li>V can never wakeup P</li>
+</ul>
+<h3 id="SOLUTION-changing-interface-of-sleep"><a class="header-anchor" href="#SOLUTION-changing-interface-of-sleep">¶</a>SOLUTION - changing interface of sleep</h3>
+<p>caller must pass <em>conditional lock to sleep</em>, so</p>
+<p><strong>IT CAN RELEASE THE LOCK AFTER THE CALLING PROCESS IS MARKED SLEEP AND WAITING ON CHAN</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span></span></span><br><span class="line"><span class="function"><span class="title">P</span><span class="params">(struct semaphore *s)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  acquire(&amp;s-&gt;lock);</span><br><span class="line">  <span class="keyword">while</span>(s-&gt;count == <span class="number">0</span>)</span><br><span class="line">     sleep(s, &amp;s-&gt;lock);</span><br><span class="line">  s-&gt;count -= <span class="number">1</span>;</span><br><span class="line">  release(&amp;s-&gt;lock);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>In sleep, the process</p>
+<ul>
+<li>
+<p>first holds <code>p-&gt;lock</code></p>
+</li>
+<li>
+<p>then releases <code>s-&gt;lock</code></p>
+</li>
+<li>
+<p>then calls <code>sched()</code></p>
+</li>
+<li>
+<p>Note that the wakeup() holds <code>p-&gt;lock</code> before actually waking it up</p>
+<ul>
+<li>When never we want to change <code>p's attribute</code> which violates any invariant, hold <code>p-&gt;lock</code></li>
+</ul>
+</li>
+</ul>
+<p>This is how xv6book stated</p>
+<blockquote>
+<p>Holding lk was necessary in the caller (in the example, P):</p>
+<p>it ensured that no other pro- cess (in the example, one running V) could start a call to wakeup(chan).</p>
+<p>Now that sleep holds p-&gt;lock, it is safe to release lk:</p>
+<p>some other process may start a call to wakeup(chan), but wakeup will wait to acquire p-&gt;lock, and thus will wait until sleep has finished putting the process to sleep, keeping the wakeup from missing the sleep.</p>
+</blockquote>
+<h3 id="Why-sleep-is-always-in-a-loop"><a class="header-anchor" href="#Why-sleep-is-always-in-a-loop">¶</a>Why sleep is always in a loop</h3>
+<blockquote>
+<p>for example, more than one process reading from a pipe.</p>
+<p>A single call to wakeup will wake them all up. One of them will run first and acquire the lock that sleep was called with, and (in the case of pipes) read whatever data is waiting in the pipe.</p>
+<p>The other processes will find that, despite being woken up, there is no data to be read.</p>
+<p>From their point of view the wakeup was “spurious,” and they must sleep again.</p>
+<p>For this reason sleep is always called inside a loop that checks the condition.</p>
+</blockquote>
+<hr>
+<h2 id="xv6’s-process-lock"><a class="header-anchor" href="#xv6’s-process-lock">¶</a>xv6’s process lock</h2>
+<blockquote>
+<p>p-&gt;lock is that it must be held while reading or writing any of the following struct procfields:p-&gt;state,p-&gt;chan,p-&gt;killed,p-&gt;xstate,and p-&gt;pid.</p>
+</blockquote>
+<p><strong>These fields can be used by other processes, or by scheduler threads on other cores, so it’s natural that they must be protected by a lock.</strong></p>
+<p>The reason why the lock is held is clear:</p>
+<ul>
+<li><strong>some fields might be used or modified by other processes</strong></li>
+</ul>
+<p>All invariants are listed in xv6 book, page 81-82</p>
+<hr>
+]]></content>
   </entry>
 </search>
