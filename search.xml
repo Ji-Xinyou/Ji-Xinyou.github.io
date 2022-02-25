@@ -363,131 +363,6 @@ call <em>swtch()</em> to switch the kernel context to <strong>scheduler’s cont
 ]]></content>
   </entry>
   <entry>
-    <title>6.S081 lec5: RISCV-calling conventions</title>
-    <url>/2022/01/27/6-S081-lec5-RISCV-calling-conventions/</url>
-    <content><![CDATA[<style>
-img{
-    width: 70%;
-}
-</style>
-<span id="more"></span>
-<h1>6.S081 lec5: RISCV calling conventions</h1>
-<hr>
-<h2 id="Caller-Saved-and-Callee-Saved"><a class="header-anchor" href="#Caller-Saved-and-Callee-Saved">¶</a>Caller Saved and Callee Saved</h2>
-<p>Registers are categorized as <strong>caller saved</strong> and <strong>callee saved</strong>. The difference between them is very important.</p>
-<img src="/2022/01/27/6-S081-lec5-RISCV-calling-conventions/regs.png" class="" title="regs">
-<ul>
-<li><strong>Caller Saved</strong> registers are <strong>not</strong> reserved across function calls.</li>
-<li><strong>Callee Saved</strong> registers are reserved across function calls. The caller has to find someway to save those registers.</li>
-</ul>
-<p>The convention also states, the <strong>return value</strong> is in a0 and a1, and <strong>arguments</strong> of the function is in a0-a7.</p>
-<ul>
-<li>If more arguments are given, they should reside on stack.</li>
-</ul>
-<hr>
-<h2 id="the-Stack"><a class="header-anchor" href="#the-Stack">¶</a>the Stack</h2>
-<ul>
-<li>The stack is created by function call! <strong>Each function call creates a stack frame for itself to use.</strong></li>
-<li>The stack starts from high address, growes down to low address. To make a new stack frame, decrement sp register.</li>
-<li>The stack size is <strong>not fixed</strong>, pay attention to the layout.
-<ul>
-<li>The return address is always at the first word
-<ul>
-<li>
-<pre><code class="language-asm">  addi sp, sp, 16 # alloc stack frame
-  sd ra, 0(sp)    # store the return address
-  ...
-  ld ra, 0(sp)    # recover the return address
-  addi sp, sp, 16 # delete the stack frame
-</code></pre>
-<ul>
-<li>This also shows that why $ra is a <strong>callee saved</strong> register.</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>The Prev. Frame address is always next to return address, to control frame callback.</li>
-</ul>
-</li>
-</ul>
-<p><img src="6-S081-lec5-RISCV-calling-conventions.assets/stack.png" alt="stack"></p>
-<hr>
-<h2 id="GDB-commands"><a class="header-anchor" href="#GDB-commands">¶</a>GDB commands</h2>
-<ul>
-<li>
-<p><strong>To open the gdb mode of xv6</strong></p>
-<ul>
-<li>In one window type <strong>make qemu-gdb</strong> to start the gdb server</li>
-<li>In another window type <strong>riscv-unknown-elf-gdb</strong> to connect to the previous gdb server and start debugging!<br>
-<br/></li>
-</ul>
-</li>
-<li>
-<p><strong>layout split/asm/reg/src</strong></p>
-<ul>
-<li>-&gt; show the layout of (asm &amp; src)/asm/reg/ src</li>
-<li><strong>focus reg/asm</strong>…
-<ul>
-<li>-&gt; change the focus among windows<br>
-<br/></li>
-</ul>
-</li>
-</ul>
-</li>
-<li>
-<p><strong>info</strong></p>
-<ul>
-<li><strong>info breakpoints</strong>
-<ul>
-<li>-&gt; check the number of bp</li>
-</ul>
-</li>
-<li><strong>info frame</strong>
-<ul>
-<li>-&gt; check the info of current stack frame (frame 0)</li>
-<li><strong>backtrace (bt)</strong>
-<ul>
-<li>frame x -&gt; info frame
-<ul>
-<li>-&gt; change current frame to <strong>x</strong> and print the info<br>
-<br/></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>
-<p><strong>tui enable</strong></p>
-<ul>
-<li>show the tui<br>
-<br/></li>
-</ul>
-</li>
-<li>
-<p><strong>breakpoint/watchpoint &lt;tag&gt;</strong></p>
-<ul>
-<li><strong>delete &lt;bp_nr&gt;</strong></li>
-<li>info breakpoints/watchpoints<br>
-<br/></li>
-</ul>
-</li>
-<li>
-<p><strong>s &amp; si</strong> (step instruction)</p>
-</li>
-</ul>
-<hr>
-]]></content>
-      <categories>
-        <category>O/S</category>
-      </categories>
-      <tags>
-        <tag>6.S081</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>6.S081 lec6: Traps</title>
     <url>/2022/01/29/6-S081-lec6-Traps/</url>
     <content><![CDATA[<style>
@@ -737,6 +612,131 @@ Why the next instuction is correctly executed instead of some garbage being run.
 <p>I think this is because, when we enter the trampoline page, we are still in user’s va space. However, we need to save the user’s registers. <strong>Given the context that, first we are using user’s mapping, and second we gotta save the registers</strong>, we need some space mapped in user process’ pgtbl to save them. And this is the TRAPFRAME page.</p>
 </li>
 </ol>
+<hr>
+]]></content>
+      <categories>
+        <category>O/S</category>
+      </categories>
+      <tags>
+        <tag>6.S081</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>6.S081 lec5: RISCV-calling conventions</title>
+    <url>/2022/01/27/6-S081-lec5-RISCV-calling-conventions/</url>
+    <content><![CDATA[<style>
+img{
+    width: 70%;
+}
+</style>
+<span id="more"></span>
+<h1>6.S081 lec5: RISCV calling conventions</h1>
+<hr>
+<h2 id="Caller-Saved-and-Callee-Saved"><a class="header-anchor" href="#Caller-Saved-and-Callee-Saved">¶</a>Caller Saved and Callee Saved</h2>
+<p>Registers are categorized as <strong>caller saved</strong> and <strong>callee saved</strong>. The difference between them is very important.</p>
+<img src="/2022/01/27/6-S081-lec5-RISCV-calling-conventions/regs.png" class="" title="regs">
+<ul>
+<li><strong>Caller Saved</strong> registers are <strong>not</strong> reserved across function calls.</li>
+<li><strong>Callee Saved</strong> registers are reserved across function calls. The caller has to find someway to save those registers.</li>
+</ul>
+<p>The convention also states, the <strong>return value</strong> is in a0 and a1, and <strong>arguments</strong> of the function is in a0-a7.</p>
+<ul>
+<li>If more arguments are given, they should reside on stack.</li>
+</ul>
+<hr>
+<h2 id="the-Stack"><a class="header-anchor" href="#the-Stack">¶</a>the Stack</h2>
+<ul>
+<li>The stack is created by function call! <strong>Each function call creates a stack frame for itself to use.</strong></li>
+<li>The stack starts from high address, growes down to low address. To make a new stack frame, decrement sp register.</li>
+<li>The stack size is <strong>not fixed</strong>, pay attention to the layout.
+<ul>
+<li>The return address is always at the first word
+<ul>
+<li>
+<pre><code class="language-asm">  addi sp, sp, 16 # alloc stack frame
+  sd ra, 0(sp)    # store the return address
+  ...
+  ld ra, 0(sp)    # recover the return address
+  addi sp, sp, 16 # delete the stack frame
+</code></pre>
+<ul>
+<li>This also shows that why $ra is a <strong>callee saved</strong> register.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>The Prev. Frame address is always next to return address, to control frame callback.</li>
+</ul>
+</li>
+</ul>
+<p><img src="6-S081-lec5-RISCV-calling-conventions.assets/stack.png" alt="stack"></p>
+<hr>
+<h2 id="GDB-commands"><a class="header-anchor" href="#GDB-commands">¶</a>GDB commands</h2>
+<ul>
+<li>
+<p><strong>To open the gdb mode of xv6</strong></p>
+<ul>
+<li>In one window type <strong>make qemu-gdb</strong> to start the gdb server</li>
+<li>In another window type <strong>riscv-unknown-elf-gdb</strong> to connect to the previous gdb server and start debugging!<br>
+<br/></li>
+</ul>
+</li>
+<li>
+<p><strong>layout split/asm/reg/src</strong></p>
+<ul>
+<li>-&gt; show the layout of (asm &amp; src)/asm/reg/ src</li>
+<li><strong>focus reg/asm</strong>…
+<ul>
+<li>-&gt; change the focus among windows<br>
+<br/></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>info</strong></p>
+<ul>
+<li><strong>info breakpoints</strong>
+<ul>
+<li>-&gt; check the number of bp</li>
+</ul>
+</li>
+<li><strong>info frame</strong>
+<ul>
+<li>-&gt; check the info of current stack frame (frame 0)</li>
+<li><strong>backtrace (bt)</strong>
+<ul>
+<li>frame x -&gt; info frame
+<ul>
+<li>-&gt; change current frame to <strong>x</strong> and print the info<br>
+<br/></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>tui enable</strong></p>
+<ul>
+<li>show the tui<br>
+<br/></li>
+</ul>
+</li>
+<li>
+<p><strong>breakpoint/watchpoint &lt;tag&gt;</strong></p>
+<ul>
+<li><strong>delete &lt;bp_nr&gt;</strong></li>
+<li>info breakpoints/watchpoints<br>
+<br/></li>
+</ul>
+</li>
+<li>
+<p><strong>s &amp; si</strong> (step instruction)</p>
+</li>
+</ul>
 <hr>
 ]]></content>
       <categories>
@@ -1236,6 +1236,209 @@ Consumers: <em>getc()</em></p>
       </tags>
   </entry>
   <entry>
+    <title>Rust(course.rs)-generic&amp;trait</title>
+    <url>/2022/02/14/Rust-course-rs-generic-trait/</url>
+    <content><![CDATA[<div></div>
+<span id="more"></span>
+<h1>Generic and Trait</h1>
+<hr>
+<h2 id="Generic"><a class="header-anchor" href="#Generic">¶</a>Generic</h2>
+<p>下面这段代码<strong>无法编译</strong></p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">largest</span></span>&lt;T&gt;(list: &amp;[T]) -&gt; T &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> largest = list[<span class="number">0</span>];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> &amp;item <span class="keyword">in</span> list.iter() &#123;</span><br><span class="line">        <span class="keyword">if</span> item &gt; largest &#123;</span><br><span class="line">            largest = item;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    largest</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> number_list = <span class="built_in">vec!</span>[<span class="number">34</span>, <span class="number">50</span>, <span class="number">25</span>, <span class="number">100</span>, <span class="number">65</span>];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> result = largest(&amp;number_list);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;The largest number is &#123;&#125;&quot;</span>, result);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> char_list = <span class="built_in">vec!</span>[<span class="string">&#x27;y&#x27;</span>, <span class="string">&#x27;m&#x27;</span>, <span class="string">&#x27;a&#x27;</span>, <span class="string">&#x27;q&#x27;</span>];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> result = largest(&amp;char_list);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;The largest char is &#123;&#125;&quot;</span>, result);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>报错的原因是</p>
+<ul>
+<li>不是所有类型都可以进行<code>&gt;</code>的比较
+<ul>
+<li>因此我们需要给<code>T</code>天界一个类型限制 -&gt; trait</li>
+<li>我们使用<code>std::cmp::PartialOrd</code>Trait进行限制</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">add</span></span>&lt;T: std::ops::Add&lt;Output = T&gt;&gt;(a:T, b:T) -&gt; T &#123;</span><br><span class="line">    a + b</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<h3 id="Generic-in-methods"><a class="header-anchor" href="#Generic-in-methods">¶</a>Generic in methods</h3>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Point</span></span>&lt;T, U&gt; &#123;</span><br><span class="line">    x: T,</span><br><span class="line">    y: U,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T, U&gt; Point&lt;T, U&gt; &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">mixup</span></span>&lt;V, W&gt;(<span class="keyword">self</span>, other: Point&lt;V, W&gt;) -&gt; Point&lt;T, W&gt; &#123;</span><br><span class="line">        Point &#123;</span><br><span class="line">            x: <span class="keyword">self</span>.x,</span><br><span class="line">            y: other.y,</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> p1 = Point &#123; x: <span class="number">5</span>, y: <span class="number">10.4</span> &#125;;</span><br><span class="line">    <span class="keyword">let</span> p2 = Point &#123; x: <span class="string">&quot;Hello&quot;</span>, y: <span class="string">&#x27;c&#x27;</span>&#125;;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> p3 = p1.mixup(p2);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;p3.x = &#123;&#125;, p3.y = &#123;&#125;&quot;</span>, p3.x, p3.y);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<h3 id="Generic-in-const"><a class="header-anchor" href="#Generic-in-const">¶</a>Generic in const</h3>
+<p><code>[i32; 2], [i32; 3]</code>是两种类型，我们可以用泛型打印所有的数组元素</p>
+<p>通过<strong>引用</strong>，我们可以实现</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">display_array</span></span>&lt;T: std::fmt::<span class="built_in">Debug</span>&gt;(arr: &amp;[T]) &#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, arr);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> arr: [<span class="built_in">i32</span>; <span class="number">3</span>] = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];</span><br><span class="line">    display_array(&amp;arr);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> arr: [<span class="built_in">i32</span>;<span class="number">2</span>] = [<span class="number">1</span>,<span class="number">2</span>];</span><br><span class="line">    display_array(&amp;arr);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>需要注意的是，我们需要对类型<code>T</code>添加限制，因为我们需要他支持Debug输出<code>&#123;:?&#125;</code></li>
+</ul>
+<p><strong>有时候，引用是不合适的</strong>，对于任意的长度，我们可以使用const泛型</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">display_array</span></span>&lt;T: std::fmt::<span class="built_in">Debug</span>, <span class="keyword">const</span> N: <span class="built_in">usize</span>&gt;(arr: [T; N]) &#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, arr);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> arr: [<span class="built_in">i32</span>; <span class="number">3</span>] = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];</span><br><span class="line">    display_array(arr);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> arr: [<span class="built_in">i32</span>; <span class="number">2</span>] = [<span class="number">1</span>, <span class="number">2</span>];</span><br><span class="line">    display_array(arr);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<h2 id="Trait"><a class="header-anchor" href="#Trait">¶</a>Trait</h2>
+<p>如果不同类型有相同行为，我们可以为他定义一个trait</p>
+<ul>
+<li>把一些方法组合在一起，实现某些目标必需的行为的集合</li>
+</ul>
+<p>Trait只定义一个行为<strong>看起来是什么样的</strong>，而不具体定义行为是什么样的</p>
+<ul>
+<li>因此我们只指定特征方法的签名</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">trait</span> <span class="title">Summary</span></span> &#123;</span><br><span class="line">  <span class="function"><span class="keyword">fn</span> <span class="title">summarize</span></span>(&amp;<span class="keyword">self</span>) -&gt; <span class="built_in">String</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="孤儿规则"><a class="header-anchor" href="#孤儿规则">¶</a>孤儿规则</h3>
+<blockquote>
+<p><strong>如果你想要为类型 <code>A</code> 实现特征 <code>T</code>，那么 <code>A</code> 或者 <code>T</code> 至少有一个是在当前作用域中定义的!</strong></p>
+</blockquote>
+<p>因此你没有办法为<code>String</code>实现<code>Display</code>，这保证了其他人编写的代码不会破坏你的代码</p>
+<p>下面的代码没有办法编译，因为我们没有在<code>std::fmt</code>中实现Display，由于孤儿规则，这是不被允许的，那我们该怎么跳过他呢，我们有时候就是需要这样！</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">use</span> std::fmt;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span> fmt::Display <span class="keyword">for</span> Point &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">fmt</span></span>(&amp;<span class="keyword">self</span>, f: &amp;<span class="keyword">mut</span> fmt::Formatter) -&gt; fmt::<span class="built_in">Result</span> &#123;</span><br><span class="line">        <span class="built_in">write!</span>(f, <span class="string">&quot;(&#123;&#125;, &#123;&#125;)&quot;</span>, <span class="keyword">self</span>.x, <span class="keyword">self</span>.y)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们可以使用<code>newtype</code>，具体做法如下</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">use</span> std::fmt;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Wrapper</span></span>(<span class="built_in">Vec</span>&lt;<span class="built_in">String</span>&gt;);</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span> fmt::Display <span class="keyword">for</span> Wrapper &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">fmt</span></span>(&amp;<span class="keyword">self</span>, f: &amp;<span class="keyword">mut</span> fmt::Formatter) -&gt; fmt::<span class="built_in">Result</span> &#123;</span><br><span class="line">        <span class="built_in">write!</span>(f, <span class="string">&quot;[&#123;&#125;]&quot;</span>, <span class="keyword">self</span>.<span class="number">0</span>.join(<span class="string">&quot;, &quot;</span>))</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> w = Wrapper(<span class="built_in">vec!</span>[<span class="built_in">String</span>::from(<span class="string">&quot;hello&quot;</span>), <span class="built_in">String</span>::from(<span class="string">&quot;world&quot;</span>)]);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;w = &#123;&#125;&quot;</span>, w);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这个不好的地方在于，我们需要从<code>Wrapper</code>中取出<code>vec&lt;string&gt;</code>，类似所有的数组方法都需要使用<code>self.0</code>来调用数组</p>
+<p>那用什么解决方法解决这个<code>self.0</code>的问题呢，Rust有一个Trait叫做<code>Deref</code>，实现之后可以自动做类型转换的操作，像数组一样使用<code>newtype</code></p>
+<p>// TODO: deref trait</p>
+<h3 id="默认实现"><a class="header-anchor" href="#默认实现">¶</a>默认实现</h3>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">trait</span> <span class="title">Summary</span></span> &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">summarize</span></span>(&amp;<span class="keyword">self</span>) -&gt; <span class="built_in">String</span> &#123;</span><br><span class="line">        <span class="built_in">String</span>::from(<span class="string">&quot;(Read more...)&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>默认实现可以调用相同trait里面的其他方法，这个方法被对应的struct实现了就可以了，而不一定要在trait里有默认实现</p>
+<h2 id="Trait-作为函数参数"><a class="header-anchor" href="#Trait-作为函数参数">¶</a>Trait 作为函数参数</h2>
+<p>trait牛逼的地方之一</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="function"><span class="keyword">fn</span> <span class="title">notify</span></span>(item: &amp;<span class="keyword">impl</span> Summary) &#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;Breaking news! &#123;&#125;&quot;</span>, item.summarize());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>什么叫做<code>item: &amp;impl Summary</code></p>
+<blockquote>
+<p>它的意思是 <code>实现了Summary特征</code> 的 <code>item</code> 参数</p>
+</blockquote>
+<p>如果没有实现Summary trait，不能作为参数</p>
+<h3 id="trait还可作为返回值"><a class="header-anchor" href="#trait还可作为返回值">¶</a>trait还可作为返回值</h3>
+<p>返回值是一个<code>实现了Summary Trait</code>的类</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">returns_summarizable</span></span>() -&gt; <span class="keyword">impl</span> Summary &#123;</span><br><span class="line">    Weibo &#123;</span><br><span class="line">        username: <span class="built_in">String</span>::from(<span class="string">&quot;sunface&quot;</span>),</span><br><span class="line">        content: <span class="built_in">String</span>::from(</span><br><span class="line">            <span class="string">&quot;m1 max太厉害了，电脑再也不会卡&quot;</span>,</span><br><span class="line">        )</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>但是，这种返回值只能有一个具体的类型</p>
+<p>具体如下</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">returns_summarizable</span></span>(switch: <span class="built_in">bool</span>) -&gt; <span class="keyword">impl</span> Summary &#123;</span><br><span class="line">    <span class="keyword">if</span> switch &#123;</span><br><span class="line">        Post &#123;</span><br><span class="line">            title: <span class="built_in">String</span>::from(</span><br><span class="line">                <span class="string">&quot;Penguins win the Stanley Cup Championship!&quot;</span>,</span><br><span class="line">            ),</span><br><span class="line">            author: <span class="built_in">String</span>::from(<span class="string">&quot;Iceburgh&quot;</span>),</span><br><span class="line">            content: <span class="built_in">String</span>::from(</span><br><span class="line">                <span class="string">&quot;The Pittsburgh Penguins once again are the best \</span></span><br><span class="line"><span class="string">                 hockey team in the NHL.&quot;</span>,</span><br><span class="line">            ),</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        Weibo &#123;</span><br><span class="line">            username: <span class="built_in">String</span>::from(<span class="string">&quot;horse_ebooks&quot;</span>),</span><br><span class="line">            content: <span class="built_in">String</span>::from(</span><br><span class="line">                <span class="string">&quot;of course, as you probably already know, people&quot;</span>,</span><br><span class="line">            ),</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这段代码无法通过，因为一个branch返回了<code>Post</code>另一个返回了<code>Weibo</code></p>
+<p>如果需要返回不同的类型，需要使用<code>特征对象</code> - <code>trait object</code></p>
+<h2 id="特征对象"><a class="header-anchor" href="#特征对象">¶</a>特征对象</h2>
+<p>可以通过 <code>&amp;</code> 引用或者 <code>Box&lt;T&gt;</code> 智能指针的方式来创建特征对象:</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">trait</span> <span class="title">Draw</span></span> &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">draw</span></span>(&amp;<span class="keyword">self</span>) -&gt; <span class="built_in">String</span>; </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span> Draw <span class="keyword">for</span> <span class="built_in">u8</span> &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">draw</span></span>(&amp;<span class="keyword">self</span>) -&gt; <span class="built_in">String</span> &#123;</span><br><span class="line">        <span class="built_in">format!</span>(<span class="string">&quot;u8: &#123;&#125;&quot;</span>, *<span class="keyword">self</span>) </span><br><span class="line">    &#125; </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span> Draw <span class="keyword">for</span> <span class="built_in">f64</span> &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">draw</span></span>(&amp;<span class="keyword">self</span>) -&gt; <span class="built_in">String</span> &#123;</span><br><span class="line">        <span class="built_in">format!</span>(<span class="string">&quot;f64: &#123;&#125;&quot;</span>, *<span class="keyword">self</span>) </span><br><span class="line">    &#125; </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">draw1</span></span>(x: <span class="built_in">Box</span>&lt;<span class="keyword">dyn</span> Draw&gt;) &#123;</span><br><span class="line">    x.draw();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">draw2</span></span>(x: &amp;<span class="keyword">dyn</span> Draw) &#123;</span><br><span class="line">    x.draw();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> x = <span class="number">1.1f64</span>;</span><br><span class="line">    <span class="comment">// do_something(&amp;x);</span></span><br><span class="line">    <span class="keyword">let</span> y = <span class="number">8u8</span>;</span><br><span class="line"></span><br><span class="line">    draw1(<span class="built_in">Box</span>::new(x));</span><br><span class="line">    draw1(<span class="built_in">Box</span>::new(y));</span><br><span class="line">    draw2(&amp;x);</span><br><span class="line">    draw2(&amp;y);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>&amp;dyn traitname</code>或者<code>Box&lt;dyn Draw&gt;</code>表达的是实现了<code>Draw Trait</code>的对象</li>
+</ul>
+<p>也许你会想，和泛型有什么不同呢？为什么不用泛型呢</p>
+<p>我们来看看泛型和特征对象代码的区别</p>
+<ul>
+<li><strong>特征对象</strong>对于screen类的定义</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">Screen</span></span> &#123;</span><br><span class="line">    <span class="keyword">pub</span> components: <span class="built_in">Vec</span>&lt;<span class="built_in">Box</span>&lt;<span class="keyword">dyn</span> Draw&gt;&gt;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span> Screen &#123;</span><br><span class="line">    <span class="keyword">pub</span> <span class="function"><span class="keyword">fn</span> <span class="title">run</span></span>(&amp;<span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="keyword">for</span> component <span class="keyword">in</span> <span class="keyword">self</span>.components.iter() &#123;</span><br><span class="line">            component.draw();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><strong>泛型</strong></li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">Screen</span></span>&lt;T: Draw&gt; &#123;</span><br><span class="line">    <span class="keyword">pub</span> components: <span class="built_in">Vec</span>&lt;T&gt;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T&gt; Screen&lt;T&gt;</span><br><span class="line">    <span class="keyword">where</span> T: Draw &#123;</span><br><span class="line">    <span class="keyword">pub</span> <span class="function"><span class="keyword">fn</span> <span class="title">run</span></span>(&amp;<span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="keyword">for</span> component <span class="keyword">in</span> <span class="keyword">self</span>.components.iter() &#123;</span><br><span class="line">            component.draw();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们可以看出来，对于第二种来说，<code>components: Vec&lt;T&gt;</code>限制了所有的component必须是<strong>同一类型</strong>，这是不灵活的，但是开销更低</p>
+<hr>
+<h2 id="Trait-Bound"><a class="header-anchor" href="#Trait-Bound">¶</a>Trait Bound</h2>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="function"><span class="keyword">fn</span> <span class="title">notify</span></span>(item1: &amp;<span class="keyword">impl</span> Summary, item2: &amp;<span class="keyword">impl</span> Summary) &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="function"><span class="keyword">fn</span> <span class="title">notify</span></span>&lt;T: Summary&gt;(item1: &amp;T, item2: &amp;T) &#123;&#125;</span><br></pre></td></tr></table></figure>
+<p>第一个语法只能保证两个参数都实现了Summary Trait</p>
+<p>第二个可以保证他们是同一个类型</p>
+<h3 id="multiple-bound"><a class="header-anchor" href="#multiple-bound">¶</a>multiple bound</h3>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="function"><span class="keyword">fn</span> <span class="title">notify</span></span>(item: &amp;(<span class="keyword">impl</span> Summary + Display)) &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="function"><span class="keyword">fn</span> <span class="title">notify</span></span>&lt;T: Summary + Display&gt;(item: &amp;T) &#123;&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="where-bound"><a class="header-anchor" href="#where-bound">¶</a>where bound</h3>
+<p>有时候，函数签名会变得很复杂</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">some_function</span></span>&lt;T: Display + <span class="built_in">Clone</span>, U: <span class="built_in">Clone</span> + <span class="built_in">Debug</span>&gt;(t: &amp;T, u: &amp;U) -&gt; <span class="built_in">i32</span></span><br></pre></td></tr></table></figure>
+<p>我们用<strong>where</strong>可以简化</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">some_function</span></span>&lt;T, U&gt;(t: &amp;T, u: &amp;U) -&gt; <span class="built_in">i32</span></span><br><span class="line">    <span class="keyword">where</span> T: Display + <span class="built_in">Clone</span>,</span><br><span class="line">          U: <span class="built_in">Clone</span> + <span class="built_in">Debug</span></span><br><span class="line">&#123;&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="用Trait-约束-Trait"><a class="header-anchor" href="#用Trait-约束-Trait">¶</a>用Trait 约束 Trait</h3>
+<p>在下面的代码我们可以看到，如果我们要实现<code>OutlinkPrint</code> 这个Trait，我们必须先实现<code>Display</code>这个Trait</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">use</span> std::fmt::Display;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">trait</span> <span class="title">OutlinePrint</span></span>: Display &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">outline_print</span></span>(&amp;<span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="keyword">let</span> output = <span class="keyword">self</span>.to_string();</span><br><span class="line">        <span class="keyword">let</span> len = output.len();</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;&quot;</span>, <span class="string">&quot;*&quot;</span>.repeat(len + <span class="number">4</span>));</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;*&#123;&#125;*&quot;</span>, <span class="string">&quot; &quot;</span>.repeat(len + <span class="number">2</span>));</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;* &#123;&#125; *&quot;</span>, output);</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;*&#123;&#125;*&quot;</span>, <span class="string">&quot; &quot;</span>.repeat(len + <span class="number">2</span>));</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;&quot;</span>, <span class="string">&quot;*&quot;</span>.repeat(len + <span class="number">4</span>));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="使用derive来派生Trait"><a class="header-anchor" href="#使用derive来派生Trait">¶</a>使用derive来派生Trait</h3>
+<p>#[derive(Debug, Copy …)]</p>
+<hr>
+<h2 id="调用不同trait的同名函数"><a class="header-anchor" href="#调用不同trait的同名函数">¶</a>调用不同trait的同名函数</h2>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">trait</span> <span class="title">Pilot</span></span> &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">fly</span></span>(&amp;<span class="keyword">self</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">trait</span> <span class="title">Wizard</span></span> &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">fly</span></span>(&amp;<span class="keyword">self</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Human</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span> Pilot <span class="keyword">for</span> Human &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">fly</span></span>(&amp;<span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;This is your captain speaking.&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span> Wizard <span class="keyword">for</span> Human &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">fly</span></span>(&amp;<span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;Up!&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span> Human &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">fly</span></span>(&amp;<span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;*waving arms furiously*&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol>
+<li>
+<p>默认调用Human::fly()</p>
+</li>
+<li>
+<p>如果需要调用Pilot::fly()或者Wizard::fly</p>
+<ol>
+<li>
+<pre><code class="language-rust">fn main() &#123;
+    let person = Human;
+    Pilot::fly(&amp;person); // 调用Pilot特征上的方法
+    Wizard::fly(&amp;person); // 调用Wizard特征上的方法
+    person.fly(); // 调用Human类型自身的方法
+&#125;
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">**那如果没有self参数呢？**</span><br><span class="line"></span><br><span class="line">```rust</span><br><span class="line">trait Animal &#123;</span><br><span class="line">    fn baby_name() -&gt; String;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">struct Dog;</span><br><span class="line"></span><br><span class="line">impl Dog &#123;</span><br><span class="line">    fn baby_name() -&gt; String &#123;</span><br><span class="line">        String::from(&quot;Spot&quot;)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">impl Animal for Dog &#123;</span><br><span class="line">    fn baby_name() -&gt; String &#123;</span><br><span class="line">        String::from(&quot;puppy&quot;)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">fn main() &#123;</span><br><span class="line">    println!(&quot;A baby dog is called a &#123;&#125;&quot;, Dog::baby_name());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+</code></pre>
+</li>
+</ol>
+</li>
+</ol>
+<p>如果我们调用</p>
+<p><code>Animal::baby_name()</code>，时会报错的，因为<strong>有很多struct可能实现了<code>Animal Trait</code></strong></p>
+<p>我们需要用<strong>完全限定语法</strong></p>
+<p><code>&lt;Dog as Animal&gt;::baby_name();</code></p>
+<p>完全限定语法的形式为</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line">&lt;Type <span class="keyword">as</span> Trait&gt;::function(receiver_if_method, next_arg, ...);</span><br></pre></td></tr></table></figure>
+<p><code>receiver_if_method</code>就是三种<code>self</code>, 如果function是关联函数就没有这一项</p>
+]]></content>
+      <categories>
+        <category>ProgLang</category>
+      </categories>
+      <tags>
+        <tag>Rust</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Rust(course.rs)-集合类型</title>
+    <url>/2022/02/24/Rust-course-rs-%E9%9B%86%E5%90%88%E7%B1%BB%E5%9E%8B/</url>
+    <content><![CDATA[<div></div>
+<span id="more"></span>
+<h1>集合类型</h1>
+<p>主要关于<code>Vector</code>和<code>Hashmap</code></p>
+<hr>
+<h2 id="Vector"><a class="header-anchor" href="#Vector">¶</a>Vector</h2>
+<h3 id="Vec-new"><a class="header-anchor" href="#Vec-new">¶</a>Vec::new()</h3>
+<p>rust编译器可以根据操作推测类型</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> v: <span class="built_in">Vec</span>&lt;<span class="built_in">i32</span>&gt;: <span class="built_in">Vec</span>::new()</span><br><span class="line"></span><br><span class="line">or...</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> <span class="keyword">mut</span> v = <span class="built_in">Vec</span>::new()</span><br><span class="line">v.push(<span class="number">1</span>)</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>如果预先知道要存储的元素个数，可以使用 <code>Vec::with_capacity(capacity)</code> 创建动态数组，这样可以避免因为插入大量新数据导致频繁的内存分配和拷贝，提升性能</p>
+</blockquote>
+<h3 id="vec"><a class="header-anchor" href="#vec">¶</a>vec![];</h3>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> v = <span class="built_in">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];</span><br></pre></td></tr></table></figure>
+<ul>
+<li>Vector和他的元素的作用域一致
+<ul>
+<li>Vector被删除后，内容也会被删除
+<ul>
+<li>如果内部有元素被引用之后，会比较复杂</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="index"><a class="header-anchor" href="#index">¶</a>index</h3>
+<p>有<code>索引</code>或者<code>vec.get()</code>的方式，需要注意的是<code>vec.get()</code>返回的是<code>Option&lt;&amp;T&gt;</code></p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> v = <span class="built_in">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>];</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> third: &amp;<span class="built_in">i32</span> = &amp;v[<span class="number">2</span>];</span><br><span class="line"><span class="built_in">println!</span>(<span class="string">&quot;第三个元素是 &#123;&#125;&quot;</span>, third);</span><br><span class="line"></span><br><span class="line"><span class="keyword">match</span> v.get(<span class="number">2</span>) &#123;</span><br><span class="line">    <span class="literal">Some</span>(third) =&gt; <span class="built_in">println!</span>(<span class="string">&quot;第三个元素是 &#123;&#125;&quot;</span>, third),</span><br><span class="line">    <span class="literal">None</span> =&gt; <span class="built_in">println!</span>(<span class="string">&quot;去你的第三个元素，根本没有！&quot;</span>),</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="tricky-point"><a class="header-anchor" href="#tricky-point">¶</a>tricky point</h4>
+<p>下面这段代码无法编译，为什么呢？</p>
+<p>原因是，虽然看似<code>不可变引用</code>以及<code>push</code>不相干，但是如果vec的大小不够用的时候，<strong>vec会开辟一个新的空间，然后把内存拷贝过去！</strong></p>
+<p><strong>这样的话原本的不可变引用就指向了一块无效内存！！！！</strong></p>
+<p>How amazing!</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="meta">#![allow(unused)]</span></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line"><span class="keyword">let</span> <span class="keyword">mut</span> v = <span class="built_in">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>];</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> first = &amp;v[<span class="number">0</span>];</span><br><span class="line"></span><br><span class="line">v.push(<span class="number">6</span>);</span><br><span class="line"></span><br><span class="line"><span class="built_in">println!</span>(<span class="string">&quot;The first element is: &#123;&#125;&quot;</span>, first);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="iterate"><a class="header-anchor" href="#iterate">¶</a>iterate</h3>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> <span class="keyword">mut</span> v = <span class="built_in">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];</span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> &amp;<span class="keyword">mut</span> v &#123;</span><br><span class="line">    *i += <span class="number">10</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="存不同类型的变量"><a class="header-anchor" href="#存不同类型的变量">¶</a>存不同类型的变量</h3>
+<p>有两种方式存储不同类型的变量</p>
+<ul>
+<li>enum</li>
+<li>Trait对象 (&amp;dyn trait)</li>
+</ul>
+<h4 id="enum"><a class="header-anchor" href="#enum">¶</a>enum</h4>
+<p>优点是简单，缺点是无法动态增加类型，且限制较多</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="meta">#[derive(Debug)]</span></span><br><span class="line"><span class="class"><span class="keyword">enum</span> <span class="title">IpAddr</span></span> &#123;</span><br><span class="line">    V4(<span class="built_in">String</span>),</span><br><span class="line">    V6(<span class="built_in">String</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">show_addr</span></span>(ip: IpAddr) &#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>,ip);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> v = <span class="built_in">vec!</span>[</span><br><span class="line">        IpAddr::V4(<span class="string">&quot;127.0.0.1&quot;</span>.to_string()),</span><br><span class="line">        IpAddr::V6(<span class="string">&quot;::1&quot;</span>.to_string())</span><br><span class="line">    ];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> ip <span class="keyword">in</span> v &#123;</span><br><span class="line">        show_addr(ip)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="trait-object"><a class="header-anchor" href="#trait-object">¶</a>trait object</h4>
+<p>比较常用，灵活，但比较复杂</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">trait</span> <span class="title">IpAddr</span></span> &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">display</span></span>(&amp;<span class="keyword">self</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">V4</span></span>(<span class="built_in">String</span>);</span><br><span class="line"><span class="keyword">impl</span> IpAddr <span class="keyword">for</span> V4 &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">display</span></span>(&amp;<span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;ipv4: &#123;:?&#125;&quot;</span>,<span class="keyword">self</span>.<span class="number">0</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">V6</span></span>(<span class="built_in">String</span>);</span><br><span class="line"><span class="keyword">impl</span> IpAddr <span class="keyword">for</span> V6 &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">display</span></span>(&amp;<span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;ipv6: &#123;:?&#125;&quot;</span>,<span class="keyword">self</span>.<span class="number">0</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> v: <span class="built_in">Vec</span>&lt;<span class="built_in">Box</span>&lt;<span class="keyword">dyn</span> IpAddr&gt;&gt; = <span class="built_in">vec!</span>[</span><br><span class="line">        <span class="built_in">Box</span>::new(V4(<span class="string">&quot;127.0.0.1&quot;</span>.to_string())),</span><br><span class="line">        <span class="built_in">Box</span>::new(V6(<span class="string">&quot;::1&quot;</span>.to_string())),</span><br><span class="line">    ];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> ip <span class="keyword">in</span> v &#123;</span><br><span class="line">        ip.display();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<h2 id="HashMap"><a class="header-anchor" href="#HashMap">¶</a>HashMap</h2>
+]]></content>
+  </entry>
+  <entry>
     <title>Set up gdb in macOS</title>
     <url>/2022/01/28/Set-up-gdb-in-macOS/</url>
     <content><![CDATA[<h1>How to setup gdb in macOS</h1>
@@ -1288,43 +1491,6 @@ Consumers: <em>getc()</em></p>
       <tags>
         <tag>gdb</tag>
       </tags>
-  </entry>
-  <entry>
-    <title>Rust(course.rs)-generic&amp;trait</title>
-    <url>/2022/02/14/Rust-course-rs-generic-trait/</url>
-    <content><![CDATA[<div></div>
-<span id="more"></span>
-<h1>Generic and Trait</h1>
-<hr>
-<h2 id="Generic"><a class="header-anchor" href="#Generic">¶</a>Generic</h2>
-<p>下面这段代码<strong>无法编译</strong></p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">largest</span></span>&lt;T&gt;(list: &amp;[T]) -&gt; T &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> largest = list[<span class="number">0</span>];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> &amp;item <span class="keyword">in</span> list.iter() &#123;</span><br><span class="line">        <span class="keyword">if</span> item &gt; largest &#123;</span><br><span class="line">            largest = item;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    largest</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> number_list = <span class="built_in">vec!</span>[<span class="number">34</span>, <span class="number">50</span>, <span class="number">25</span>, <span class="number">100</span>, <span class="number">65</span>];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> result = largest(&amp;number_list);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;The largest number is &#123;&#125;&quot;</span>, result);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> char_list = <span class="built_in">vec!</span>[<span class="string">&#x27;y&#x27;</span>, <span class="string">&#x27;m&#x27;</span>, <span class="string">&#x27;a&#x27;</span>, <span class="string">&#x27;q&#x27;</span>];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> result = largest(&amp;char_list);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;The largest char is &#123;&#125;&quot;</span>, result);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>报错的原因是</p>
-<ul>
-<li>不是所有类型都可以进行<code>&gt;</code>的比较
-<ul>
-<li>因此我们需要给<code>T</code>天界一个类型限制 -&gt; trait</li>
-<li>我们使用<code>std::cmp::PartialOrd</code>Trait进行限制</li>
-</ul>
-</li>
-</ul>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">add</span></span>&lt;T: std::ops::Add&lt;Output = T&gt;&gt;(a:T, b:T) -&gt; T &#123;</span><br><span class="line">    a + b</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<hr>
-<h3 id="Generic-in-methods"><a class="header-anchor" href="#Generic-in-methods">¶</a>Generic in methods</h3>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Point</span></span>&lt;T, U&gt; &#123;</span><br><span class="line">    x: T,</span><br><span class="line">    y: U,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T, U&gt; Point&lt;T, U&gt; &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">mixup</span></span>&lt;V, W&gt;(<span class="keyword">self</span>, other: Point&lt;V, W&gt;) -&gt; Point&lt;T, W&gt; &#123;</span><br><span class="line">        Point &#123;</span><br><span class="line">            x: <span class="keyword">self</span>.x,</span><br><span class="line">            y: other.y,</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> p1 = Point &#123; x: <span class="number">5</span>, y: <span class="number">10.4</span> &#125;;</span><br><span class="line">    <span class="keyword">let</span> p2 = Point &#123; x: <span class="string">&quot;Hello&quot;</span>, y: <span class="string">&#x27;c&#x27;</span>&#125;;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> p3 = p1.mixup(p2);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;p3.x = &#123;&#125;, p3.y = &#123;&#125;&quot;</span>, p3.x, p3.y);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<hr>
-<h3 id="Generic-in-const"><a class="header-anchor" href="#Generic-in-const">¶</a>Generic in const</h3>
-<p><code>[i32; 2], [i32; 3]</code>是两种类型，我们可以用泛型打印所有的数组元素</p>
-<p>通过<strong>引用</strong>，我们可以实现</p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">display_array</span></span>&lt;T: std::fmt::<span class="built_in">Debug</span>&gt;(arr: &amp;[T]) &#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, arr);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> arr: [<span class="built_in">i32</span>; <span class="number">3</span>] = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];</span><br><span class="line">    display_array(&amp;arr);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> arr: [<span class="built_in">i32</span>;<span class="number">2</span>] = [<span class="number">1</span>,<span class="number">2</span>];</span><br><span class="line">    display_array(&amp;arr);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<ul>
-<li>需要注意的是，我们需要对类型<code>T</code>添加限制，因为我们需要他支持Debug输出<code>&#123;:?&#125;</code></li>
-</ul>
-<p><strong>有时候，引用是不合适的</strong>，对于任意的长度，我们可以使用const泛型</p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">display_array</span></span>&lt;T: std::fmt::<span class="built_in">Debug</span>, <span class="keyword">const</span> N: <span class="built_in">usize</span>&gt;(arr: [T; N]) &#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, arr);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> arr: [<span class="built_in">i32</span>; <span class="number">3</span>] = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];</span><br><span class="line">    display_array(arr);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> arr: [<span class="built_in">i32</span>; <span class="number">2</span>] = [<span class="number">1</span>, <span class="number">2</span>];</span><br><span class="line">    display_array(arr);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<hr>
-<h2 id="Trait"><a class="header-anchor" href="#Trait">¶</a>Trait</h2>
-]]></content>
   </entry>
   <entry>
     <title>Some detailed things in C (1)</title>
@@ -1414,43 +1580,18 @@ You probably already notice why, because the <strong>pointer is actually a addre
       </tags>
   </entry>
   <entry>
-    <title>Welcome!</title>
-    <url>/2022/01/23/homepage/</url>
-    <content><![CDATA[<style>
-img{
-    width: 60%;
-}
-</style>
-<h2 id="Welcome-to-my-homepage-💤"><a class="header-anchor" href="#Welcome-to-my-homepage-💤">¶</a>Welcome to my homepage! 💤</h2>
-<p>This is my first post to this blog website! 😋<br>
-It is really exciting for me to have the chance to really say something on the Internet.<br>
-There are mainly <strong>3️⃣</strong> reasons for me to start the blog.</p>
-<ul>
-<li>
-<p>⭐ <strong>Reading others’ blog really inspires me</strong></p>
-<ul>
-<li>Others’ sharing experiences on blogs really helps me through many mind-windling 😱 situations, and I really want to be one of them. Hopefully my experience will help the readers as well 😄<br>
-<br/></li>
-</ul>
-</li>
-<li>
-<p>☝️ <strong>Learning without recording is not as effective</strong></p>
-<ul>
-<li>This came across to my mind when I am taking 6.S081: Operating System Engineering (great course btw). There are so many important details and great minds inside an O/S, which I think should be well-learned and recorded.<br>
-<br/></li>
-</ul>
-</li>
-<li>
-<p>💥 <strong>SHARING IS ALWAYS FUN!</strong></p>
-<ul>
-<li>The thrill of sharing takes up the most part of why I am starting this blog! Not only sharing the experience is rewarding 😋, but sharing my daily life is also exciting.<br>
-<br/></li>
-</ul>
-</li>
-</ul>
-<p><strong>To everyone read this page:</strong></p>
-<p><em>May the force be with you</em></p>
-<img src="/2022/01/23/homepage/grogu.jpeg" class="" title="grogu">]]></content>
+    <title>Vim-shortcuts (keep updating)</title>
+    <url>/2022/01/30/Vim-shortcuts-keep-updating/</url>
+    <content><![CDATA[<span id="more"></span>
+<h1>Vim shortcuts</h1>
+<hr>
+<h2 id="Intro"><a class="header-anchor" href="#Intro">¶</a>Intro</h2>
+<p>The topic is in ##, the commands are in ###, the decription is below them.</p>
+<h2 id="screensplit"><a class="header-anchor" href="#screensplit">¶</a>screensplit</h2>
+]]></content>
+      <categories>
+        <category>Vim</category>
+      </categories>
   </entry>
   <entry>
     <title>html入门</title>
@@ -1617,18 +1758,43 @@ There are mainly <strong>3️⃣</strong> reasons for me to start the blog.</p>
       </tags>
   </entry>
   <entry>
-    <title>Vim-shortcuts (keep updating)</title>
-    <url>/2022/01/30/Vim-shortcuts-keep-updating/</url>
-    <content><![CDATA[<span id="more"></span>
-<h1>Vim shortcuts</h1>
-<hr>
-<h2 id="Intro"><a class="header-anchor" href="#Intro">¶</a>Intro</h2>
-<p>The topic is in ##, the commands are in ###, the decription is below them.</p>
-<h2 id="screensplit"><a class="header-anchor" href="#screensplit">¶</a>screensplit</h2>
-]]></content>
-      <categories>
-        <category>Vim</category>
-      </categories>
+    <title>Welcome!</title>
+    <url>/2022/01/23/homepage/</url>
+    <content><![CDATA[<style>
+img{
+    width: 60%;
+}
+</style>
+<h2 id="Welcome-to-my-homepage-💤"><a class="header-anchor" href="#Welcome-to-my-homepage-💤">¶</a>Welcome to my homepage! 💤</h2>
+<p>This is my first post to this blog website! 😋<br>
+It is really exciting for me to have the chance to really say something on the Internet.<br>
+There are mainly <strong>3️⃣</strong> reasons for me to start the blog.</p>
+<ul>
+<li>
+<p>⭐ <strong>Reading others’ blog really inspires me</strong></p>
+<ul>
+<li>Others’ sharing experiences on blogs really helps me through many mind-windling 😱 situations, and I really want to be one of them. Hopefully my experience will help the readers as well 😄<br>
+<br/></li>
+</ul>
+</li>
+<li>
+<p>☝️ <strong>Learning without recording is not as effective</strong></p>
+<ul>
+<li>This came across to my mind when I am taking 6.S081: Operating System Engineering (great course btw). There are so many important details and great minds inside an O/S, which I think should be well-learned and recorded.<br>
+<br/></li>
+</ul>
+</li>
+<li>
+<p>💥 <strong>SHARING IS ALWAYS FUN!</strong></p>
+<ul>
+<li>The thrill of sharing takes up the most part of why I am starting this blog! Not only sharing the experience is rewarding 😋, but sharing my daily life is also exciting.<br>
+<br/></li>
+</ul>
+</li>
+</ul>
+<p><strong>To everyone read this page:</strong></p>
+<p><em>May the force be with you</em></p>
+<img src="/2022/01/23/homepage/grogu.jpeg" class="" title="grogu">]]></content>
   </entry>
   <entry>
     <title>the book(Rust) - Chapt3</title>
@@ -1996,6 +2162,21 @@ Rust 不允许自身或其任何部分实现了 <code>Drop trait</code> 的类�
       </tags>
   </entry>
   <entry>
+    <title>the book(Rust) - Chapt7</title>
+    <url>/2022/02/10/the-book-Rust-Chapt7/</url>
+    <content><![CDATA[<div></div>
+<span id="more"></span>
+<h1>the book (Rust) - chapt7: module system</h1>
+<hr>
+]]></content>
+      <categories>
+        <category>ProgLang</category>
+      </categories>
+      <tags>
+        <tag>Rust</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>the book(Rust) - Chapt5</title>
     <url>/2022/02/07/the-book-Rust-Chapt5/</url>
     <content><![CDATA[<style>
@@ -2203,21 +2384,6 @@ img{
 <figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="comment">// 绑定新变量 `p`，同时对 `Point` 进行解构</span></span><br><span class="line">    <span class="keyword">let</span> p @ Point &#123;x: px, y: py &#125; = Point &#123;x: <span class="number">10</span>, y: <span class="number">23</span>&#125;;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;x: &#123;&#125;, y: &#123;&#125;&quot;</span>, px, py);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, p);</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">let</span> point = Point &#123;x: <span class="number">10</span>, y: <span class="number">5</span>&#125;;</span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">let</span> p @ Point &#123;x: <span class="number">10</span>, y&#125; = point &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;x is 10 and y is &#123;&#125; in &#123;:?&#125;&quot;</span>, y, p);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;x was not 10 :(&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h3 id="新特性"><a class="header-anchor" href="#新特性">¶</a>@新特性</h3>
 <figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">match</span> <span class="number">1</span> &#123;</span><br><span class="line">        num @ (<span class="number">1</span> | <span class="number">2</span>) =&gt; &#123;</span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;&quot;</span>, num);</span><br><span class="line">        &#125;</span><br><span class="line">        _ =&gt; &#123;&#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<hr>
-]]></content>
-      <categories>
-        <category>ProgLang</category>
-      </categories>
-      <tags>
-        <tag>Rust</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>the book(Rust) - Chapt7</title>
-    <url>/2022/02/10/the-book-Rust-Chapt7/</url>
-    <content><![CDATA[<div></div>
-<span id="more"></span>
-<h1>the book (Rust) - chapt7: module system</h1>
 <hr>
 ]]></content>
       <categories>
