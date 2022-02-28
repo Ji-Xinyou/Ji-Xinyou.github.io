@@ -1436,7 +1436,64 @@ Consumers: <em>getc()</em></p>
 <figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">trait</span> <span class="title">IpAddr</span></span> &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">display</span></span>(&amp;<span class="keyword">self</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">V4</span></span>(<span class="built_in">String</span>);</span><br><span class="line"><span class="keyword">impl</span> IpAddr <span class="keyword">for</span> V4 &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">display</span></span>(&amp;<span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;ipv4: &#123;:?&#125;&quot;</span>,<span class="keyword">self</span>.<span class="number">0</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">V6</span></span>(<span class="built_in">String</span>);</span><br><span class="line"><span class="keyword">impl</span> IpAddr <span class="keyword">for</span> V6 &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">display</span></span>(&amp;<span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;ipv6: &#123;:?&#125;&quot;</span>,<span class="keyword">self</span>.<span class="number">0</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> v: <span class="built_in">Vec</span>&lt;<span class="built_in">Box</span>&lt;<span class="keyword">dyn</span> IpAddr&gt;&gt; = <span class="built_in">vec!</span>[</span><br><span class="line">        <span class="built_in">Box</span>::new(V4(<span class="string">&quot;127.0.0.1&quot;</span>.to_string())),</span><br><span class="line">        <span class="built_in">Box</span>::new(V6(<span class="string">&quot;::1&quot;</span>.to_string())),</span><br><span class="line">    ];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> ip <span class="keyword">in</span> v &#123;</span><br><span class="line">        ip.display();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <hr>
 <h2 id="HashMap"><a class="header-anchor" href="#HashMap">¶</a>HashMap</h2>
+<ol>
+<li>不在<code>prelude</code>中，需要</li>
+</ol>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">use</span> std::collections::HashMap;</span><br></pre></td></tr></table></figure>
+<h2 id="创建"><a class="header-anchor" href="#创建">¶</a>创建</h2>
+<p><code>key</code>和<code>value</code>分别必须为相同的类型</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">use</span> std::collections::HashMap;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> <span class="keyword">mut</span> my_gems = HashMap::new();</span><br><span class="line"></span><br><span class="line">my_gems.insert(<span class="string">&quot;红宝石&quot;</span>, <span class="number">1</span>);</span><br></pre></td></tr></table></figure>
+<ul>
+<li>如果提前知道大小，可以指定大小 <code>HashMap::with_capacity(capacity)</code></li>
+</ul>
+<h3 id="用iter和collect"><a class="header-anchor" href="#用iter和collect">¶</a>用iter和collect</h3>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> <span class="keyword">mut</span> info_vec: vec&lt;(<span class="built_in">String</span>, <span class="built_in">u32</span>)&gt;;</span><br><span class="line"><span class="keyword">let</span> <span class="keyword">mut</span> info_map = HashMap::new()</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> info <span class="keyword">in</span> &amp;info_vec &#123;</span><br><span class="line">  info_map.insert(&amp;team.<span class="number">0</span>, &amp;team.<span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><strong>MORE RUSTY</strong></li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">use</span> std::collections::HashMap;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> teams_list = <span class="built_in">vec!</span>[</span><br><span class="line">        (<span class="string">&quot;中国队&quot;</span>.to_string(), <span class="number">100</span>),</span><br><span class="line">        (<span class="string">&quot;美国队&quot;</span>.to_string(), <span class="number">10</span>),</span><br><span class="line">        (<span class="string">&quot;日本队&quot;</span>.to_string(), <span class="number">50</span>),</span><br><span class="line">    ];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> teams_map: HashMap&lt;_,_&gt; = teams_list.into_iter().collect();</span><br><span class="line">    </span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>,teams_map)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>into_iter()</code>将Vec转成iter</li>
+<li><code>collect()</code>将iter收集
+<ul>
+<li>内置支持多种集合类型，因此需要告诉编译器为<code>HashMap&lt;_, _&gt;</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="ownership"><a class="header-anchor" href="#ownership">¶</a>ownership</h3>
+<ul>
+<li>如果有<code>copy trait</code>，复制进去</li>
+<li>如果没有，所有权转移</li>
+</ul>
+<p>如果将<code>reference</code>放入了<code>Hashmap</code>，请保证<code>ref</code>的生命周期至少跟<code>HashMap</code>一样久</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">use</span> std::collections::HashMap;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> name = <span class="built_in">String</span>::from(<span class="string">&quot;Sunface&quot;</span>);</span><br><span class="line">    <span class="keyword">let</span> age = <span class="number">18</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> handsome_boys = HashMap::new();</span><br><span class="line">    handsome_boys.insert(&amp;name, age);</span><br><span class="line"></span><br><span class="line">    std::mem::<span class="built_in">drop</span>(name);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;因为过于无耻，&#123;:?&#125;已经被除名&quot;</span>, handsome_boys);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;还有，他的真实年龄远远不止&#123;&#125;岁&quot;</span>,age);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面这段代码是有问题的，因为name已经被析构了，而Hashmap使用的是他的引用</p>
+<h3 id="查询"><a class="header-anchor" href="#查询">¶</a>查询</h3>
+<h4 id="get"><a class="header-anchor" href="#get">¶</a>get()</h4>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> <span class="keyword">mut</span> scores: HashMap&lt;<span class="built_in">String</span>, <span class="built_in">u32</span>&gt; = HashMap::new();</span><br><span class="line">...</span><br><span class="line"><span class="keyword">let</span> info: <span class="built_in">Option</span>&lt;&amp;<span class="built_in">i32</span>&gt; = scores.get(<span class="string">&quot;Team1&quot;</span>);</span><br></pre></td></tr></table></figure>
+<p><code>get(key)</code>返回的是<code>value</code>的<code>reference</code>，如果咨询不到，会是None</p>
+<h4 id="iter"><a class="header-anchor" href="#iter">¶</a>iter</h4>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> <span class="keyword">mut</span> scores = HashMap::new();</span><br><span class="line"></span><br><span class="line">scores.insert(<span class="built_in">String</span>::from(<span class="string">&quot;Blue&quot;</span>), <span class="number">10</span>);</span><br><span class="line">scores.insert(<span class="built_in">String</span>::from(<span class="string">&quot;Yellow&quot;</span>), <span class="number">50</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> (key, value) <span class="keyword">in</span> &amp;scores &#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;: &#123;&#125;&quot;</span>, key, value);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="更新"><a class="header-anchor" href="#更新">¶</a>更新</h3>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">use</span> std::collections::HashMap;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> scores = HashMap::new();</span><br><span class="line"></span><br><span class="line">    scores.insert(<span class="string">&quot;Blue&quot;</span>, <span class="number">10</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 覆盖已有的值</span></span><br><span class="line">    <span class="keyword">let</span> old = scores.insert(<span class="string">&quot;Blue&quot;</span>, <span class="number">20</span>);</span><br><span class="line">    <span class="built_in">assert_eq!</span>(old, <span class="literal">Some</span>(<span class="number">10</span>));</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 查询新插入的值</span></span><br><span class="line">    <span class="keyword">let</span> new = scores.get(<span class="string">&quot;Blue&quot;</span>);</span><br><span class="line">    <span class="built_in">assert_eq!</span>(new, <span class="literal">Some</span>(&amp;<span class="number">20</span>));</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 查询Yellow对应的值，若不存在则插入新值</span></span><br><span class="line">    <span class="keyword">let</span> v = scores.entry(<span class="string">&quot;Yellow&quot;</span>).or_insert(<span class="number">5</span>);</span><br><span class="line">    <span class="built_in">assert_eq!</span>(*v, <span class="number">5</span>); <span class="comment">// 不存在，插入5</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 查询Yellow对应的值，若不存在则插入新值</span></span><br><span class="line">    <span class="keyword">let</span> v = scores.entry(<span class="string">&quot;Yellow&quot;</span>).or_insert(<span class="number">50</span>);</span><br><span class="line">    <span class="built_in">assert_eq!</span>(*v, <span class="number">5</span>); <span class="comment">// 已经存在，因此50没有插入</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>HashMap.insert(K, V)</code>，如果原本存在<code>K</code>对应的值，会把原本的<code>V</code>返回，并将新的<code>&lt;K, V&gt;</code>插入</li>
+<li><code>HashMap.get(K)</code>，返回<code>Option(&amp;V)</code></li>
+<li><code>HashMap.entry(K).or_insert(V)</code>返回的是<code>&amp;mut v</code>引用
+<ul>
+<li>如果要修改值，要先进行<code>deref</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="第三方库-哈希函数"><a class="header-anchor" href="#第三方库-哈希函数">¶</a>第三方库 - 哈希函数</h3>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="meta">#![allow(unused)]</span></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line"><span class="keyword">use</span> std::hash::BuildHasherDefault;</span><br><span class="line"><span class="keyword">use</span> std::collections::HashMap;</span><br><span class="line"><span class="comment">// 引入第三方的哈希函数</span></span><br><span class="line"><span class="keyword">use</span> twox_hash::XxHash64;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 指定HashMap使用第三方的哈希函数XxHash64</span></span><br><span class="line"><span class="keyword">let</span> <span class="keyword">mut</span> hash: HashMap&lt;_, _, BuildHasherDefault&lt;XxHash64&gt;&gt; = <span class="built_in">Default</span>::default();</span><br><span class="line">hash.insert(<span class="number">42</span>, <span class="string">&quot;the answer&quot;</span>);</span><br><span class="line"><span class="built_in">assert_eq!</span>(hash.get(&amp;<span class="number">42</span>), <span class="literal">Some</span>(&amp;<span class="string">&quot;the answer&quot;</span>));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 ]]></content>
+      <categories>
+        <category>ProgLang</category>
+      </categories>
+      <tags>
+        <tag>Rust</tag>
+      </tags>
   </entry>
   <entry>
     <title>Set up gdb in macOS</title>
@@ -2816,5 +2873,19 @@ so both can use trapframe.</li>
 <p>All invariants are listed in xv6 book, page 81-82</p>
 <hr>
 ]]></content>
+  </entry>
+  <entry>
+    <title>Rust(course.rs)-类型转换</title>
+    <url>/2022/02/28/Rust-course-rs-%E7%B1%BB%E5%9E%8B%E8%BD%AC%E6%8D%A2/</url>
+    <content><![CDATA[<div></div>
+<span id="more"></span>
+<h1>Rust - 类型转换</h1>
+]]></content>
+      <categories>
+        <category>ProgLang</category>
+      </categories>
+      <tags>
+        <tag>Rust</tag>
+      </tags>
   </entry>
 </search>
