@@ -2880,6 +2880,41 @@ so both can use trapframe.</li>
     <content><![CDATA[<div></div>
 <span id="more"></span>
 <h1>Rust - 类型转换</h1>
+<h2 id="as-cast"><a class="header-anchor" href="#as-cast">¶</a>as cast</h2>
+<p>我们一般将<strong>较小的</strong>数据类型转为<strong>较大</strong>的</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> a = <span class="number">100_i8</span> <span class="keyword">as</span> <span class="built_in">i32</span>;</span><br><span class="line"><span class="keyword">let</span> c = <span class="string">&#x27;a&#x27;</span> <span class="keyword">as</span> <span class="built_in">u8</span>;</span><br></pre></td></tr></table></figure>
+<h3 id="还可以将内存地址转为指针"><a class="header-anchor" href="#还可以将内存地址转为指针">¶</a>还可以将内存地址转为指针</h3>
+<p>重点是<code>values.as_mut_ptr()</code></p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> <span class="keyword">mut</span> values: [<span class="built_in">i32</span>; <span class="number">2</span>] = [<span class="number">1</span>, <span class="number">2</span>];</span><br><span class="line"><span class="keyword">let</span> p1: *<span class="keyword">mut</span> <span class="built_in">i32</span> = values.as_mut_ptr();</span><br><span class="line"><span class="keyword">let</span> first_address = p1 <span class="keyword">as</span> <span class="built_in">usize</span>; <span class="comment">// 将p1内存地址转换为一个整数</span></span><br><span class="line"><span class="keyword">let</span> second_address = first_address + <span class="number">4</span>; <span class="comment">// i32类型占用4个字节，因此将内存地址 + 4</span></span><br><span class="line"><span class="keyword">let</span> p2 = second_address <span class="keyword">as</span> *<span class="keyword">mut</span> <span class="built_in">i32</span>; <span class="comment">// 访问该地址指向的下一个整数p2</span></span><br><span class="line"><span class="keyword">unsafe</span> &#123;</span><br><span class="line">    *p2 += <span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">assert_eq!</span>(values[<span class="number">1</span>], <span class="number">3</span>);</span><br></pre></td></tr></table></figure>
+<h3 id="边角知识"><a class="header-anchor" href="#边角知识">¶</a>边角知识</h3>
+<ol>
+<li>数组切片原生指针之间的转换，不会改变数组占用的内存字节数，尽管数组元素的类型发生了改变：</li>
+</ol>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> a: *<span class="keyword">const</span> [<span class="built_in">u16</span>] = &amp;[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>];</span><br><span class="line">    <span class="keyword">let</span> b = a <span class="keyword">as</span> *<span class="keyword">const</span> [<span class="built_in">u8</span>];</span><br><span class="line">    <span class="built_in">assert_eq!</span>(std::mem::size_of_val(&amp;a), std::mem::size_of_val(&amp;b))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<h2 id="Tryinto-cast"><a class="header-anchor" href="#Tryinto-cast">¶</a>Tryinto cast</h2>
+<p><code>try_into</code>是<code>TryInto Trait</code>的一个方法，他会捕获我们大类型向小类型转换的溢出错误</p>
+<ul>
+<li>返回的是<code>Result</code></li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">use</span> std::convert::TryInto;</span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> b: <span class="built_in">i16</span> = <span class="number">1500</span>;</span><br><span class="line">    <span class="keyword">let</span> b_: <span class="built_in">u8</span> = <span class="keyword">match</span> b.try_into() &#123;</span><br><span class="line">        <span class="literal">Ok</span>(b1) =&gt; b1,</span><br><span class="line">        <span class="literal">Err</span>(e) =&gt; &#123;</span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, e.to_string());</span><br><span class="line">            <span class="number">0</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>如果我们用<code>unwrap()</code>或者<code>expect()</code>来处理<code>Result&lt;T, E&gt;</code>
+<ul>
+<li>unwrap会panic！，expect会发送错误信息</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="General-cast"><a class="header-anchor" href="#General-cast">¶</a>General cast</h2>
+<ol>
+<li>一个<code>Trait</code>为<code>&amp;i32</code>实现了，<code>&amp;mut i32</code>可以转成<code>&amp;i32</code>，但是他仍然不能用这个<code>Trait</code></li>
+</ol>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">trait</span> <span class="title">Trait</span></span> &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">foo</span></span>&lt;X: Trait&gt;(t: X) &#123;&#125;</span><br><span class="line"><span class="keyword">impl</span>&lt;<span class="symbol">&#x27;a</span>&gt; Trait <span class="keyword">for</span> &amp;<span class="symbol">&#x27;a</span> <span class="built_in">i32</span> &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> t: &amp;<span class="keyword">mut</span> <span class="built_in">i32</span> = &amp;<span class="keyword">mut</span> <span class="number">0</span>;</span><br><span class="line">    foo(t);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">error[E0277]: the <span class="class"><span class="keyword">trait</span> <span class="title">bound</span></span> `&amp;<span class="keyword">mut</span> <span class="built_in">i32</span>: Trait` is not satisfied</span><br><span class="line">--&gt; src/main.rs:<span class="number">9</span>:<span class="number">9</span></span><br><span class="line">|</span><br><span class="line"><span class="number">9</span> |     foo(t);</span><br><span class="line">|         ^ the <span class="class"><span class="keyword">trait</span> `<span class="title">Trait</span></span>` is not implemented <span class="keyword">for</span> `&amp;<span class="keyword">mut</span> <span class="built_in">i32</span>`</span><br><span class="line">|</span><br><span class="line">= help: the following implementations were found:</span><br><span class="line">        &lt;&amp;<span class="symbol">&#x27;a</span> <span class="built_in">i32</span> <span class="keyword">as</span> Trait&gt;</span><br><span class="line">= note: `Trait` is implemented <span class="keyword">for</span> `&amp;<span class="built_in">i32</span>`, but not <span class="keyword">for</span> `&amp;<span class="keyword">mut</span> <span class="built_in">i32</span>`</span><br></pre></td></tr></table></figure>
+<h3 id="点操作符"><a class="header-anchor" href="#点操作符">¶</a>点操作符</h3>
+<p>建议看网页</p>
+<p><a href="https://course.rs/basic/converse.html">https://course.rs/basic/converse.html</a></p>
+<p>暂时决定停更了，语言还是边写边学比较好，尽管Rust语言特性很多，可能一开始记录下来是很低效的</p>
 ]]></content>
       <categories>
         <category>ProgLang</category>
