@@ -28,7 +28,7 @@
 <meta property="og:image" content="https://jerryji0414.github.io/2022/03/07/6-824-lab1-MapReduce/1.png">
 <meta property="og:image" content="https://jerryji0414.github.io/2022/03/07/6-824-lab1-MapReduce/2.png">
 <meta property="article:published_time" content="2022-03-07T12:25:31.000Z">
-<meta property="article:modified_time" content="2022-03-07T14:13:16.340Z">
+<meta property="article:modified_time" content="2022-03-07T16:12:20.323Z">
 <meta property="article:author" content="Ji-Xinyou(Jerry)">
 <meta property="article:tag" content="6.824">
 <meta name="twitter:card" content="summary">
@@ -221,10 +221,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
-              
 
-              <time title="Created: 2022-03-07 20:25:31 / Modified: 22:13:16" itemprop="dateCreated datePublished" datetime="2022-03-07T20:25:31+08:00">2022-03-07</time>
+              <time title="Created: 2022-03-07 20:25:31" itemprop="dateCreated datePublished" datetime="2022-03-07T20:25:31+08:00">2022-03-07</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2022-03-08 00:12:20" itemprop="dateModified" datetime="2022-03-08T00:12:20+08:00">2022-03-08</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -257,8 +263,11 @@
 <span id="more"></span>
 <h1>6.824_lab1: MapReduce, A Conceptual Solution</h1>
 <hr>
+<p>[toc]</p>
+<hr>
 <h2 id="Pre-statement"><a class="header-anchor" href="#Pre-statement">¶</a>Pre-statement</h2>
-<p>The reason why the solutions to these labs are not in the form of code is that, <strong>the 6.824 said not to</strong> and that’s it.</p>
+<p><strong>WE HAVE NO NECESSARY CODE HERE!!!</strong></p>
+<p>The reason why the solutions to these labs are not in the form of code is that, <strong>the 6.824 course staff said not to</strong>.</p>
 <p>However, sharing a conceptual idea about them in my opinion is helpful for both myself and others, without damaging the experience of the students who actually are taking the 6.824 course.</p>
 <ol>
 <li>
@@ -334,7 +343,41 @@
 <li>If you want to use unsafe data structures like hashmap, you need at least a <strong>lock</strong> to make some operations on them atomic</li>
 </ul>
 <h3 id="worker"><a class="header-anchor" href="#worker">¶</a>worker</h3>
-<h3 id="message-exchange"><a class="header-anchor" href="#message-exchange">¶</a>message exchange</h3>
+<p>The worker does need to specially save any state, or you can say it <strong>self-contains its own state within the function</strong> <code>Worker()</code>. It acts as a procedure callee.</p>
+<p>It sits in an infinite loop:</p>
+<ul>
+<li>When it has no task assigned, keep asking for task</li>
+<li>When it receives a task, do the task.
+<ul>
+<li>the intermediate files generated live in the local directory</li>
+<li>When the task is over, signal the master. This helps the master move on to next phase.</li>
+</ul>
+</li>
+<li>When the master is down, exits</li>
+</ul>
+<h3 id="message-exchange-flow"><a class="header-anchor" href="#message-exchange-flow">¶</a>message exchange flow</h3>
+<p>It is very obvious at this point that the coordination between master and worker depends on massive message exchanges.</p>
+<ul>
+<li>In real world, the message exchange is done by RPC. In this lab, we use RPC as well.</li>
+</ul>
+<p>We next discuss the message exchange from two perspectives w.r.t information flow.</p>
+<h4 id="master-worker"><a class="header-anchor" href="#master-worker">¶</a>master -&gt; worker</h4>
+<p>Clearly, master replys to the messages from workers.</p>
+<ul>
+<li>When a worker asks for a task, the master reply with a message containing <strong>necessary information</strong> about the task to the worker.
+<ul>
+<li>this acts as assigning the task, and the phase of the task should change</li>
+</ul>
+</li>
+<li>When the whole job is over, the master sends a pesudo-task <strong>please exit</strong> to workers to let them exit.
+<ul>
+<li>you can also let worker exit if the master does not respond to RPC calls</li>
+</ul>
+</li>
+</ul>
+<p>The messages <strong>sent</strong> by the master is simple, because the major work of it is to <strong>handle the messages from the workers</strong></p>
+<h4 id="worker-master"><a class="header-anchor" href="#worker-master">¶</a>worker -&gt; master</h4>
+<h3 id="message-handlers"><a class="header-anchor" href="#message-handlers">¶</a>message handlers</h3>
 <h3 id="details-on-a-possible-way-of-implementation"><a class="header-anchor" href="#details-on-a-possible-way-of-implementation">¶</a>details on a possible way of implementation</h3>
 
     </div>
@@ -416,7 +459,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">6.824_lab1: MapReduce, A Conceptual Solution</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Pre-statement"><span class="nav-number">1.1.</span> <span class="nav-text">Pre-statement</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Screenshot-of-passing-tests"><span class="nav-number">1.2.</span> <span class="nav-text">Screenshot of passing tests</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Solution"><span class="nav-number">1.3.</span> <span class="nav-text">Solution</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#general-picture"><span class="nav-number">1.3.1.</span> <span class="nav-text">general picture</span></a></li><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-number">1.3.2.</span> <span class="nav-text">¶</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#master-coordinator"><span class="nav-number">1.3.3.</span> <span class="nav-text">master (coordinator)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#worker"><span class="nav-number">1.3.4.</span> <span class="nav-text">worker</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#message-exchange"><span class="nav-number">1.3.5.</span> <span class="nav-text">message exchange</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#details-on-a-possible-way-of-implementation"><span class="nav-number">1.3.6.</span> <span class="nav-text">details on a possible way of implementation</span></a></li></ol></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">6.824_lab1: MapReduce, A Conceptual Solution</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Pre-statement"><span class="nav-number">1.1.</span> <span class="nav-text">Pre-statement</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Screenshot-of-passing-tests"><span class="nav-number">1.2.</span> <span class="nav-text">Screenshot of passing tests</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Solution"><span class="nav-number">1.3.</span> <span class="nav-text">Solution</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#general-picture"><span class="nav-number">1.3.1.</span> <span class="nav-text">general picture</span></a></li><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-number">1.3.2.</span> <span class="nav-text">¶</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#master-coordinator"><span class="nav-number">1.3.3.</span> <span class="nav-text">master (coordinator)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#worker"><span class="nav-number">1.3.4.</span> <span class="nav-text">worker</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#message-exchange-flow"><span class="nav-number">1.3.5.</span> <span class="nav-text">message exchange flow</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#master-worker"><span class="nav-number">1.3.5.1.</span> <span class="nav-text">master -&gt; worker</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#worker-master"><span class="nav-number">1.3.5.2.</span> <span class="nav-text">worker -&gt; master</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#message-handlers"><span class="nav-number">1.3.6.</span> <span class="nav-text">message handlers</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#details-on-a-possible-way-of-implementation"><span class="nav-number">1.3.7.</span> <span class="nav-text">details on a possible way of implementation</span></a></li></ol></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
