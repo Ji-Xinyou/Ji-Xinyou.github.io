@@ -3005,10 +3005,68 @@ Rust 不允许自身或其任何部分实现了 <code>Drop trait</code> 的类�
 <img src="6-824-lab1-MapReduce/screenshots.png" alt="screenshots" style="zoom: 33%;" />
 <hr>
 <h2 id="Solution"><a class="header-anchor" href="#Solution">¶</a>Solution</h2>
-<p>The MapReduce in general has two sides, one master and several workers.</p>
+<p>The implementation of mine takes about <strong>650 lines</strong> of code insertion</p>
 <h3 id="general-picture"><a class="header-anchor" href="#general-picture">¶</a>general picture</h3>
+<p>The MapReduce in general has two sides, one master and several workers.</p>
+<p>The master and worker use <strong>messages</strong> to communicate</p>
+<ul>
+<li>The master uses messages to distribute tasks (map or reduce) to workers</li>
+<li>The worker uses messages to tell the master that it needs a task or its task is done</li>
+</ul>
+<h3 id=""><a class="header-anchor" href="#">¶</a></h3>
+<p>In real world, MapReduce works on Distributed File System like GFS, in which large files are split into small chunks of 64MB. In the lab the files are around the order of some KB, so it is fine to <strong>MAKE EACH FILE A MAP TASK</strong></p>
+<p>The # of Reduce task is set by user, actually in function <code>makeMaster()</code></p>
+<p><strong>Therefore, we have the result that</strong></p>
+<ol>
+<li>we have <code>file #</code> number of map task, each corresponds to a file</li>
+<li>we have <code>nReduce</code> number of reduce task, each corresponds to a output file</li>
+</ol>
+<p>Let’s have a look at the stages of MapReduce job, the figure is from the paper. This execution model is very important for both comprehending and implementing.</p>
+<img src="6-824-lab1-MapReduce/screenshots-6660787.png" alt="screenshots" style="zoom:50%;" />
+<ul>
+<li><strong>Split</strong>: for this lab, we split the input files a chunk per file - that is no split</li>
+<li><strong>Read</strong>: map worker read the file locally in the lab, but actually a mixture of RPC and local read in the real world</li>
+<li><strong>Intermediate</strong>:
+<ul>
+<li>It is important to figure out how many intermediate files does a MapReduce job produce.</li>
+<li>According to the hint, we name the intermediate file <code>mr-x-y</code>, where <code>x</code> is <strong>map task #</strong>, <code>y</code> is <strong>reduce task #</strong>, this representation is easier to understand.</li>
+<li>from above, we know we have <code>file #</code> of <code>x</code>, and <code>nReduce</code> of <code>y</code></li>
+<li><strong>THEREFORE</strong>, we know, for each <code>Map task # x</code>, if generates <code>nReduce</code> intermediate file
+<ul>
+<li>mr-x-0, mr-x-1, mr-x-2, …, mr-x-(nReduce-1)</li>
+</ul>
+</li>
+<li><strong>IMPORTANTLY</strong>, the job phase moves <strong>FROM</strong> Map phase <strong>TO</strong> Reduce phase, which means only when <strong>ALL MAP TASKS ARE DONE</strong>, can any Reduce task be distributed to workers</li>
+</ul>
+</li>
+<li><strong>Reduce read</strong>: decode from json file (act as a substitution of remote read)</li>
+</ul>
 <h3 id="master-coordinator"><a class="header-anchor" href="#master-coordinator">¶</a>master (coordinator)</h3>
+<p>The master works as a <strong>state machine.</strong></p>
+<p>This is because the master is the one who <strong>detects the state</strong> and <strong>change the state</strong> of the whole job, which means <strong>the master must remember necessary states of the job for changes</strong></p>
+<p>The changes includes</p>
+<ul>
+<li>Phase changing
+<ul>
+<li>from Map -&gt; Reduce -&gt; Done</li>
+<li>No need to holds a UNSTARTED phase, starting from Phase_Map is fine</li>
+</ul>
+</li>
+<li>Crash recovery
+<ul>
+<li>When some worker takes the task, the master changes <strong>per-task</strong> phase. But what if the worker exits for some unknown reasons.</li>
+</ul>
+</li>
+</ul>
+<p>The states Master struct holds could look like this.</p>
+<p><strong>It changes the jobphase by doing checks on its state variables.</strong></p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Master <span class="keyword">struct</span> &#123;</span><br><span class="line">  ...</span><br><span class="line">  lk					  sync.Mutex</span><br><span class="line">  ...</span><br><span class="line">  jobphase	    phase_t</span><br><span class="line">  Map_phase		  <span class="keyword">map</span>[<span class="keyword">string</span>]phase_t</span><br><span class="line">  Reduce_phase  <span class="keyword">map</span>[<span class="keyword">int</span>]phase_t</span><br><span class="line">  ...</span><br><span class="line">  sometimestamp <span class="keyword">int64</span></span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>If you want to use unsafe data structures like hashmap, you need at least a <strong>lock</strong> to make some operations on them atomic</li>
+</ul>
 <h3 id="worker"><a class="header-anchor" href="#worker">¶</a>worker</h3>
+<h3 id="message-exchange"><a class="header-anchor" href="#message-exchange">¶</a>message exchange</h3>
+<h3 id="details-on-a-possible-way-of-implementation"><a class="header-anchor" href="#details-on-a-possible-way-of-implementation">¶</a>details on a possible way of implementation</h3>
 ]]></content>
       <categories>
         <category>Distributed System</category>
