@@ -2981,4 +2981,40 @@ Rust 不允许自身或其任何部分实现了 <code>Drop trait</code> 的类�
         <tag>Rust</tag>
       </tags>
   </entry>
+  <entry>
+    <title>6.824-lab1-MapReduce</title>
+    <url>/2022/03/07/6-824-lab1-MapReduce/</url>
+    <content><![CDATA[<div></div>
+<span id="more"></span>
+<h1>6.824_lab1: MapReduce, A Conceptual Solution</h1>
+<hr>
+<h2 id="Pre-statement"><a class="header-anchor" href="#Pre-statement">¶</a>Pre-statement</h2>
+<p>The reason why the solutions to these labs are not in the form of code is that, <strong>the 6.824 said not to</strong> and that’s it.</p>
+<p>However, sharing a conceptual idea about them in my opinion is helpful for both myself and others, without damaging the experience of the students who actually are taking the 6.824 course.</p>
+<ol>
+<li>
+<p>The solution will <strong>not</strong> be too-detailed, it <strong>ONLY</strong> contains my way of solving the lab.</p>
+</li>
+<li>
+<p>The solution itself is <strong>NOT OPTIMIZED</strong> in purpose, which means the locking scheme is very coarse-grained, the traversing is used often, the RPC is used instead of go channel etc. etc.</p>
+</li>
+</ol>
+<p>Anyway, enjoy 😃))))))</p>
+<hr>
+<h2 id="Screenshot-of-passing-tests"><a class="header-anchor" href="#Screenshot-of-passing-tests">¶</a>Screenshot of passing tests</h2>
+<img src="6-824-lab1-MapReduce/screenshots.png" alt="screenshots" style="zoom: 33%;" />
+<hr>
+<h2 id="Solution"><a class="header-anchor" href="#Solution">¶</a>Solution</h2>
+<p>The MapReduce in general has two sides, one master and several workers.</p>
+<h3 id="general-picture"><a class="header-anchor" href="#general-picture">¶</a>general picture</h3>
+<h3 id="master-coordinator"><a class="header-anchor" href="#master-coordinator">¶</a>master (coordinator)</h3>
+<h3 id="worker"><a class="header-anchor" href="#worker">¶</a>worker</h3>
+]]></content>
+      <categories>
+        <category>Distributed System</category>
+      </categories>
+      <tags>
+        <tag>6.824</tag>
+      </tags>
+  </entry>
 </search>
