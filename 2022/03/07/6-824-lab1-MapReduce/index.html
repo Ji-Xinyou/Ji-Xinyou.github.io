@@ -28,7 +28,7 @@
 <meta property="og:image" content="https://jerryji0414.github.io/2022/03/07/6-824-lab1-MapReduce/1.png">
 <meta property="og:image" content="https://jerryji0414.github.io/2022/03/07/6-824-lab1-MapReduce/2.png">
 <meta property="article:published_time" content="2022-03-07T12:25:31.000Z">
-<meta property="article:modified_time" content="2022-03-07T16:12:20.323Z">
+<meta property="article:modified_time" content="2022-03-07T16:26:23.067Z">
 <meta property="article:author" content="Ji-Xinyou(Jerry)">
 <meta property="article:tag" content="6.824">
 <meta name="twitter:card" content="summary">
@@ -229,7 +229,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2022-03-08 00:12:20" itemprop="dateModified" datetime="2022-03-08T00:12:20+08:00">2022-03-08</time>
+                <time title="Modified: 2022-03-08 00:26:23" itemprop="dateModified" datetime="2022-03-08T00:26:23+08:00">2022-03-08</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -338,7 +338,7 @@
 </ul>
 <p>The states Master struct holds could look like this.</p>
 <p><strong>It changes the jobphase by doing checks on its state variables.</strong></p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Master <span class="keyword">struct</span> &#123;</span><br><span class="line">  ...</span><br><span class="line">  lk					  sync.Mutex</span><br><span class="line">  ...</span><br><span class="line">  jobphase	    phase_t</span><br><span class="line">  Map_phase		  <span class="keyword">map</span>[<span class="keyword">string</span>]phase_t</span><br><span class="line">  Reduce_phase  <span class="keyword">map</span>[<span class="keyword">int</span>]phase_t</span><br><span class="line">  ...</span><br><span class="line">  sometimestamp <span class="keyword">int64</span></span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Master <span class="keyword">struct</span> &#123;</span><br><span class="line">  ...</span><br><span class="line">  lk				sync.Mutex</span><br><span class="line">  ...</span><br><span class="line">  jobphase			phase_t</span><br><span class="line">  Map_phase			<span class="keyword">map</span>[<span class="keyword">string</span>]phase_t</span><br><span class="line">  Reduce_phase		<span class="keyword">map</span>[<span class="keyword">int</span>]phase_t</span><br><span class="line">  ...</span><br><span class="line">  sometimestamp		<span class="keyword">int64</span></span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <ul>
 <li>If you want to use unsafe data structures like hashmap, you need at least a <strong>lock</strong> to make some operations on them atomic</li>
 </ul>
