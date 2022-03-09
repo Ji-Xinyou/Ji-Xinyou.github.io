@@ -21,20 +21,17 @@
   </script>
 
   <meta property="og:type" content="article">
-<meta property="og:title" content="6.824-lab1-MapReduce">
-<meta property="og:url" content="https://jerryji0414.github.io/2022/03/07/6-824-lab1-MapReduce/index.html">
+<meta property="og:title" content="6.824-lec4-VMft">
+<meta property="og:url" content="https://jerryji0414.github.io/2022/03/08/6-824-lec4-VMft/index.html">
 <meta property="og:site_name" content="Ji-Xinyou&#39;s page">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="https://jerryji0414.github.io/2022/03/07/6-824-lab1-MapReduce/1.png">
-<meta property="og:image" content="https://jerryji0414.github.io/2022/03/07/6-824-lab1-MapReduce/2.png">
-<meta property="article:published_time" content="2022-03-07T12:25:31.000Z">
-<meta property="article:modified_time" content="2022-03-08T02:59:06.390Z">
+<meta property="article:published_time" content="2022-03-08T10:09:05.000Z">
+<meta property="article:modified_time" content="2022-03-09T05:41:31.152Z">
 <meta property="article:author" content="Ji-Xinyou(Jerry)">
 <meta property="article:tag" content="6.824">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://jerryji0414.github.io/2022/03/07/6-824-lab1-MapReduce/1.png">
 
-<link rel="canonical" href="https://jerryji0414.github.io/2022/03/07/6-824-lab1-MapReduce/">
+<link rel="canonical" href="https://jerryji0414.github.io/2022/03/08/6-824-lec4-VMft/">
 
 
 <script id="page-configurations">
@@ -47,7 +44,7 @@
   };
 </script>
 
-  <title>6.824-lab1-MapReduce | Ji-Xinyou's page</title>
+  <title>6.824-lec4-VMft | Ji-Xinyou's page</title>
   
 
 
@@ -199,7 +196,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="https://jerryji0414.github.io/2022/03/07/6-824-lab1-MapReduce/">
+    <link itemprop="mainEntityOfPage" href="https://jerryji0414.github.io/2022/03/08/6-824-lec4-VMft/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avtdisney.JPG">
@@ -212,7 +209,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          6.824-lab1-MapReduce
+          6.824-lec4-VMft
         </h1>
 
         <div class="post-meta">
@@ -222,14 +219,14 @@
               </span>
               <span class="post-meta-item-text">Posted on</span>
 
-              <time title="Created: 2022-03-07 20:25:31" itemprop="dateCreated datePublished" datetime="2022-03-07T20:25:31+08:00">2022-03-07</time>
+              <time title="Created: 2022-03-08 18:09:05" itemprop="dateCreated datePublished" datetime="2022-03-08T18:09:05+08:00">2022-03-08</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2022-03-08 10:59:06" itemprop="dateModified" datetime="2022-03-08T10:59:06+08:00">2022-03-08</time>
+                <time title="Modified: 2022-03-09 13:41:31" itemprop="dateModified" datetime="2022-03-09T13:41:31+08:00">2022-03-09</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -261,145 +258,89 @@
       
         <div></div>
 <span id="more"></span>
-<h1>6.824_lab1: MapReduce, A Conceptual Solution</h1>
+<h1>Replicas</h1>
 <hr>
-<p>[toc]</p>
-<hr>
-<h2 id="Pre-statement"><a class="header-anchor" href="#Pre-statement">¶</a>Pre-statement</h2>
-<p><strong>WE HAVE NO NECESSARY CODE HERE!!!</strong></p>
-<p>The reason why the solutions to these labs are not in the form of code is that, <strong>the 6.824 course staff said not to</strong>.</p>
-<p>However, sharing a conceptual idea about them in my opinion is helpful for both myself and others, without damaging the experience of the students who actually are taking the 6.824 course.</p>
+<p>Following are just sth i think novel and hard to think of immediately.</p>
+<h2 id="Two-ways-of-replicate-machines"><a class="header-anchor" href="#Two-ways-of-replicate-machines">¶</a>Two ways of replicate machines</h2>
 <ol>
 <li>
-<p>The solution will <strong>not</strong> be too-detailed, it <strong>ONLY</strong> contains my way of solving the lab.</p>
+<p><strong>State transfer</strong></p>
+<ul>
+<li>just a backup of state (e.g. RAM)</li>
+</ul>
 </li>
 <li>
-<p>The solution itself is <strong>NOT OPTIMIZED</strong> in purpose, which means the locking scheme is very coarse-grained, the traversing is used often, the RPC is used instead of go channel etc. etc.</p>
+<p>**Replicated State Machine **(unicore-machine only)</p>
+<ul>
+<li>Start from the same state, only transfer the <strong>input</strong> to the backup from primary
+<ul>
+<li>Because the transition caused by the input from the same state is the same.</li>
+</ul>
+</li>
+</ul>
 </li>
 </ol>
-<p>Anyway, enjoy 😃))))))</p>
 <hr>
-<h2 id="Screenshot-of-passing-tests"><a class="header-anchor" href="#Screenshot-of-passing-tests">¶</a>Screenshot of passing tests</h2>
-<img src="/2022/03/07/6-824-lab1-MapReduce/1.png" alt="1" style="zoom: 33%;">
+<h2 id="Replicated-State-Machine"><a class="header-anchor" href="#Replicated-State-Machine">¶</a>Replicated State Machine</h2>
+<h3 id="Challenges"><a class="header-anchor" href="#Challenges">¶</a>Challenges</h3>
+<ul>
+<li>What state?
+<ul>
+<li>All things in RAM and registers</li>
+</ul>
+</li>
+<li>P/B sync
+<ul>
+<li>logging channel and log entry
+<ul>
+<li><strong>Backup only receives log entry ONLY from Primary, it drops clients’ packets, EVEN the interrupt of physical machine</strong></li>
+<li>Backup can not be ahead of Primary
+<ul>
+<li>Backup has a buffer storing the events Primary sent, and <strong>ONLY IF</strong> there exists at least an event can it start running.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Cut-over (how)</li>
+<li>Anomolies always show up when machine fails</li>
+<li>New replicas is expensive</li>
+</ul>
 <hr>
-<h2 id="Solution"><a class="header-anchor" href="#Solution">¶</a>Solution</h2>
-<p>The implementation of mine takes about <strong>650 lines</strong> of code insertion</p>
-<h3 id="general-picture"><a class="header-anchor" href="#general-picture">¶</a>general picture</h3>
-<p>The MapReduce in general has two sides, one master and several workers.</p>
-<p>The master and worker use <strong>messages</strong> to communicate</p>
+<h2 id="Non-deterministic-events"><a class="header-anchor" href="#Non-deterministic-events">¶</a>Non-deterministic events</h2>
 <ul>
-<li>The master uses messages to distribute tasks (map or reduce) to workers</li>
-<li>The worker uses messages to tell the master that it needs a task or its task is done</li>
-</ul>
-<h3 id><a class="header-anchor" href="#">¶</a></h3>
-<p>In real world, MapReduce works on Distributed File System like GFS, in which large files are split into small chunks of 64MB. In the lab the files are around the order of some KB, so it is fine to <strong>MAKE EACH FILE A MAP TASK</strong></p>
-<p>The # of Reduce task is set by user, actually in function <code>makeMaster()</code></p>
-<p><strong>Therefore, we have the result that</strong></p>
-<ol>
-<li>we have <code>file #</code> number of map task, each corresponds to a file</li>
-<li>we have <code>nReduce</code> number of reduce task, each corresponds to a output file</li>
-</ol>
-<p>Let’s have a look at the stages of MapReduce job, the figure is from the paper. This execution model is very important for both comprehending and implementing.</p>
-<img src="/2022/03/07/6-824-lab1-MapReduce/2.png" alt="2" style="zoom:50%;">
+<li>Inputs &lt;- packets
 <ul>
-<li><strong>Split</strong>: for this lab, we split the input files a chunk per file - that is no split</li>
-<li><strong>Read</strong>: map worker read the file locally in the lab, but actually a mixture of RPC and local read in the real world</li>
-<li><strong>Intermediate</strong>:
+<li>Packets -&gt; data + an interrupt
 <ul>
-<li>It is important to figure out how many intermediate files does a MapReduce job produce.</li>
-<li>According to the hint, we name the intermediate file <code>mr-x-y</code>, where <code>x</code> is <strong>map task #</strong>, <code>y</code> is <strong>reduce task #</strong>, this representation is easier to understand.</li>
-<li>from above, we know we have <code>file #</code> of <code>x</code>, and <code>nReduce</code> of <code>y</code></li>
-<li><strong>THEREFORE</strong>, we know, for each <code>Map task # x</code>, if generates <code>nReduce</code> intermediate file
+<li>We want to interrupt the primary and backup <strong>at the same instruction</strong>
 <ul>
-<li>mr-x-0, mr-x-1, mr-x-2, …, mr-x-(nReduce-1)</li>
-</ul>
-</li>
-<li><strong>IMPORTANTLY</strong>, the job phase moves <strong>FROM</strong> Map phase <strong>TO</strong> Reduce phase, which means only when <strong>ALL MAP TASKS ARE DONE</strong>, can any Reduce task be distributed to workers</li>
-</ul>
-</li>
-<li><strong>Reduce read</strong>: decode from json file (act as a substitution of remote read)</li>
-</ul>
-<h3 id="master-coordinator"><a class="header-anchor" href="#master-coordinator">¶</a>master (coordinator)</h3>
-<p>The master works as a <strong>state machine.</strong></p>
-<p>This is because the master is the one who <strong>detects the state</strong> and <strong>change the state</strong> of the whole job, which means <strong>the master must remember necessary states of the job for changes</strong></p>
-<p>The changes includes</p>
-<ul>
-<li>Phase changing
-<ul>
-<li>from Map -&gt; Reduce -&gt; Done</li>
-<li>No need to holds a UNSTARTED phase, starting from Phase_Map is fine</li>
-</ul>
-</li>
-<li>Crash recovery
-<ul>
-<li>When some worker takes the task, the master changes <strong>per-task</strong> phase. But what if the worker exits for some unknown reasons.</li>
+<li>use <strong>SPECIAL INSTURTION</strong> to interrupt cpu <strong>at specified instruction number</strong></li>
 </ul>
 </li>
 </ul>
-<p>The states Master struct holds could look like this.</p>
-<p><strong>It changes the jobphase by doing checks on its state variables.</strong></p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Master <span class="keyword">struct</span> &#123;</span><br><span class="line">  ...</span><br><span class="line">  lk				sync.Mutex</span><br><span class="line">  ...</span><br><span class="line">  jobphase			phase_t</span><br><span class="line">  Map_phase			<span class="keyword">map</span>[<span class="keyword">string</span>]phase_t</span><br><span class="line">  Reduce_phase		<span class="keyword">map</span>[<span class="keyword">int</span>]phase_t</span><br><span class="line">  ...</span><br><span class="line">  sometimestamp		<span class="keyword">int64</span></span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<ul>
-<li>If you want to use unsafe data structures like hashmap, you need at least a <strong>lock</strong> to make some operations on them atomic</li>
-</ul>
-<h3 id="worker"><a class="header-anchor" href="#worker">¶</a>worker</h3>
-<p>The worker does need to specially save any state, or you can say it <strong>self-contains its own state within the function</strong> <code>Worker()</code>. It acts as a procedure callee.</p>
-<p>It sits in an infinite loop:</p>
-<ul>
-<li>When it has no task assigned, keep asking for task</li>
-<li>When it receives a task, do the task.
-<ul>
-<li>the intermediate files generated live in the local directory</li>
-<li>When the task is over, signal the master. This helps the master move on to next phase.</li>
+</li>
 </ul>
 </li>
-<li>When the master is down, exits</li>
-</ul>
-<h3 id="message-exchange-flow"><a class="header-anchor" href="#message-exchange-flow">¶</a>message exchange flow</h3>
-<p>It is very obvious at this point that the coordination between master and worker depends on massive message exchanges.</p>
+<li>Weird instructions
 <ul>
-<li>In real world, the message exchange is done by RPC. In this lab, we use RPC as well.</li>
-</ul>
-<p>We next discuss the message exchange from two perspectives w.r.t information flow.</p>
-<h4 id="master-worker"><a class="header-anchor" href="#master-worker">¶</a>master -&gt; worker</h4>
-<p>Clearly, master replys to the messages from workers.</p>
-<ul>
-<li>
-<p>When a worker asks for a task, the master reply with a message containing <strong>necessary information</strong> about the task to the worker.</p>
-<ul>
-<li>this acts as assigning the task, and the phase of the task should change</li>
+<li>getTimeOfDay(), random()</li>
 </ul>
 </li>
-<li>
-<p>When the whole job is over, the master sends a pesudo-task <strong>please exit</strong> to workers to let them exit.</p>
+<li><strong>Multicore</strong> parallelism</li>
+</ul>
+<h3 id="Solution"><a class="header-anchor" href="#Solution">¶</a>Solution</h3>
 <ul>
-<li>you can also let worker exit if the master does not respond to RPC calls</li>
+<li>Log entry has
+<ul>
+<li><strong>intruction number</strong> (from startup)</li>
+<li>type</li>
+<li>data</li>
 </ul>
 </li>
 </ul>
-<p>The messages <strong>sent</strong> by the master is simple, because the major work of it is to <strong>handle the messages from the workers</strong></p>
-<h4 id="worker-master"><a class="header-anchor" href="#worker-master">¶</a>worker -&gt; master</h4>
-<p>Workers also need to massively exchange messages with master</p>
-<ul>
-<li>worker asks for a task when it is idle</li>
-<li>worker signals the master when his task is finished</li>
-</ul>
-<p>The messages <strong>sent</strong> by the worker is also simple, because the major work of it is to <strong>handle the messages from the master</strong>, that is, enforce the task when being assigned one</p>
-<h3 id="message-handlers"><a class="header-anchor" href="#message-handlers">¶</a>message handlers</h3>
-<p><strong>How to implement message handlers</strong> of master and worker is the key of MapReduce.</p>
-<p>As mentioned above, master handles worker’s messages</p>
-<ul>
-<li>worker as for a task</li>
-<li>worker’s task done</li>
-<li>worker exit</li>
-</ul>
-<p>For each case, Master should respond to worker by <strong>changing its state variables</strong> and <strong>making corresponding reply.</strong></p>
-<p>Worker also handles master’s reply</p>
-<ul>
-<li>If a task is assigned, parse the reply and enforce the task</li>
-<li>If master asks worker to exit, exit</li>
-</ul>
-<p>The hard part is probably to maintain the state of master and the detailed architecture of handler.</p>
+<hr>
 
     </div>
 
@@ -480,7 +421,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">6.824_lab1: MapReduce, A Conceptual Solution</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Pre-statement"><span class="nav-number">1.1.</span> <span class="nav-text">Pre-statement</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Screenshot-of-passing-tests"><span class="nav-number">1.2.</span> <span class="nav-text">Screenshot of passing tests</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Solution"><span class="nav-number">1.3.</span> <span class="nav-text">Solution</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#general-picture"><span class="nav-number">1.3.1.</span> <span class="nav-text">general picture</span></a></li><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-number">1.3.2.</span> <span class="nav-text">¶</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#master-coordinator"><span class="nav-number">1.3.3.</span> <span class="nav-text">master (coordinator)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#worker"><span class="nav-number">1.3.4.</span> <span class="nav-text">worker</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#message-exchange-flow"><span class="nav-number">1.3.5.</span> <span class="nav-text">message exchange flow</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#master-worker"><span class="nav-number">1.3.5.1.</span> <span class="nav-text">master -&gt; worker</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#worker-master"><span class="nav-number">1.3.5.2.</span> <span class="nav-text">worker -&gt; master</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#message-handlers"><span class="nav-number">1.3.6.</span> <span class="nav-text">message handlers</span></a></li></ol></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">Replicas</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Two-ways-of-replicate-machines"><span class="nav-number">1.1.</span> <span class="nav-text">Two ways of replicate machines</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Replicated-State-Machine"><span class="nav-number">1.2.</span> <span class="nav-text">Replicated State Machine</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Challenges"><span class="nav-number">1.2.1.</span> <span class="nav-text">Challenges</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Non-deterministic-events"><span class="nav-number">1.3.</span> <span class="nav-text">Non-deterministic events</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Solution"><span class="nav-number">1.3.1.</span> <span class="nav-text">Solution</span></a></li></ol></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
