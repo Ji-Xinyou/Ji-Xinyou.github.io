@@ -11,16 +11,16 @@
 <meta property="og:url" content="https://jerryji0414.github.io/2022/05/08/IDT-GDT-TSS-Descriptor-Segment-Selector%E7%9A%84%E5%85%B3%E7%B3%BB/index.html">
 <meta property="og:site_name" content="Ji-Xinyou&#39;s page">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="https://jerryji0414.github.io/2022/05/08/IDT-GDT-TSS-Descriptor-Segment-Selector%E7%9A%84%E5%85%B3%E7%B3%BB/05/08/IDT-GDT-TSS-Descriptor-Segment-Selector%E7%9A%84%E5%85%B3%E7%B3%BB/screenshots-2016085.png">
+<meta property="og:image" content="https://jerryji0414.github.io/2022/05/08/IDT-GDT-TSS-Descriptor-Segment-Selector%E7%9A%84%E5%85%B3%E7%B3%BB/screenshots-2016085.png">
 <meta property="og:image" content="https://jerryji0414.github.io/2022/05/08/IDT-GDT-TSS-Descriptor-Segment-Selector%E7%9A%84%E5%85%B3%E7%B3%BB/screenshots-2016456.png">
 <meta property="og:image" content="https://jerryji0414.github.io/2022/05/08/IDT-GDT-TSS-Descriptor-Segment-Selector%E7%9A%84%E5%85%B3%E7%B3%BB/screenshots-2017327.png">
-<meta property="og:image" content="https://jerryji0414.github.io/2022/05/08/IDT-GDT-TSS-Descriptor-Segment-Selector%E7%9A%84%E5%85%B3%E7%B3%BB/05/08/IDT-GDT-TSS-Descriptor-Segment-Selector%E7%9A%84%E5%85%B3%E7%B3%BB/screenshots-2016833.png">
+<meta property="og:image" content="https://jerryji0414.github.io/2022/05/08/IDT-GDT-TSS-Descriptor-Segment-Selector%E7%9A%84%E5%85%B3%E7%B3%BB/screenshots-2016833.png">
 <meta property="og:image" content="https://jerryji0414.github.io/2022/05/08/IDT-GDT-TSS-Descriptor-Segment-Selector%E7%9A%84%E5%85%B3%E7%B3%BB/screenshots-2017327.png">
 <meta property="article:published_time" content="2022-05-08T13:19:14.000Z">
 <meta property="article:modified_time" content="2022-05-08T13:47:20.179Z">
 <meta property="article:author" content="Ji-Xinyou(Jerry)">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://jerryji0414.github.io/2022/05/08/IDT-GDT-TSS-Descriptor-Segment-Selector%E7%9A%84%E5%85%B3%E7%B3%BB/05/08/IDT-GDT-TSS-Descriptor-Segment-Selector%E7%9A%84%E5%85%B3%E7%B3%BB/screenshots-2016085.png">
+<meta name="twitter:image" content="https://jerryji0414.github.io/2022/05/08/IDT-GDT-TSS-Descriptor-Segment-Selector%E7%9A%84%E5%85%B3%E7%B3%BB/screenshots-2016085.png">
     
     
       
@@ -158,7 +158,7 @@
 <p>Entry的结构如下：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[repr(C)]</span></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">Entry</span></span>&lt;F&gt; &#123;</span><br><span class="line">    pointer_low: <span class="built_in">u16</span>,</span><br><span class="line">    gdt_selector: <span class="built_in">u16</span>,</span><br><span class="line">    options: EntryOptions,</span><br><span class="line">    pointer_middle: <span class="built_in">u16</span>,</span><br><span class="line">    pointer_high: <span class="built_in">u32</span>,</span><br><span class="line">    reserved: <span class="built_in">u32</span>,</span><br><span class="line">    phantom: PhantomData&lt;F&gt;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>IDT其实就是中断向量表，当中断/exception发生的时候，系统根据对应的exception前往IDT寻找handler的地址，然后跳转到handler进行对应exception的处理，处理之后再返回，<strong>具体的IDT中每一个entry</strong>的格式如下</p>
-<img src="/2022/05/08/IDT-GDT-TSS-Descriptor-Segment-Selector%E7%9A%84%E5%85%B3%E7%B3%BB/05/08/IDT-GDT-TSS-Descriptor-Segment-Selector%E7%9A%84%E5%85%B3%E7%B3%BB/screenshots-2016085.png" class title="screenshots-2016085">
+<img src="/2022/05/08/IDT-GDT-TSS-Descriptor-Segment-Selector%E7%9A%84%E5%85%B3%E7%B3%BB/screenshots-2016085.png" class title="screenshots-2016085">
 <p>当Exception发生时，具体做了这些</p>
 <blockquote>
 <ol>
@@ -211,7 +211,7 @@
 <img src="/2022/05/08/IDT-GDT-TSS-Descriptor-Segment-Selector%E7%9A%84%E5%85%B3%E7%B3%BB/screenshots-2017327.png" alt="screenshots-2017327" style="zoom:50%;">
 <h2 id="TSS"><a class="header-anchor" href="#TSS">¶</a>TSS</h2>
 <p>那什么又是TSS呢，TSS其实在最开始的OS中有别的用途，这里我们不关心，我们来看他现在的用途</p>
-<img src="/2022/05/08/IDT-GDT-TSS-Descriptor-Segment-Selector%E7%9A%84%E5%85%B3%E7%B3%BB/05/08/IDT-GDT-TSS-Descriptor-Segment-Selector%E7%9A%84%E5%85%B3%E7%B3%BB/screenshots-2016833.png" class title="screenshots-2016833">
+<img src="/2022/05/08/IDT-GDT-TSS-Descriptor-Segment-Selector%E7%9A%84%E5%85%B3%E7%B3%BB/screenshots-2016833.png" class title="screenshots-2016833">
 <p>可以看出，我们有对应的IST表，我们给对应的Interrupt <strong>Option</strong>设置了对应的Index后，<strong>在Interrupt发生之后，他就会自动将栈指针切换到这个IST[index]中</strong>，这样就可以防止在Double Fault的时候仍然产生Page Fault的情况，导致Triple Fault的发生</p>
 <p><strong>与上面结合，其实GDT中也包含了TSS_selector，帮助在Interrupt的时候找到对应的TSS，进而找到对应的IST</strong></p>
 <hr>
