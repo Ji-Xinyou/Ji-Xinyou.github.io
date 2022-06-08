@@ -1,3 +1,4 @@
+https://jerryji0414.github.io/2022/06/08/C-inline-assembly/
 https://jerryji0414.github.io/about/index.html
 https://jerryji0414.github.io/2022/05/08/IDT-GDT-TSS-Descriptor-Segment-Selector%E7%9A%84%E5%85%B3%E7%B3%BB/
 https://jerryji0414.github.io/2022/03/08/6-824-lec4-VMft/
@@ -30,12 +31,13 @@ https://jerryji0414.github.io/404.html
 https://jerryji0414.github.io/
 https://jerryji0414.github.io/tags/6-824/
 https://jerryji0414.github.io/tags/6-S081/
+https://jerryji0414.github.io/tags/C/
 https://jerryji0414.github.io/tags/Rust/
 https://jerryji0414.github.io/tags/gdb/
 https://jerryji0414.github.io/tags/html/
-https://jerryji0414.github.io/tags/C/
 https://jerryji0414.github.io/categories/Distributed-System/
 https://jerryji0414.github.io/categories/O-S/
+https://jerryji0414.github.io/categories/Programming-Languages/
 https://jerryji0414.github.io/categories/ProgLang/
-https://jerryji0414.github.io/categories/Vim/
 https://jerryji0414.github.io/categories/C/
+https://jerryji0414.github.io/categories/Vim/
