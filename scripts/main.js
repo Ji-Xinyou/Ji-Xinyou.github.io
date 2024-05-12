@@ -110,8 +110,8 @@ function createCode(code, text) {
 function display_help() {
     createCode("help", "Display this.");
     createCode("about", "Me.");
-    createCode("proj", "My github page.");
-    createCode("sm", "All my social networks.");
+    createCode("proj", "Some interesting projects.");
+    createCode("sn", "Some social networks.");
     createCode("clear", "Clean the terminal.");
 }
 

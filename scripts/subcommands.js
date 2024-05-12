@@ -25,7 +25,7 @@ function projects() {
     );
 }
 
-function sm() {
+function sn() {
     createText(
         "<a href='https://github.com/Ji-Xinyou' target='_blank'><i class='fab fa-github black'></i> github.com/Ji-Xinyou</a>"
     );
