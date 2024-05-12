@@ -57,9 +57,9 @@ async function getInputValue() {
     } else if (value === "about") {
         trueValue(value);
         about();
-    } else if (value === "sm") {
+    } else if (value === "sn") {
         trueValue(value);
-        sm();
+        sn();
     } else if (value === "clear") {
         clear();
     } else {
