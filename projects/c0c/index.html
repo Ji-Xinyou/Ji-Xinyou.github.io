@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8" />
+    <link href="styles.css" rel="stylesheet" />
+  </head>
+  <body>
+    <div class="page-title">C0 compiler in your browser</div>
+    <div class="page-description">
+      This website hosts a C0 compiler that compiles C0 source code into x86-64
+      and wasm text format, and executes the compiled wasm directly in your
+      browser! Try it out by writing your own C0 code in the editor below and
+      clicking the "compile and run" button. The compiler is written in rust,
+      and compiled to wasm using wasm-pack, and exposed to the browser
+      javascript runtime as a callable module. This is part of the final project
+      for the CMU 15-411/611 Compiler Design course in Spring 2024, developed by
+      team Paul Erdos.
+    </div>
+    <div class="container">
+      <div class="code-container">
+        <div class="title-bar">
+          C0 source code
+          <div id="compile-button">
+            <button>compile and run</button>
+          </div>
+        </div>
+        <textarea
+          id="edit-container"
+          placeholder="Your C0 code here"
+          spellcheck="false"
+        >
+// Your C0 code goes here! Try it out!
+int jan_hoffman(int jan, int hoffman) {
+    return jan + hoffman;
+}
+
+typedef int jan;
+typedef jan hoffman;
+
+int main() {
+    jan *a = alloc(jan);
+    hoffman[] b = alloc_array(hoffman, 10);
+
+    *a = 10;
+
+    for (int i = 0; i < 10; i++) {
+        b[i] = i % 2 == 0 ? (i + 10) : (i - 10);
+    }
+
+    return jan_hoffman(*a, b[3]);
+}
+        </textarea>
+      </div>
+      <div class="code-container">
+        <div class="title-bar">Compiled x86-64 assembly</div>
+        <div class="output-area" id="x86"></div>
+      </div>
+      <div class="code-container">
+        <div class="title-bar">Compiled WebAssembly</div>
+        <div class="output-area" id="wasm"></div>
+      </div>
+      <div class="code-container">
+        <div class="title-bar">WebAssembly execution output</div>
+        <div class="output-area" id="result"></div>
+      </div>
+    </div>
+    <script src="./dist/bundle.js"></script>
+  </body>
+</html>

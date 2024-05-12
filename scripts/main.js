@@ -51,7 +51,7 @@ async function getInputValue() {
     if (value === "help") {
         trueValue(value);
         display_help();
-    } else if (value === "projects") {
+    } else if (value === "proj") {
         trueValue(value);
         projects();
     } else if (value === "about") {
@@ -110,7 +110,7 @@ function createCode(code, text) {
 function display_help() {
     createCode("help", "Display this.");
     createCode("about", "Me.");
-    createCode("projects", "My github page.");
+    createCode("proj", "My github page.");
     createCode("sm", "All my social networks.");
     createCode("clear", "Clean the terminal.");
 }
