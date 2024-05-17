@@ -41,27 +41,29 @@ int main() {
     jan *a = alloc(jan);
     hoffman[] b = alloc_array(hoffman, 10);
 
-    *a = 10;
+    *a = 50;
+    
+    int c = *a / 23;
 
     for (int i = 0; i < 10; i++) {
         b[i] = i % 2 == 0 ? (i + 10) : (i - 10);
     }
 
-    return jan_hoffman(*a, b[3]);
+    return jan_hoffman(*a, b[c]);
 }
         </textarea>
       </div>
       <div class="code-container">
         <div class="title-bar">Compiled x86-64 assembly</div>
-        <div class="output-area" id="x86"></div>
+        <pre class="output-area" id="x86"></pre>
       </div>
       <div class="code-container">
         <div class="title-bar">Compiled WebAssembly</div>
-        <div class="output-area" id="wasm"></div>
+        <pre class="output-area" id="wasm"></pre>
       </div>
       <div class="code-container">
         <div class="title-bar">WebAssembly execution output</div>
-        <div class="output-area" id="result"></div>
+        <pre class="output-area" id="result"></pre>
       </div>
     </div>
     <script src="./dist/bundle.js"></script>
